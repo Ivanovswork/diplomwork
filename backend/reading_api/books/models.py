@@ -1,3 +1,50 @@
 from django.db import models
+from django.conf import settings
+from users.models import User
 
-# Create your models here.
+
+class UserConnection(models.Model):
+    CONNECTION_TYPES = [
+        ('friendship', 'Дружба'),
+        ('parent_child', 'Родитель_ребенок'),
+    ]
+
+    user1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='connections_as_user1')
+    user2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='connections_as_user2')
+    connection_type = models.CharField(max_length=20, choices=CONNECTION_TYPES, verbose_name="Тип")
+    is_parent_flag = models.BooleanField(default=False, verbose_name="Флаг родителя")
+    is_child_flag = models.BooleanField(default=False, verbose_name="Флаг дочерний")
+
+    class Meta:
+        unique_together = ['user1', 'user2', 'connection_type']
+        verbose_name = "Связь пользователей"
+        verbose_name_plural = "Связи пользователей"
+
+    def __str__(self):
+        return f"{self.user1.name} - {self.user2.name} ({self.connection_type})"
+
+
+class Book(models.Model):
+    name = models.CharField(max_length=255, verbose_name="Наименование")
+    pages_count = models.PositiveIntegerField(verbose_name="Количество страниц")
+    upload_date = models.DateTimeField(auto_now_add=True, verbose_name="Дата загрузки")
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('in_progress', 'В процессе'),
+            ('completed', 'Закончена'),
+            ('deleted', 'Удалена'),
+        ],
+        default='in_progress',
+        verbose_name="Статус"
+    )
+    daily_goal = models.PositiveIntegerField(default=5, verbose_name="Дневная цель")
+    content = models.BinaryField(verbose_name="Содержимое")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь")
+
+    class Meta:
+        verbose_name = "Книга"
+        verbose_name_plural = "Книги"
+
+    def __str__(self):
+        return f"{self.name} ({self.pages_count} стр.)"
