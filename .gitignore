@@ -1,0 +1,20 @@
+# Backend (Python)
+backend/__pycache__/
+backend/.venv/
+backend/.env/
+backend/media/
+
+# Mobile (Android)
+mobile-app/build/
+mobile-app/app/build/
+mobile-app/.gradle/
+mobile-app/local.properties
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
