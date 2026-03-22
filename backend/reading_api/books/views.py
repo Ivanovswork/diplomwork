@@ -1,12 +1,15 @@
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.parsers import MultiPartParser, FormParser  # ← ДОБАВЬ ЭТО!
 from django.db import models
 from users.models import User
-from .models import UserConnection
-from .serializers import ConnectionRequestSerializer, ConnectionSerializer
-
+from .models import UserConnection, Book
+from .serializers import (
+    ConnectionRequestSerializer, ConnectionSerializer,
+    BookUploadSerializer, BookUploadToChildSerializer, BookListSerializer
+)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -274,4 +277,74 @@ def list_friend_requests(request):
     return Response({
         "friend_requests": serializer.data,
         "pending_count": len(serializer.data)
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+def upload_book(request):
+    """Загрузка книги себе"""
+    serializer = BookUploadSerializer(data=request.data, context={'request': request})
+    if serializer.is_valid():
+        book = serializer.save()
+        return Response({
+            "message": "Книга загружена!",
+            "book": BookListSerializer(book).data
+        }, status=201)
+    return Response(serializer.errors, status=400)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+def upload_book_to_child(request):
+    """Загрузка книги ребенку"""
+    serializer = BookUploadToChildSerializer(data=request.data, context={'request': request})
+    if serializer.is_valid():
+        book = serializer.save()
+        return Response({
+            "message": "Книга загружена ребенку!",
+            "book": BookListSerializer(book).data
+        }, status=201)
+    return Response(serializer.errors, status=400)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_my_books(request):
+    """Свои книги"""
+    books = Book.objects.filter(
+        user=request.user,
+        status__in=['in_progress', 'completed']
+    ).order_by('-upload_date')
+
+    serializer = BookListSerializer(books, many=True)
+    return Response({
+        "my_books": serializer.data,
+        "count": len(serializer.data)
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_child_books(request, child_id):
+    """Книги ребенка (проверка связи)"""
+    # Проверка: свой ли ребенок?
+    if not UserConnection.objects.filter(
+            user1=request.user, user2_id=child_id,
+            connection_type='parent_child',
+            is_parent_flag=True, is_child_flag=True
+    ).exists():
+        return Response({"error": "Нет доступа к книгам этого ребенка"}, status=403)
+
+    books = Book.objects.filter(
+        user_id=child_id,
+        status__in=['in_progress', 'completed']
+    ).order_by('-upload_date')
+
+    serializer = BookListSerializer(books, many=True)
+    return Response({
+        "child_books": serializer.data,
+        "count": len(serializer.data)
     })

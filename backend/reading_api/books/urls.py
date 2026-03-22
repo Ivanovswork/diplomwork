@@ -22,4 +22,10 @@ urlpatterns = [
     path('friends/reject/', views.reject_friendship, name='reject_friend'),
     path('friends/remove/', views.remove_friend, name='remove_friend'),
     path('friends/requests/', views.list_friend_requests, name='friend_requests'),
+
+    # Книги
+    path('books/', views.upload_book, name='upload_book'),
+    path('books/child/', views.upload_book_to_child, name='upload_book_child'),
+    path('books/my/', views.list_my_books, name='my_books'),
+    path('books/child/<int:child_id>/', views.list_child_books, name='child_books'),
 ]
