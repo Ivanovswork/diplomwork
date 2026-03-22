@@ -7,6 +7,8 @@ class UserConnection(models.Model):
     CONNECTION_TYPES = [
         ('friendship', 'Дружба'),
         ('parent_child', 'Родитель_ребенок'),
+        ('child_request', 'Запрос_от_ребенка'),  # Новый тип!
+        ('pending', 'Ожидает_подтверждения'),    # Новый тип!
     ]
 
     user1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='connections_as_user1')
@@ -22,6 +24,16 @@ class UserConnection(models.Model):
 
     def __str__(self):
         return f"{self.user1.name} - {self.user2.name} ({self.connection_type})"
+
+    def save(self, *args, **kwargs):
+        # Автоматическая логика типов связи
+        if self.connection_type == 'parent_child':
+            if self.is_parent_flag and self.is_child_flag:
+                self.connection_type = 'parent_child'  # Полностью активна
+            elif self.is_parent_flag and not self.is_child_flag:
+                self.connection_type = 'pending'  # Ожидает ребенка
+        super().save(*args, **kwargs)
+
 
 
 class Book(models.Model):
