@@ -157,3 +157,121 @@ def unlink_by_parent(request):
         connections.delete()
         return Response({"message": "Связь удалена"})
     return Response({"error": "Связь не найдена"}, status=404)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def request_friendship(request):
+    """Запрос в друзья (target_user_id)"""
+    serializer = ConnectionRequestSerializer(data=request.data, context={'request': request})
+    if serializer.is_valid():
+        target_user = User.objects.get(id=serializer.validated_data['target_user_id'])
+
+        # Проверка существующей дружбы
+        if UserConnection.objects.filter(
+                models.Q(user1=request.user, user2=target_user, connection_type='friendship') |
+                models.Q(user1=target_user, user2=request.user, connection_type='friendship')
+        ).exists():
+            return Response({"error": "Уже друзья"}, status=400)
+
+        # Запрос в друзья
+        connection = UserConnection.objects.create(
+            user1=request.user,
+            user2=target_user,
+            connection_type='friendship',
+            is_parent_flag=False,  # Не используется для друзей
+            is_child_flag=False
+        )
+        return Response({
+            "message": "Запрос в друзья отправлен",
+            "connection": ConnectionSerializer(connection).data
+        }, status=201)
+    return Response(serializer.errors, status=400)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def confirm_friendship(request):
+    """Подтверждение дружбы (target_user_id)"""
+    target_user_id = request.data.get('target_user_id')
+    if not target_user_id:
+        return Response({"error": "Нужен target_user_id"}, status=400)
+
+    try:
+        connection = UserConnection.objects.get(
+            user2=request.user,
+            user1_id=target_user_id,
+            connection_type='friendship'
+        )
+        # Для друзей просто активируем связь
+        connection.is_parent_flag = True  # Подтверждение получателя
+        connection.is_child_flag = True  # Отправитель уже согласился
+        connection.save()
+
+        return Response({
+            "message": "Теперь вы друзья!",
+            "connection": ConnectionSerializer(connection).data
+        })
+    except UserConnection.DoesNotExist:
+        return Response({"error": "Запрос не найден"}, status=404)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def reject_friendship(request):
+    """Отклонение запроса в друзья (target_user_id)"""
+    target_user_id = request.data.get('target_user_id')
+    if not target_user_id:
+        return Response({"error": "Нужен target_user_id"}, status=400)
+
+    connections = UserConnection.objects.filter(
+        user2=request.user,
+        user1_id=target_user_id,
+        connection_type='friendship'
+    )
+    if connections.exists():
+        connections.delete()
+        return Response({"message": "Запрос отклонен"})
+    return Response({"error": "Запрос не найден"}, status=404)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def remove_friend(request):
+    """Удаление из друзей (target_user_id) - любой может удалить"""
+    target_user_id = request.data.get('target_user_id')
+    if not target_user_id:
+        return Response({"error": "Нужен target_user_id"}, status=400)
+
+    # Удаляем ВСЕ связи friendship между пользователями
+    connections = UserConnection.objects.filter(
+        models.Q(
+            (models.Q(user1=request.user, user2_id=target_user_id) |
+             models.Q(user1_id=target_user_id, user2=request.user)) &
+            models.Q(connection_type='friendship')
+        )
+    )
+
+    if connections.exists():
+        deleted_count = connections.count()
+        connections.delete()
+        return Response({
+            "message": f"Удалено {deleted_count} связей дружбы"
+        })
+    return Response({"error": "Дружба не найдена"}, status=404)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_friend_requests(request):
+    """Запросы в друзья для текущего пользователя"""
+    requests = UserConnection.objects.filter(
+        user2=request.user,
+        connection_type='friendship'
+    ).exclude(is_parent_flag=True).select_related('user1')
+
+    serializer = ConnectionSerializer(requests, many=True)
+    return Response({
+        "friend_requests": serializer.data,
+        "pending_count": len(serializer.data)
+    })
