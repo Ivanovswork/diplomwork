@@ -33,6 +33,12 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".ProfileActivity" android:exported="false" />
+        <activity android:name=".FriendsActivity" android:exported="false" />
+        <activity android:name=".ParentControlActivity" android:exported="false" />
+        <activity android:name=".RequestsActivity" android:exported="false" />
+        <activity android:name=".ChangePasswordActivity" android:exported="false" />
+
     </application>
 
 </manifest>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_light"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="16dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@android:drawable/ic_menu_revert"
+            android:background="@android:color/transparent"
+            android:contentDescription="Назад" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Друзья"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_dark"
+            android:gravity="center" />
+
+        <View
+            android:layout_width="40dp"
+            android:layout_height="40dp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <EditText
+            android:id="@+id/etUserEmail"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Email пользователя"
+            android:inputType="textEmailAddress"
+            android:padding="12dp"
+            android:background="@drawable/edit_text_bg" />
+
+        <Button
+            android:id="@+id/btnAddFriend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Добавить"
+            android:backgroundTint="@color/primary_blue"
+            android:layout_marginStart="8dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvEmpty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="У вас пока нет друзей"
+        android:textSize="16sp"
+        android:textColor="@color/text_light"
+        android:gravity="center"
+        android:padding="32dp"
+        android:visibility="gone" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvFriends"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</LinearLayout>

@@ -17,8 +17,34 @@
             android:layout_height="?attr/actionBarSize"
             app:title="Reading Tracker"
             app:titleTextColor="@color/text_dark"
-            app:titleTextAppearance="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"
-            app:titleMarginStart="16dp" />
+            app:titleMarginStart="16dp">
+
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:paddingEnd="16dp">
+
+                <ImageButton
+                    android:id="@+id/btnProfile"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_profile"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Профиль" />
+
+                <View
+                    android:id="@+id/badgeRequests"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:background="@drawable/badge_red_circle"
+                    android:visibility="gone"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginTop="4dp" />
+
+            </FrameLayout>
+
+        </androidx.appcompat.widget.Toolbar>
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -33,11 +59,13 @@
             android:orientation="vertical"
             android:padding="24dp">
 
-            <!-- Карточка профиля -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:id="@+id/cardProfile"
                 app:cardCornerRadius="24dp"
                 app:cardElevation="4dp">
 
@@ -50,11 +78,10 @@
                     <ImageView
                         android:layout_width="64dp"
                         android:layout_height="64dp"
-                        android:src="@drawable/ic_launcher_foreground"
+                        android:src="@drawable/ic_profile"
                         android:background="@color/primary_blue_light"
                         android:padding="12dp"
-                        android:layout_marginEnd="20dp"
-                        app:shapeAppearanceOverlay="@style/CircleShape" />
+                        android:layout_marginEnd="20dp" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -80,10 +107,10 @@
                             android:textColor="@color/text_light" />
 
                     </LinearLayout>
+
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Статистика -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -119,6 +146,7 @@
                             android:textColor="@color/text_light" />
 
                         <TextView
+                            android:id="@+id/tvBooksCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0"
@@ -157,6 +185,7 @@
                             android:textColor="@color/text_light" />
 
                         <TextView
+                            android:id="@+id/tvPagesCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0"
@@ -167,7 +196,6 @@
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
 
-            <!-- Кнопки действий -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -299,19 +327,6 @@
                         app:backgroundTint="@android:color/transparent" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnLogout"
-                style="@style/Widget.MaterialComponents.Button"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:text="Выйти"
-                android:textAllCaps="false"
-                android:textColor="@color/text_light"
-                app:cornerRadius="24dp"
-                app:strokeColor="@color/text_light"
-                app:strokeWidth="1dp"
-                app:backgroundTint="@android:color/transparent" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

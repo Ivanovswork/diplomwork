@@ -2,14 +2,27 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.parsers import MultiPartParser, FormParser  # ← ДОБАВЬ ЭТО!
+from rest_framework.parsers import MultiPartParser, FormParser
 from django.db import models
-from users.models import User
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+from datetime import timedelta
 from .models import UserConnection, Book
 from .serializers import (
     ConnectionRequestSerializer, ConnectionSerializer,
     BookUploadSerializer, BookUploadToChildSerializer, BookListSerializer
 )
+
+User = get_user_model()
+
+
+# ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
+
+def get_my_id(user):
+    return user.id
+
+
+# ==================== ОБЩИЕ СВЯЗИ ====================
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -18,7 +31,6 @@ def list_my_connections(request):
     connections = UserConnection.objects.filter(
         models.Q(user1=request.user) | models.Q(user2=request.user)
     ).select_related('user1', 'user2').order_by('-id')
-
     serializer = ConnectionSerializer(connections, many=True)
     return Response({
         "my_connections": serializer.data,
@@ -27,26 +39,53 @@ def list_my_connections(request):
     })
 
 
+# ==================== ДРУЗЬЯ ====================
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def list_parent_requests(request):
-    """Запросы родителей для текущего ребенка"""
-    requests = UserConnection.objects.filter(
-        user2=request.user,
-        connection_type='parent_request'
-    ).select_related('user1')
+def list_friends(request):
+    """Список активных друзей"""
+    connections = UserConnection.objects.filter(
+        models.Q(user1=request.user) | models.Q(user2=request.user),
+        connection_type='friendship',
+        is_parent_flag=True,
+        is_child_flag=True
+    ).select_related('user1', 'user2')
 
-    serializer = ConnectionSerializer(requests, many=True)
+    result = []
+    for conn in connections:
+        friend = conn.user2 if conn.user1 == request.user else conn.user1
+        result.append({
+            'id': friend.id,
+            'name': friend.name,
+            'email': friend.email,
+            'connection_id': conn.id
+        })
+
+    return Response({'friends': result})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_friend_requests(request):
+    """Запросы в друзья для текущего пользователя"""
+    requests_list = UserConnection.objects.filter(
+        user2=request.user,
+        connection_type='friendship',
+        is_parent_flag=False,
+        is_child_flag=False
+    ).select_related('user1')
+    serializer = ConnectionSerializer(requests_list, many=True)
     return Response({
-        "parent_requests": serializer.data,
+        "friend_requests": serializer.data,
         "pending_count": len(serializer.data)
     })
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def request_parent_connection(request):
-    """Родитель → запрос ребенку (target_user_id)"""
+def request_friendship(request):
+    """Отправить запрос в друзья"""
     serializer = ConnectionRequestSerializer(data=request.data, context={'request': request})
     if serializer.is_valid():
         target_user = User.objects.get(id=serializer.validated_data['target_user_id'])
@@ -56,7 +95,147 @@ def request_parent_connection(request):
             models.Q(user1=target_user, user2=request.user)
         )
         if existing.exists():
-            return Response({"error": "Связь уже существует"}, status=400)
+            return Response({"error": "Связь уже существует"}, status=status.HTTP_400_BAD_REQUEST)
+
+        connection = UserConnection.objects.create(
+            user1=request.user,
+            user2=target_user,
+            connection_type='friendship',
+            is_parent_flag=False,
+            is_child_flag=False
+        )
+        return Response({
+            "message": "Запрос в друзья отправлен",
+            "connection": ConnectionSerializer(connection).data
+        }, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def confirm_friendship(request):
+    """Подтверждение дружбы"""
+    target_user_id = request.data.get('target_user_id')
+    if not target_user_id:
+        return Response({"error": "Нужен target_user_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        connection = UserConnection.objects.get(
+            user2=request.user,
+            user1_id=target_user_id,
+            connection_type='friendship'
+        )
+        connection.is_parent_flag = True
+        connection.is_child_flag = True
+        connection.save()
+        return Response({
+            "message": "Теперь вы друзья!",
+            "connection": ConnectionSerializer(connection).data
+        })
+    except UserConnection.DoesNotExist:
+        return Response({"error": "Запрос не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def reject_friendship(request):
+    """Отклонение запроса в друзья"""
+    target_user_id = request.data.get('target_user_id')
+    if not target_user_id:
+        return Response({"error": "Нужен target_user_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+    connections = UserConnection.objects.filter(
+        user2=request.user,
+        user1_id=target_user_id,
+        connection_type='friendship'
+    )
+    if connections.exists():
+        connections.delete()
+        return Response({"message": "Запрос отклонен"})
+    return Response({"error": "Запрос не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def remove_friend(request):
+    """Удаление из друзей"""
+    target_user_id = request.data.get('target_user_id')
+    if not target_user_id:
+        return Response({"error": "Нужен target_user_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+    connections = UserConnection.objects.filter(
+        models.Q(
+            (models.Q(user1=request.user, user2_id=target_user_id) |
+             models.Q(user1_id=target_user_id, user2=request.user))
+        ) &
+        models.Q(connection_type='friendship')
+    )
+    if connections.exists():
+        connections.delete()
+        return Response({"message": "Друг удален"})
+    return Response({"error": "Дружба не найдена"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_friend_by_email(request):
+    """Добавить друга по email"""
+    email = request.data.get('email')
+
+    if not email:
+        return Response({'error': 'Email не указан'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        target_user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return Response({'error': 'Пользователь не найден'}, status=status.HTTP_404_NOT_FOUND)
+
+    if target_user == request.user:
+        return Response({'error': 'Нельзя добавить самого себя'}, status=status.HTTP_400_BAD_REQUEST)
+
+    existing = UserConnection.objects.filter(
+        models.Q(user1=request.user, user2=target_user) |
+        models.Q(user1=target_user, user2=request.user)
+    )
+
+    if existing.exists():
+        conn = existing.first()
+        if conn.connection_type == 'friendship' and conn.is_parent_flag and conn.is_child_flag:
+            return Response({'error': 'Уже друзья'}, status=status.HTTP_400_BAD_REQUEST)
+        elif conn.connection_type == 'friendship':
+            return Response({'error': 'Запрос уже отправлен'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Связь уже существует'}, status=status.HTTP_400_BAD_REQUEST)
+
+    connection = UserConnection.objects.create(
+        user1=request.user,
+        user2=target_user,
+        connection_type='friendship',
+        is_parent_flag=False,
+        is_child_flag=False
+    )
+
+    return Response({
+        'status': 'Запрос отправлен',
+        'connection': ConnectionSerializer(connection).data
+    }, status=status.HTTP_201_CREATED)
+
+
+# ==================== РОДИТЕЛЬСКИЙ КОНТРОЛЬ ====================
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def request_parent_connection(request):
+    """Родитель отправляет запрос ребенку"""
+    serializer = ConnectionRequestSerializer(data=request.data, context={'request': request})
+    if serializer.is_valid():
+        target_user = User.objects.get(id=serializer.validated_data['target_user_id'])
+
+        existing = UserConnection.objects.filter(
+            models.Q(user1=request.user, user2=target_user) |
+            models.Q(user1=target_user, user2=request.user)
+        )
+        if existing.exists():
+            return Response({"error": "Связь уже существует"}, status=status.HTTP_400_BAD_REQUEST)
 
         connection = UserConnection.objects.create(
             user1=request.user,
@@ -66,19 +245,36 @@ def request_parent_connection(request):
             is_child_flag=False
         )
         return Response({
-            "message": "Запрос отправлен",
+            "message": "Запрос отправлен ребенку",
             "connection": ConnectionSerializer(connection).data
-        }, status=201)
-    return Response(serializer.errors, status=400)
+        }, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_parent_requests(request):
+    """Запросы от родителей для текущего пользователя"""
+    requests_list = UserConnection.objects.filter(
+        user2=request.user,
+        connection_type='parent_request',
+        is_parent_flag=True,
+        is_child_flag=False
+    ).select_related('user1')
+    serializer = ConnectionSerializer(requests_list, many=True)
+    return Response({
+        "parent_requests": serializer.data,
+        "pending_count": len(serializer.data)
+    })
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def confirm_connection(request):
-    """Ребенок подтверждает связь с родителем (target_parent_id)"""
+    """Ребенок подтверждает связь с родителем"""
     target_parent_id = request.data.get('target_parent_id')
     if not target_parent_id:
-        return Response({"error": "Нужен target_parent_id"}, status=400)
+        return Response({"error": "Нужен target_parent_id"}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         connection = UserConnection.objects.get(
@@ -89,22 +285,21 @@ def confirm_connection(request):
         connection.connection_type = 'parent_child'
         connection.is_child_flag = True
         connection.save()
-
         return Response({
             "message": "Связь активирована!",
             "connection": ConnectionSerializer(connection).data
         })
     except UserConnection.DoesNotExist:
-        return Response({"error": "Запрос не найден"}, status=404)
+        return Response({"error": "Запрос не найден"}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def reject_connection(request):
-    """Ребенок отклоняет связь с родителем (target_parent_id)"""
+    """Ребенок отклоняет запрос родителя"""
     target_parent_id = request.data.get('target_parent_id')
     if not target_parent_id:
-        return Response({"error": "Нужен target_parent_id"}, status=400)
+        return Response({"error": "Нужен target_parent_id"}, status=status.HTTP_400_BAD_REQUEST)
 
     connection = UserConnection.objects.filter(
         user1_id=target_parent_id,
@@ -114,42 +309,150 @@ def reject_connection(request):
     if connection.exists():
         connection.delete()
         return Response({"message": "Запрос отклонен"})
-    return Response({"error": "Запрос не найден"}, status=404)
+    return Response({"error": "Запрос не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_children(request):
+    """Список детей для родителя"""
+    connections = UserConnection.objects.filter(
+        user1=request.user,
+        connection_type='parent_child',
+        is_parent_flag=True,
+        is_child_flag=True
+    ).select_related('user2')
+
+    result = []
+    for conn in connections:
+        result.append({
+            'id': conn.user2.id,
+            'name': conn.user2.name,
+            'email': conn.user2.email,
+            'connection_id': conn.id
+        })
+    return Response({'children': result})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_parents(request):
+    """Список родителей для ребенка"""
+    connections = UserConnection.objects.filter(
+        user2=request.user,
+        connection_type='parent_child',
+        is_parent_flag=True,
+        is_child_flag=True
+    ).select_related('user1')
+
+    result = []
+    for conn in connections:
+        result.append({
+            'id': conn.user1.id,
+            'name': conn.user1.name,
+            'email': conn.user1.email,
+            'connection_id': conn.id
+        })
+    return Response({'parents': result})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def request_parent_by_email(request):
+    """Отправить запрос на родительский контроль по email"""
+    email = request.data.get('email')
+
+    if not email:
+        return Response({'error': 'Email не указан'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        target_user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return Response({'error': 'Пользователь не найден'}, status=status.HTTP_404_NOT_FOUND)
+
+    if target_user == request.user:
+        return Response({'error': 'Нельзя добавить самого себя'}, status=status.HTTP_400_BAD_REQUEST)
+
+    existing = UserConnection.objects.filter(
+        models.Q(user1=request.user, user2=target_user) |
+        models.Q(user1=target_user, user2=request.user)
+    )
+
+    if existing.exists():
+        conn = existing.first()
+
+        if conn.connection_type == 'parent_child' and conn.is_parent_flag and conn.is_child_flag:
+            return Response({'error': 'Уже связаны как родитель-ребенок'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if conn.connection_type in ['parent_request', 'child_request']:
+            return Response({'error': 'Запрос уже отправлен'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if conn.connection_type == 'friendship' and conn.is_parent_flag and conn.is_child_flag:
+            parent_connection = UserConnection.objects.create(
+                user1=request.user,
+                user2=target_user,
+                connection_type='parent_request',
+                is_parent_flag=True,
+                is_child_flag=False
+            )
+            return Response({
+                'status': 'Запрос на родительский контроль отправлен (дружба сохранена)',
+                'connection': ConnectionSerializer(parent_connection).data
+            }, status=status.HTTP_201_CREATED)
+
+    connection = UserConnection.objects.create(
+        user1=request.user,
+        user2=target_user,
+        connection_type='parent_request',
+        is_parent_flag=True,
+        is_child_flag=False
+    )
+
+    return Response({
+        'status': 'Запрос отправлен',
+        'connection': ConnectionSerializer(connection).data
+    }, status=status.HTTP_201_CREATED)
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def unlink_by_child(request):
-    """Ребенок инициирует отвязку (target_parent_id)"""
+    """Ребенок инициирует отвязку"""
     target_parent_id = request.data.get('target_parent_id')
-    if not target_parent_id:
-        return Response({"error": "Нужен target_parent_id"}, status=400)
 
-    connection = UserConnection.objects.filter(
-        user1_id=target_parent_id,
-        user2=request.user,
-        connection_type='parent_child'
-    )
-    if connection.exists():
-        connection.update(
-            connection_type='child_request',
-            is_child_flag=False
+    if not target_parent_id:
+        return Response({"error": "Нужен target_parent_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        connection = UserConnection.objects.get(
+            user1_id=target_parent_id,
+            user2=request.user,
+            connection_type='parent_child',
+            is_parent_flag=True,
+            is_child_flag=True
         )
-        updated = connection.first()
+
+        connection.connection_type = 'child_request'
+        connection.is_child_flag = False
+        connection.save()
+
         return Response({
-            "message": "Отвязка инициирована",
-            "connection": ConnectionSerializer(updated).data
+            "message": "Запрос на отвязку отправлен родителю",
+            "connection": ConnectionSerializer(connection).data
         })
-    return Response({"error": "Активная связь не найдена"}, status=404)
+
+    except UserConnection.DoesNotExist:
+        return Response({"error": "Активная связь не найдена"}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def unlink_by_parent(request):
-    """Родитель полностью удаляет связь (target_child_id)"""
+    """Родитель полностью удаляет связь"""
     target_child_id = request.data.get('target_child_id')
+
     if not target_child_id:
-        return Response({"error": "Нужен target_child_id"}, status=400)
+        return Response({"error": "Нужен target_child_id"}, status=status.HTTP_400_BAD_REQUEST)
 
     connections = UserConnection.objects.filter(
         user1=request.user,
@@ -159,126 +462,117 @@ def unlink_by_parent(request):
     if connections.exists():
         connections.delete()
         return Response({"message": "Связь удалена"})
-    return Response({"error": "Связь не найдена"}, status=404)
-
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def request_friendship(request):
-    """Запрос в друзья (target_user_id)"""
-    serializer = ConnectionRequestSerializer(data=request.data, context={'request': request})
-    if serializer.is_valid():
-        target_user = User.objects.get(id=serializer.validated_data['target_user_id'])
-
-        # Проверка существующей дружбы
-        if UserConnection.objects.filter(
-                models.Q(user1=request.user, user2=target_user, connection_type='friendship') |
-                models.Q(user1=target_user, user2=request.user, connection_type='friendship')
-        ).exists():
-            return Response({"error": "Уже друзья"}, status=400)
-
-        # Запрос в друзья
-        connection = UserConnection.objects.create(
-            user1=request.user,
-            user2=target_user,
-            connection_type='friendship',
-            is_parent_flag=False,  # Не используется для друзей
-            is_child_flag=False
-        )
-        return Response({
-            "message": "Запрос в друзья отправлен",
-            "connection": ConnectionSerializer(connection).data
-        }, status=201)
-    return Response(serializer.errors, status=400)
-
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def confirm_friendship(request):
-    """Подтверждение дружбы (target_user_id)"""
-    target_user_id = request.data.get('target_user_id')
-    if not target_user_id:
-        return Response({"error": "Нужен target_user_id"}, status=400)
-
-    try:
-        connection = UserConnection.objects.get(
-            user2=request.user,
-            user1_id=target_user_id,
-            connection_type='friendship'
-        )
-        # Для друзей просто активируем связь
-        connection.is_parent_flag = True  # Подтверждение получателя
-        connection.is_child_flag = True  # Отправитель уже согласился
-        connection.save()
-
-        return Response({
-            "message": "Теперь вы друзья!",
-            "connection": ConnectionSerializer(connection).data
-        })
-    except UserConnection.DoesNotExist:
-        return Response({"error": "Запрос не найден"}, status=404)
-
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def reject_friendship(request):
-    """Отклонение запроса в друзья (target_user_id)"""
-    target_user_id = request.data.get('target_user_id')
-    if not target_user_id:
-        return Response({"error": "Нужен target_user_id"}, status=400)
-
-    connections = UserConnection.objects.filter(
-        user2=request.user,
-        user1_id=target_user_id,
-        connection_type='friendship'
-    )
-    if connections.exists():
-        connections.delete()
-        return Response({"message": "Запрос отклонен"})
-    return Response({"error": "Запрос не найден"}, status=404)
-
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def remove_friend(request):
-    """Удаление из друзей (target_user_id) - любой может удалить"""
-    target_user_id = request.data.get('target_user_id')
-    if not target_user_id:
-        return Response({"error": "Нужен target_user_id"}, status=400)
-
-    # Удаляем ВСЕ связи friendship между пользователями
-    connections = UserConnection.objects.filter(
-        models.Q(
-            (models.Q(user1=request.user, user2_id=target_user_id) |
-             models.Q(user1_id=target_user_id, user2=request.user)) &
-            models.Q(connection_type='friendship')
-        )
-    )
-
-    if connections.exists():
-        deleted_count = connections.count()
-        connections.delete()
-        return Response({
-            "message": f"Удалено {deleted_count} связей дружбы"
-        })
-    return Response({"error": "Дружба не найдена"}, status=404)
+    return Response({"error": "Связь не найдена"}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def list_friend_requests(request):
-    """Запросы в друзья для текущего пользователя"""
-    requests = UserConnection.objects.filter(
-        user2=request.user,
-        connection_type='friendship'
-    ).exclude(is_parent_flag=True).select_related('user1')
+def list_unlink_requests(request):
+    """Запросы на отвязку от детей для родителя"""
+    requests_list = UserConnection.objects.filter(
+        user1=request.user,
+        connection_type='child_request',
+        is_parent_flag=True,
+        is_child_flag=False
+    ).select_related('user2')
 
-    serializer = ConnectionSerializer(requests, many=True)
+    result = []
+    for conn in requests_list:
+        result.append({
+            'id': conn.id,
+            'child_id': conn.user2.id,
+            'child_name': conn.user2.name,
+            'child_email': conn.user2.email
+        })
+    return Response({'unlink_requests': result})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def confirm_unlink(request):
+    """Родитель подтверждает отвязку ребенка"""
+    connection_id = request.data.get('connection_id')
+
+    if not connection_id:
+        return Response({"error": "Нужен connection_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        connection = UserConnection.objects.get(
+            id=connection_id,
+            user1=request.user,
+            connection_type='child_request',
+            is_parent_flag=True,
+            is_child_flag=False
+        )
+        connection.delete()
+        return Response({"message": "Связь удалена"})
+    except UserConnection.DoesNotExist:
+        return Response({"error": "Запрос не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def reject_unlink(request):
+    """Родитель отклоняет запрос на отвязку ребенка"""
+    connection_id = request.data.get('connection_id')
+
+    if not connection_id:
+        return Response({"error": "Нужен connection_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        connection = UserConnection.objects.get(
+            id=connection_id,
+            user1=request.user,
+            connection_type='child_request',
+            is_parent_flag=True,
+            is_child_flag=False
+        )
+        connection.connection_type = 'parent_child'
+        connection.is_child_flag = True
+        connection.save()
+        return Response({"message": "Связь восстановлена"})
+    except UserConnection.DoesNotExist:
+        return Response({"error": "Запрос не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+
+# ==================== ЗАПРОСЫ И УВЕДОМЛЕНИЯ ====================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_requests_count(request):
+    """Количество активных запросов"""
+    friend_requests_count = UserConnection.objects.filter(
+        user2=request.user,
+        connection_type='friendship',
+        is_parent_flag=False,
+        is_child_flag=False
+    ).count()
+
+    parent_requests_count = UserConnection.objects.filter(
+        user2=request.user,
+        connection_type='parent_request',
+        is_parent_flag=True,
+        is_child_flag=False
+    ).count()
+
+    unlink_requests_count = UserConnection.objects.filter(
+        user1=request.user,
+        connection_type='child_request',
+        is_parent_flag=True,
+        is_child_flag=False
+    ).count()
+
+    total = friend_requests_count + parent_requests_count + unlink_requests_count
+
     return Response({
-        "friend_requests": serializer.data,
-        "pending_count": len(serializer.data)
+        'total': total,
+        'friend_requests': friend_requests_count,
+        'parent_requests': parent_requests_count,
+        'unlink_requests': unlink_requests_count
     })
 
+
+# ==================== КНИГИ ====================
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -291,8 +585,8 @@ def upload_book(request):
         return Response({
             "message": "Книга загружена!",
             "book": BookListSerializer(book).data
-        }, status=201)
-    return Response(serializer.errors, status=400)
+        }, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
@@ -306,19 +600,18 @@ def upload_book_to_child(request):
         return Response({
             "message": "Книга загружена ребенку!",
             "book": BookListSerializer(book).data
-        }, status=201)
-    return Response(serializer.errors, status=400)
+        }, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_my_books(request):
-    """Свои книги"""
+    """Список своих книг"""
     books = Book.objects.filter(
         user=request.user,
         status__in=['in_progress', 'completed']
     ).order_by('-upload_date')
-
     serializer = BookListSerializer(books, many=True)
     return Response({
         "my_books": serializer.data,
@@ -329,20 +622,18 @@ def list_my_books(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_child_books(request, child_id):
-    """Книги ребенка (проверка связи)"""
-    # Проверка: свой ли ребенок?
+    """Список книг ребенка"""
     if not UserConnection.objects.filter(
             user1=request.user, user2_id=child_id,
             connection_type='parent_child',
             is_parent_flag=True, is_child_flag=True
     ).exists():
-        return Response({"error": "Нет доступа к книгам этого ребенка"}, status=403)
+        return Response({"error": "Нет доступа к книгам этого ребенка"}, status=status.HTTP_403_FORBIDDEN)
 
     books = Book.objects.filter(
         user_id=child_id,
         status__in=['in_progress', 'completed']
     ).order_by('-upload_date')
-
     serializer = BookListSerializer(books, many=True)
     return Response({
         "child_books": serializer.data,

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_light">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="24dp">
+
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@android:drawable/ic_menu_revert"
+                android:background="@android:color/transparent"
+                android:contentDescription="Назад" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Запросы"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_dark"
+                android:gravity="center" />
+
+            <View
+                android:layout_width="40dp"
+                android:layout_height="40dp" />
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="👥 Запросы в друзья"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_dark"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tvFriendRequestsCount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textSize="14sp"
+            android:textColor="@color/text_light"
+            android:layout_marginBottom="12dp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvFriendRequests"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="👨‍👩‍👧 Запросы от родителей"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_dark"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tvParentRequestsCount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textSize="14sp"
+            android:textColor="@color/text_light"
+            android:layout_marginBottom="12dp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvParentRequests"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🔗 Запросы на отвязку"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_dark"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tvUnlinkRequestsCount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textSize="14sp"
+            android:textColor="@color/text_light"
+            android:layout_marginBottom="12dp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvUnlinkRequests"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/tvEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Нет новых запросов"
+            android:textSize="16sp"
+            android:textColor="@color/text_light"
+            android:gravity="center"
+            android:padding="32dp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+</ScrollView>

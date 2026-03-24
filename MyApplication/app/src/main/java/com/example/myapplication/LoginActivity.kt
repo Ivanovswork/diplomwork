@@ -28,7 +28,7 @@ class LoginActivity : AppCompatActivity() {
             .build()
         api = retrofit.create(DjangoApi::class.java)
 
-        // Обработка кнопки "Войти"
+        // Кнопка "Войти"
         binding.btnLogin.setOnClickListener {
             val email = binding.etLoginEmail.text.toString().trim()
             val password = binding.etLoginPassword.text.toString().trim()
@@ -42,18 +42,28 @@ class LoginActivity : AppCompatActivity() {
             api.login(request).enqueue(object : Callback<LoginResponse> {
                 override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
                     if (response.isSuccessful && response.body() != null) {
-                        val token = response.body()!!.token
-                        // Сохраняем токен и email
+                        val loginResponse = response.body()!!
+                        val token = loginResponse.token
+                        val user = loginResponse.user
+
+                        // Сохраняем данные пользователя
                         getSharedPreferences("auth", MODE_PRIVATE).edit().apply {
                             putString("token", token)
                             putString("email", email)
+                            putInt("user_id", user?.id ?: 0)
+                            putString("user_name", user?.name ?: email.split("@")[0])
                             apply()
                         }
+
                         Toast.makeText(this@LoginActivity, "Вход выполнен", Toast.LENGTH_SHORT).show()
                         startActivity(Intent(this@LoginActivity, HomeActivity::class.java))
                         finish()
                     } else {
-                        Toast.makeText(this@LoginActivity, "Ошибка входа: ${response.code()}", Toast.LENGTH_LONG).show()
+                        when (response.code()) {
+                            401 -> Toast.makeText(this@LoginActivity, "Неверный email или пароль", Toast.LENGTH_LONG).show()
+                            403 -> Toast.makeText(this@LoginActivity, "Подтвердите email перед входом", Toast.LENGTH_LONG).show()
+                            else -> Toast.makeText(this@LoginActivity, "Ошибка: ${response.code()}", Toast.LENGTH_LONG).show()
+                        }
                     }
                 }
 
