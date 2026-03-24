@@ -579,14 +579,21 @@ def get_requests_count(request):
 @parser_classes([MultiPartParser, FormParser])
 def upload_book(request):
     """Загрузка книги себе"""
+    print("=== UPLOAD BOOK CALLED ===")
+    print("Request data:", request.data)
+    print("Request FILES:", request.FILES)
+
     serializer = BookUploadSerializer(data=request.data, context={'request': request})
     if serializer.is_valid():
         book = serializer.save()
+        print(f"Book saved: {book.id} - {book.name}")
         return Response({
             "message": "Книга загружена!",
-            "book": BookListSerializer(book).data
+            "book": BookListSerializer(book, context={'request': request}).data
         }, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        print("Serializer errors:", serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
@@ -594,14 +601,21 @@ def upload_book(request):
 @parser_classes([MultiPartParser, FormParser])
 def upload_book_to_child(request):
     """Загрузка книги ребенку"""
+    print("=== UPLOAD BOOK TO CHILD CALLED ===")
+    print("Request data:", request.data)
+    print("Request FILES:", request.FILES)
+
     serializer = BookUploadToChildSerializer(data=request.data, context={'request': request})
     if serializer.is_valid():
         book = serializer.save()
+        print(f"Book saved to child: {book.id} - {book.name}")
         return Response({
             "message": "Книга загружена ребенку!",
-            "book": BookListSerializer(book).data
+            "book": BookListSerializer(book, context={'request': request}).data
         }, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        print("Serializer errors:", serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
@@ -638,4 +652,183 @@ def list_child_books(request, child_id):
     return Response({
         "child_books": serializer.data,
         "count": len(serializer.data)
+    })
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_book(request, book_id):
+    """Удалить книгу"""
+    try:
+        book = Book.objects.get(id=book_id)
+
+        # Проверка прав: владелец книги может удалить
+        is_owner = book.user == request.user
+
+        # Проверка: родитель может удалить книгу ребенка
+        is_parent = UserConnection.objects.filter(
+            user1=request.user,
+            user2=book.user,
+            connection_type='parent_child',
+            is_parent_flag=True,
+            is_child_flag=True
+        ).exists()
+
+        if not is_owner and not is_parent:
+            return Response({"error": "Нет прав для удаления"}, status=status.HTTP_403_FORBIDDEN)
+
+        book.content = None
+        book.status = 'deleted'
+        book.save(update_fields=['content', 'status'])
+
+        return Response({"message": "Книга удалена"})
+    except Book.DoesNotExist:
+        return Response({"error": "Книга не найдена"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_book_daily_goal(request, book_id):
+    """Обновить дневную цель книги"""
+    try:
+        book = Book.objects.get(id=book_id)
+
+        # Проверка прав: либо владелец книги, либо родитель владельца
+        is_owner = book.user == request.user
+        is_parent = UserConnection.objects.filter(
+            user1=request.user,
+            user2=book.user,
+            connection_type='parent_child',
+            is_parent_flag=True,
+            is_child_flag=True
+        ).exists()
+
+        if not is_owner and not is_parent:
+            return Response({"error": "Нет прав для изменения"}, status=status.HTTP_403_FORBIDDEN)
+
+        daily_goal = request.data.get('daily_goal')
+
+        if daily_goal is None:
+            return Response({"error": "daily_goal не указан"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            daily_goal_int = int(daily_goal)
+            if daily_goal_int < 1:
+                return Response({"error": "Дневная цель должна быть больше 0"}, status=status.HTTP_400_BAD_REQUEST)
+            book.daily_goal = daily_goal_int
+            book.save(update_fields=['daily_goal'])
+        except (TypeError, ValueError):
+            return Response({"error": "daily_goal должен быть числом"}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({
+            "message": "Дневная цель обновлена",
+            "book": BookListSerializer(book, context={'request': request}).data
+        })
+    except Book.DoesNotExist:
+        return Response({"error": "Книга не найдена"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_book_details(request, book_id):
+    """Получить детали книги для редактирования"""
+    try:
+        book = Book.objects.get(id=book_id)
+
+        is_owner = book.user == request.user
+        is_parent = UserConnection.objects.filter(
+            user1=request.user,
+            user2=book.user,
+            connection_type='parent_child',
+            is_parent_flag=True,
+            is_child_flag=True
+        ).exists()
+
+        if not is_owner and not is_parent:
+            return Response({"error": "Нет доступа"}, status=status.HTTP_403_FORBIDDEN)
+
+        return Response({
+            "id": book.id,
+            "name": book.name,
+            "pages_count": book.pages_count,
+            "daily_goal": book.daily_goal,
+            "status": book.status,
+            "upload_date": book.upload_date,
+            "is_owner": is_owner
+        })
+    except Book.DoesNotExist:
+        return Response({"error": "Книга не найдена"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_book_limit(request):
+    """Получить лимит книг для текущего пользователя"""
+    user = request.user
+    book_limit = 10 if user.subscription_type == 'active' else 1
+    current_count = Book.objects.filter(
+        user=user,
+        status__in=['in_progress', 'completed']
+    ).count()
+
+    return Response({
+        'can_upload': current_count < book_limit,
+        'current_count': current_count,
+        'limit': book_limit,
+        'message': f'У вас {current_count} из {book_limit} книг'
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_child_book_limit(request, child_id):
+    """Получить лимит книг для ребенка"""
+    try:
+        child = User.objects.get(id=child_id)
+
+        # Проверка, что это ребенок текущего пользователя
+        is_parent = UserConnection.objects.filter(
+            user1=request.user,
+            user2=child,
+            connection_type='parent_child',
+            is_parent_flag=True,
+            is_child_flag=True
+        ).exists()
+
+        if not is_parent:
+            return Response({"error": "Нет доступа"}, status=status.HTTP_403_FORBIDDEN)
+
+        book_limit = 10 if child.subscription_type == 'active' else 1
+        current_count = Book.objects.filter(
+            user=child,
+            status__in=['in_progress', 'completed']
+        ).count()
+
+        return Response({
+            'can_upload': current_count < book_limit,
+            'current_count': current_count,
+            'limit': book_limit,
+            'message': f'У ребенка {current_count} из {book_limit} книг'
+        })
+    except User.DoesNotExist:
+        return Response({"error": "Ребенок не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_stats(request):
+    """Получить статистику пользователя (количество книг и страниц)"""
+    user = request.user
+
+    books = Book.objects.filter(
+        user=user,
+        status__in=['in_progress', 'completed']
+    )
+
+    books_count = books.count()
+    total_pages = books.aggregate(total=models.Sum('pages_count'))['total'] or 0
+
+    return Response({
+        'books_count': books_count,
+        'total_pages': total_pages
     })

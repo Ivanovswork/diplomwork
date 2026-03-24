@@ -25,7 +25,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Мои родители"
+            android:text="Мои дети"
             android:textSize="24sp"
             android:textStyle="bold"
             android:textColor="@color/text_dark"
@@ -44,20 +44,20 @@
         android:layout_marginBottom="24dp">
 
         <EditText
-            android:id="@+id/etParentEmail"
+            android:id="@+id/etChildEmail"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="Email родителя"
+            android:hint="Email ребенка"
             android:inputType="textEmailAddress"
             android:padding="12dp"
             android:background="@drawable/edit_text_bg" />
 
         <Button
-            android:id="@+id/btnAddParent"
+            android:id="@+id/btnAddChild"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Отправить запрос"
+            android:text="Добавить"
             android:backgroundTint="@color/accent_purple"
             android:layout_marginStart="8dp"
             android:paddingStart="16dp"
@@ -69,7 +69,7 @@
         android:id="@+id/tvEmpty"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="У вас нет привязанных родителей"
+        android:text="У вас нет привязанных детей"
         android:textSize="16sp"
         android:textColor="@color/text_light"
         android:gravity="center"
@@ -77,8 +77,9 @@
         android:visibility="gone" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvParents"
+        android:id="@+id/rvChildren"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:visibility="gone" />
 
 </LinearLayout>

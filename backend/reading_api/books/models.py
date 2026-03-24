@@ -35,24 +35,23 @@ class UserConnection(models.Model):
         super().save(*args, **kwargs)
 
 
-
 class Book(models.Model):
+    STATUS_CHOICES = [
+        ('in_progress', 'В процессе'),
+        ('completed', 'Закончена'),
+        ('deleted', 'Удалена'),
+    ]
+
     name = models.CharField(max_length=255, verbose_name="Наименование")
-    pages_count = models.PositiveIntegerField(verbose_name="Количество страниц")
+    pages_count = models.PositiveIntegerField(verbose_name="Количество страниц", default=0)
     upload_date = models.DateTimeField(auto_now_add=True, verbose_name="Дата загрузки")
-    status = models.CharField(
-        max_length=20,
-        choices=[
-            ('in_progress', 'В процессе'),
-            ('completed', 'Закончена'),
-            ('deleted', 'Удалена'),
-        ],
-        default='in_progress',
-        verbose_name="Статус"
-    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='in_progress', verbose_name="Статус")
     daily_goal = models.PositiveIntegerField(default=5, verbose_name="Дневная цель")
-    content = models.BinaryField(verbose_name="Содержимое")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь")
+    content = models.BinaryField(verbose_name="Содержимое", null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Пользователь",
+                             related_name='books')
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+                                    verbose_name="Кем загружена", related_name='uploaded_books')
 
     class Meta:
         verbose_name = "Книга"

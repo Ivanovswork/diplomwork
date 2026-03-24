@@ -4,11 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.widget.ImageButton
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
 import com.example.myapplication.databinding.ActivityHomeBinding
 import retrofit2.Call
 import retrofit2.Callback
@@ -56,15 +53,32 @@ class HomeActivity : AppCompatActivity() {
         }
 
         binding.btnMyBooks.setOnClickListener {
-            Toast.makeText(this, "Скоро здесь будут ваши книги", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, MyBooksActivity::class.java))
         }
 
         binding.btnStats.setOnClickListener {
             Toast.makeText(this, "Скоро здесь будет статистика", Toast.LENGTH_SHORT).show()
         }
 
+        loadUserStats()
         loadRequestsCount()
         startPeriodicRequestsCheck()
+    }
+
+    private fun loadUserStats() {
+        api.getUserStats("Token $token").enqueue(object : Callback<UserStatsResponse> {
+            override fun onResponse(call: Call<UserStatsResponse>, response: Response<UserStatsResponse>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val stats = response.body()!!
+                    binding.tvBooksCount.text = stats.books_count.toString()
+                    binding.tvPagesCount.text = stats.total_pages.toString()
+                }
+            }
+
+            override fun onFailure(call: Call<UserStatsResponse>, t: Throwable) {
+                // Не показываем ошибку
+            }
+        })
     }
 
     private fun loadRequestsCount() {
@@ -81,7 +95,7 @@ class HomeActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<RequestsCountResponse>, t: Throwable) {
-                // Не показываем ошибку, чтобы не раздражать пользователя
+                // Не показываем ошибку
             }
         })
     }
@@ -103,6 +117,7 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        loadUserStats()
         loadRequestsCount()
     }
 }

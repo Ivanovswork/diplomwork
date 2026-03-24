@@ -1,10 +1,14 @@
 package com.example.myapplication
 
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Call
 import retrofit2.http.*
 
-// ==================== АУТЕНТИФИКАЦИЯ ====================
 
+// ==================== МОДЕЛИ ДАННЫХ ====================
+
+// Аутентификация
 data class RegisterRequest(
     val name: String,
     val email: String,
@@ -46,8 +50,7 @@ data class ChangePasswordResponse(
 )
 
 
-// ==================== ОБЩИЕ СВЯЗИ ====================
-
+// Общие связи
 data class ConnectionRequest(
     val target_user_id: Int? = null,
     val email: String? = null
@@ -70,8 +73,7 @@ data class ConnectionsResponse(
 )
 
 
-// ==================== ДРУЗЬЯ ====================
-
+// Друзья
 data class Friend(
     val id: Int,
     val name: String,
@@ -89,8 +91,7 @@ data class FriendRequestsResponse(
 )
 
 
-// ==================== РОДИТЕЛЬСКИЙ КОНТРОЛЬ ====================
-
+// Родительский контроль
 data class Child(
     val id: Int,
     val name: String,
@@ -123,8 +124,7 @@ data class AddByEmailRequest(
 )
 
 
-// ==================== ЗАПРОСЫ НА ОТВЯЗКУ ====================
-
+// Запросы на отвязку
 data class UnlinkRequestItem(
     val id: Int,
     val child_id: Int,
@@ -137,8 +137,7 @@ data class UnlinkRequestResponse(
 )
 
 
-// ==================== ЗАПРОСЫ И УВЕДОМЛЕНИЯ ====================
-
+// Запросы и уведомления
 data class RequestsCountResponse(
     val total: Int,
     val friend_requests: Int,
@@ -147,11 +146,64 @@ data class RequestsCountResponse(
 )
 
 
+// Статистика пользователя
+data class UserStatsResponse(
+    val books_count: Int,
+    val total_pages: Int
+)
+
+
+// Книги
+data class Book(
+    val id: Int,
+    val name: String,
+    val pages_count: Int,
+    val status: String,
+    val daily_goal: Int,
+    val upload_date: String,
+    val is_owner: Boolean,
+    val can_delete: Boolean,
+    val uploaded_by_name: String?,
+    val uploaded_by_id: Int?
+)
+
+data class BooksResponse(
+    val my_books: List<Book>,
+    val count: Int
+)
+
+data class ChildBooksResponse(
+    val child_books: List<Book>,
+    val count: Int
+)
+
+data class BookDetailsResponse(
+    val id: Int,
+    val name: String,
+    val pages_count: Int,
+    val daily_goal: Int,
+    val status: String,
+    val upload_date: String,
+    val is_owner: Boolean
+)
+
+data class UpdateDailyGoalRequest(
+    val daily_goal: Int
+)
+
+data class CheckBookLimitResponse(
+    val can_upload: Boolean,
+    val current_count: Int,
+    val limit: Int,
+    val message: String
+)
+
+
 // ==================== ИНТЕРФЕЙС API ====================
 
 interface DjangoApi {
 
-    // ========== АУТЕНТИФИКАЦИЯ ==========
+    // ==================== АУТЕНТИФИКАЦИЯ ====================
 
     @POST("api/users/register/")
     fun register(@Body body: RegisterRequest): Call<RegisterResponse>
@@ -169,7 +221,7 @@ interface DjangoApi {
     fun logout(@Header("Authorization") token: String): Call<Map<String, String>>
 
 
-    // ========== ДРУЗЬЯ ==========
+    // ==================== ДРУЗЬЯ ====================
 
     @GET("api/books/friends/")
     fun listFriends(@Header("Authorization") token: String): Call<FriendsListResponse>
@@ -208,7 +260,7 @@ interface DjangoApi {
     ): Call<Map<String, String>>
 
 
-    // ========== РОДИТЕЛЬСКИЙ КОНТРОЛЬ ==========
+    // ==================== РОДИТЕЛЬСКИЙ КОНТРОЛЬ ====================
 
     @GET("api/books/parent/children/")
     fun listChildren(@Header("Authorization") token: String): Call<ChildrenListResponse>
@@ -256,7 +308,7 @@ interface DjangoApi {
     ): Call<Map<String, String>>
 
 
-    // ========== ЗАПРОСЫ НА ОТВЯЗКУ ==========
+    // ==================== ЗАПРОСЫ НА ОТВЯЗКУ ====================
 
     @GET("api/books/connections/unlink-requests/")
     fun getUnlinkRequests(@Header("Authorization") token: String): Call<UnlinkRequestResponse>
@@ -274,11 +326,76 @@ interface DjangoApi {
     ): Call<Map<String, String>>
 
 
-    // ========== ЗАПРОСЫ И УВЕДОМЛЕНИЯ ==========
+    // ==================== ЗАПРОСЫ И УВЕДОМЛЕНИЯ ====================
 
     @GET("api/books/connections/requests-count/")
     fun getRequestsCount(@Header("Authorization") token: String): Call<RequestsCountResponse>
 
     @GET("api/books/connections/")
     fun getMyConnections(@Header("Authorization") token: String): Call<ConnectionsResponse>
+
+
+    // ==================== СТАТИСТИКА ====================
+
+    @GET("api/books/stats/")
+    fun getUserStats(@Header("Authorization") token: String): Call<UserStatsResponse>
+
+
+    // ==================== КНИГИ ====================
+
+    @GET("api/books/books/my/")
+    fun getMyBooks(@Header("Authorization") token: String): Call<BooksResponse>
+
+    @GET("api/books/books/child/{childId}/")
+    fun getChildBooks(
+        @Header("Authorization") token: String,
+        @Path("childId") childId: Int
+    ): Call<ChildBooksResponse>
+
+    @Multipart
+    @POST("api/books/books/")
+    fun uploadBook(
+        @Header("Authorization") token: String,
+        @Part("name") name: RequestBody,
+        @Part("daily_goal") dailyGoal: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Call<Map<String, Any>>
+
+    @Multipart
+    @POST("api/books/books/child/")
+    fun uploadBookToChild(
+        @Header("Authorization") token: String,
+        @Part("child_id") childId: RequestBody,
+        @Part("name") name: RequestBody,
+        @Part("daily_goal") dailyGoal: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Call<Map<String, Any>>
+
+    @GET("api/books/books/{bookId}/")
+    fun getBookDetails(
+        @Header("Authorization") token: String,
+        @Path("bookId") bookId: Int
+    ): Call<BookDetailsResponse>
+
+    @PUT("api/books/books/{bookId}/daily-goal/")
+    fun updateDailyGoal(
+        @Header("Authorization") token: String,
+        @Path("bookId") bookId: Int,
+        @Body body: UpdateDailyGoalRequest
+    ): Call<Map<String, Any>>
+
+    @DELETE("api/books/books/{bookId}/delete/")
+    fun deleteBook(
+        @Header("Authorization") token: String,
+        @Path("bookId") bookId: Int
+    ): Call<Map<String, String>>
+
+    @GET("api/books/books/limit/")
+    fun getBookLimit(@Header("Authorization") token: String): Call<CheckBookLimitResponse>
+
+    @GET("api/books/books/child-limit/{childId}/")
+    fun getChildBookLimit(
+        @Header("Authorization") token: String,
+        @Path("childId") childId: Int
+    ): Call<CheckBookLimitResponse>
 }

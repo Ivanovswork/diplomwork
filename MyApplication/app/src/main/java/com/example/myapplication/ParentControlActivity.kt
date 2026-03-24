@@ -1,7 +1,9 @@
 package com.example.myapplication
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.myapplication.databinding.ActivityParentControlBinding
@@ -16,7 +18,7 @@ class ParentControlActivity : AppCompatActivity() {
     private lateinit var binding: ActivityParentControlBinding
     private lateinit var api: DjangoApi
     private lateinit var token: String
-    private var parentsList = mutableListOf<Parent>()
+    private var childrenList = mutableListOf<Child>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,52 +38,54 @@ class ParentControlActivity : AppCompatActivity() {
             finish()
         }
 
-        binding.btnAddParent.setOnClickListener {
-            val email = binding.etParentEmail.text.toString().trim()
+        binding.btnAddChild.setOnClickListener {
+            val email = binding.etChildEmail.text.toString().trim()
             if (email.isEmpty()) {
-                Toast.makeText(this, "Введите email пользователя", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Введите email ребенка", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            addParentByEmail(email)
+            addChildByEmail(email)
         }
 
-        loadParents()
+        loadChildren()
     }
 
-    private fun loadParents() {
-        api.listParents("Token $token").enqueue(object : Callback<ParentsListResponse> {
-            override fun onResponse(call: Call<ParentsListResponse>, response: Response<ParentsListResponse>) {
+    private fun loadChildren() {
+        api.listChildren("Token $token").enqueue(object : Callback<ChildrenListResponse> {
+            override fun onResponse(call: Call<ChildrenListResponse>, response: Response<ChildrenListResponse>) {
                 if (response.isSuccessful && response.body() != null) {
-                    parentsList = response.body()!!.parents.toMutableList()
-                    setupParentsRecyclerView()
+                    childrenList = response.body()!!.children.toMutableList()
+                    setupRecyclerView()
 
-                    if (parentsList.isEmpty()) {
+                    if (childrenList.isEmpty()) {
                         binding.tvEmpty.visibility = android.view.View.VISIBLE
+                        binding.rvChildren.visibility = android.view.View.GONE
                     } else {
                         binding.tvEmpty.visibility = android.view.View.GONE
+                        binding.rvChildren.visibility = android.view.View.VISIBLE
                     }
                 }
             }
 
-            override fun onFailure(call: Call<ParentsListResponse>, t: Throwable) {
+            override fun onFailure(call: Call<ChildrenListResponse>, t: Throwable) {
                 Toast.makeText(this@ParentControlActivity, "Ошибка загрузки: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
     }
 
-    private fun setupParentsRecyclerView() {
-        binding.rvParents.layoutManager = LinearLayoutManager(this)
-        binding.rvParents.adapter = ParentsAdapter(parentsList)
+    private fun setupRecyclerView() {
+        binding.rvChildren.layoutManager = LinearLayoutManager(this)
+        binding.rvChildren.adapter = ChildrenAdapter(childrenList)
     }
 
-    private fun addParentByEmail(email: String) {
+    private fun addChildByEmail(email: String) {
         val request = AddByEmailRequest(email)
         api.requestParentByEmail("Token $token", request).enqueue(object : Callback<Map<String, Any>> {
             override fun onResponse(call: Call<Map<String, Any>>, response: Response<Map<String, Any>>) {
                 if (response.isSuccessful) {
                     Toast.makeText(this@ParentControlActivity, "Запрос отправлен", Toast.LENGTH_SHORT).show()
-                    binding.etParentEmail.text?.clear()
-                    loadParents()
+                    binding.etChildEmail.text?.clear()
+                    loadChildren()
                 } else {
                     when (response.code()) {
                         404 -> Toast.makeText(this@ParentControlActivity, "Пользователь не найден", Toast.LENGTH_SHORT).show()
@@ -97,45 +101,88 @@ class ParentControlActivity : AppCompatActivity() {
         })
     }
 
-    private fun requestUnlink(parent: Parent) {
-        val request = mapOf("target_parent_id" to parent.id)
-        api.unlinkByChild("Token $token", request).enqueue(object : Callback<Map<String, Any>> {
-            override fun onResponse(call: Call<Map<String, Any>>, response: Response<Map<String, Any>>) {
+    private fun removeChild(child: Child) {
+        AlertDialog.Builder(this)
+            .setTitle("Удаление ребенка")
+            .setMessage("Вы уверены, что хотите удалить ребенка \"${child.name}\"?")
+            .setPositiveButton("Удалить") { _, _ ->
+                performRemoveChild(child)
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
+    private fun performRemoveChild(child: Child) {
+        val request = ConnectionRequest(child.id)
+        api.unlinkByParent("Token $token", request).enqueue(object : Callback<Map<String, String>> {
+            override fun onResponse(call: Call<Map<String, String>>, response: Response<Map<String, String>>) {
                 if (response.isSuccessful) {
-                    Toast.makeText(this@ParentControlActivity, "Запрос на отвязку отправлен", Toast.LENGTH_SHORT).show()
-                    loadParents()
+                    Toast.makeText(this@ParentControlActivity, "Ребенок удален", Toast.LENGTH_SHORT).show()
+                    loadChildren()
                 } else {
                     Toast.makeText(this@ParentControlActivity, "Ошибка: ${response.code()}", Toast.LENGTH_SHORT).show()
                 }
             }
 
-            override fun onFailure(call: Call<Map<String, Any>>, t: Throwable) {
+            override fun onFailure(call: Call<Map<String, String>>, t: Throwable) {
                 Toast.makeText(this@ParentControlActivity, "Ошибка: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
     }
 
-    inner class ParentsAdapter(
-        private val parents: List<Parent>
-    ) : androidx.recyclerview.widget.RecyclerView.Adapter<ParentsAdapter.ViewHolder>() {
+    inner class ChildrenAdapter(
+        private val children: List<Child>
+    ) : androidx.recyclerview.widget.RecyclerView.Adapter<ChildrenAdapter.ViewHolder>() {
 
         override fun onCreateViewHolder(parent: android.view.ViewGroup, viewType: Int): ViewHolder {
-            val binding = com.example.myapplication.databinding.ItemParentRelationBinding.inflate(layoutInflater, parent, false)
+            val binding = com.example.myapplication.databinding.ItemChildBinding.inflate(layoutInflater, parent, false)
             return ViewHolder(binding)
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            val parent = parents[position]
-            holder.binding.tvName.text = parent.name
-            holder.binding.tvEmail.text = parent.email
-            holder.binding.btnUnlink.setOnClickListener {
-                requestUnlink(parent)
+            val child = children[position]
+            holder.binding.tvName.text = child.name
+            holder.binding.tvEmail.text = child.email
+
+            holder.binding.btnViewBooks.setOnClickListener {
+                api.getChildBookLimit("Token $token", child.id).enqueue(object : Callback<CheckBookLimitResponse> {
+                    override fun onResponse(call: Call<CheckBookLimitResponse>, response: Response<CheckBookLimitResponse>) {
+                        if (response.isSuccessful && response.body() != null) {
+                            val result = response.body()!!
+                            val intent = Intent(this@ParentControlActivity, ChildProfileActivity::class.java)
+                            intent.putExtra("child_id", child.id)
+                            intent.putExtra("child_name", child.name)
+                            intent.putExtra("child_email", child.email)
+                            intent.putExtra("child_limit", result.limit)
+                            intent.putExtra("child_current_count", result.current_count)
+                            startActivity(intent)
+                        } else {
+                            val intent = Intent(this@ParentControlActivity, ChildProfileActivity::class.java)
+                            intent.putExtra("child_id", child.id)
+                            intent.putExtra("child_name", child.name)
+                            intent.putExtra("child_email", child.email)
+                            startActivity(intent)
+                        }
+                    }
+
+                    override fun onFailure(call: Call<CheckBookLimitResponse>, t: Throwable) {
+                        val intent = Intent(this@ParentControlActivity, ChildProfileActivity::class.java)
+                        intent.putExtra("child_id", child.id)
+                        intent.putExtra("child_name", child.name)
+                        intent.putExtra("child_email", child.email)
+                        startActivity(intent)
+                    }
+                })
+            }
+
+            holder.binding.btnRemove.setOnClickListener {
+                removeChild(child)
             }
         }
 
-        override fun getItemCount() = parents.size
+        override fun getItemCount() = children.size
 
-        inner class ViewHolder(val binding: com.example.myapplication.databinding.ItemParentRelationBinding) :
+        inner class ViewHolder(val binding: com.example.myapplication.databinding.ItemChildBinding) :
             androidx.recyclerview.widget.RecyclerView.ViewHolder(binding.root)
     }
 }
