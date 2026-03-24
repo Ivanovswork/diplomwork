@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Основной градиент синий (Duolingo-стиль) -->
+    <color name="primary_blue">#3B82F6</color>
+    <color name="primary_blue_dark">#1E40AF</color>
+    <color name="primary_blue_light">#DBEAFE</color>
+    <!-- Акцент -->
+    <color name="accent_purple">#8B5CF6</color>
+    <!-- Фон -->
+    <color name="bg_white">#FFFFFF</color>
+    <color name="bg_light">#F8FAFC</color>
+    <!-- Текст -->
+    <color name="text_dark">#111827</color>
+    <color name="text_light">#6B7280</color>
+</resources>

@@ -1,0 +1,198 @@
+### 1. Регистрация нового пользователя
+POST http://localhost:8000/api/users/register/
+Content-Type: application/json
+
+{
+  "name": "Иван Ивановcкий",
+  "email": "dyplom_reading2@mail.ru",
+  "password": "Qwerty4321",
+  "password_confirm": "Qwerty4321",
+  "subscription_type": "inactive"
+}
+
+# Токен destira 28b2d32bb253efe63f71227449b5c3a27a1ac694
+# Токен dyplom_reading2 47e779401b9587bf9a4659927d4b4a464b49b5fd
+
+
+### 5. Логин (после подтверждения email)
+POST http://localhost:8000/api/users/login/
+Content-Type: application/json
+
+{
+  "email": "dyplom_reading2@mail.ru",
+  "password": "Qwerty4321"
+}
+
+
+### 8. Смена пароля (ЗАМЕНИ token на реальный из логина!)
+PUT http://localhost:8000/api/users/change-password/
+Content-Type: application/json
+Authorization: Token 28b2d32bb253efe63f71227449b5c3a27a1ac694 
+
+{
+  "old_password": "newpass123",
+  "new_password": "Qwerty4321",
+  "new_password_confirm": "Qwerty4321"
+}
+
+
+### 9. РОДИТЕЛЬ: Все свои связи (пусто пока)
+GET http://localhost:8000/api/books/connections/
+Authorization: Token 28b2d32bb253efe63f71227449b5c3a27a1ac694
+
+### 10. РЕБЕНОК: Запросы родителей (пусто пока)  
+GET http://localhost:8000/api/books/connections/parent-requests/
+Authorization: Token 47e779401b9587bf9a4659927d4b4a464b49b5fd
+
+### 11. РОДИТЕЛЬ: Отправить запрос ребенку (ID=2)
+POST http://localhost:8000/api/books/connections/request/
+Content-Type: application/json
+Authorization: Token 28b2d32bb253efe63f71227449b5c3a27a1ac694
+
+{
+  "target_user_id": 3
+}
+
+### 12. РЕБЕНОК: Проверить новые запросы родителей
+GET http://localhost:8000/api/books/connections/parent-requests/
+Authorization: Token 47e779401b9587bf9a4659927d4b4a464b49b5fd
+
+
+
+
+### 1. Родитель отправляет запрос ребенку (ID=2)
+POST http://localhost:8000/api/books/connections/request/
+Content-Type: application/json
+Authorization: Token 28b2d32bb253efe63f71227449b5c3a27a1ac694
+
+{
+  "target_user_id": 2
+}
+
+### 2. Ребенок подтверждает связь с родителем (ID=1)
+POST http://localhost:8000/api/books/connections/confirm/
+Content-Type: application/json
+Authorization: Token 47e779401b9587bf9a4659927d4b4a464b49b5fd
+
+{
+  "target_parent_id": 2
+}
+
+### 3. Ребенок отклоняет связь
+POST http://localhost:8000/api/books/connections/reject/
+Content-Type: application/json
+Authorization: Token 47e779401b9587bf9a4659927d4b4a464b49b5fd
+
+{
+  "target_parent_id": 2
+}
+
+### 4. Ребенок инициирует отвязку
+POST http://localhost:8000/api/books/connections/unlink-child/
+Content-Type: application/json
+Authorization: Token 47e779401b9587bf9a4659927d4b4a464b49b5fd
+
+{
+  "target_parent_id": 2
+}
+
+### 5. Родитель полностью удаляет связь
+POST http://localhost:8000/api/books/connections/unlink-parent/
+Content-Type: application/json
+Authorization: Token 28b2d32bb253efe63f71227449b5c3a27a1ac694
+ 
+{
+  "target_child_id": 3
+}
+
+
+
+
+
+
+
+
+### Иван отправляет запрос Маше в друзья
+POST http://localhost:8000/api/books/friends/request/
+Content-Type: application/json
+Authorization: Token 28b2d32bb253efe63f71227449b5c3a27a1ac694
+
+{
+  "target_user_id": 3
+}
+
+### Маша проверяет запросы в друзья
+GET http://localhost:8000/api/books/friends/requests/
+Authorization: Token 47e779401b9587bf9a4659927d4b4a464b49b5fd
+
+### Маша подтверждает дружбу с Иваном
+POST http://localhost:8000/api/books/friends/confirm/
+Content-Type: application/json
+Authorization: Token 47e779401b9587bf9a4659927d4b4a464b49b5fd
+
+{
+  "target_user_id": 2
+}
+
+### Иван проверяет свои связи (дружба активна)
+GET http://localhost:8000/api/books/connections/
+Authorization: Token 28b2d32bb253efe63f71227449b5c3a27a1ac694
+
+### Маша проверяет свои связи (дружба активна)
+GET http://localhost:8000/api/books/connections/
+Authorization: Token 47e779401b9587bf9a4659927d4b4a464b49b5fd
+
+###
+
+###
+### ✂️ 3. УДАЛЕНИЕ ДРУЗЬБЫ (любой может!)
+###
+
+### Иван удаляет Машу из друзей
+POST http://localhost:8000/api/books/friends/remove/
+Content-Type: application/json
+Authorization: Token 28b2d32bb253efe63f71227449b5c3a27a1ac694
+
+{
+  "target_user_id": 2
+}
+
+### Проверка: дружба удалена (у обоих пусто)
+GET http://localhost:8000/api/books/connections/
+Authorization: Token 28b2d32bb253efe63f71227449b5c3a27a1ac694
+
+GET http://localhost:8000/api/books/connections/
+Authorization: Token 47e779401b9587bf9a4659927d4b4a464b49b5fd
+
+###
+
+###
+### 🔄 4. ВТОРОЙ ТЕСТ (Иван + Петя)
+###
+
+### Иван → Петя в друзья
+POST http://localhost:8000/api/books/friends/request/
+Content-Type: application/json
+Authorization: Token TOKEN1_ИЗ_ЛОГИНА_ИВАНА
+
+{
+  "target_user_id": 3
+}
+
+### Петя подтверждает
+POST http://localhost:8000/api/books/friends/confirm/
+Content-Type: application/json
+Authorization: Token TOKEN3_ИЗ_ЛОГИНА_ПЕТИ
+
+{
+  "target_user_id": 1
+}
+
+### Петя удаляет Ивана (проверка двустороннего удаления)
+POST http://localhost:8000/api/books/friends/remove/
+Content-Type: application/json
+Authorization: Token TOKEN3_ИЗ_ЛОГИНА_ПЕТИ
+
+{
+  "target_user_id": 1
+}
