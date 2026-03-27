@@ -3,23 +3,25 @@ from datetime import timedelta
 from django.core.exceptions import ValidationError
 from users.models import User
 from books.models import Book, UserConnection
+from django.conf import settings
 
 
 class ReadingSession(models.Model):
+    STATUS_CHOICES = [
+        ('active', 'Активна'),
+        ('completed', 'Завершена'),
+        ('abandoned', 'Брошена'),
+    ]
+
+    book = models.ForeignKey('books.Book', on_delete=models.CASCADE, verbose_name="Книга",
+                             related_name='reading_sessions')
     start_page = models.PositiveIntegerField(verbose_name="Начальная страница")
-    end_page = models.PositiveIntegerField(verbose_name="Конечная страница")
+    end_page = models.PositiveIntegerField(verbose_name="Конечная страница", null=True, blank=True)
     start_datetime = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время начала")
     end_datetime = models.DateTimeField(null=True, blank=True, verbose_name="Дата и время окончания")
-    status = models.CharField(
-        max_length=20,
-        choices=[
-            ('active', 'Активна'),
-            ('completed', 'Завершена'),
-        ],
-        default='active',
-        verbose_name="Статус"
-    )
-    book = models.ForeignKey(Book, on_delete=models.CASCADE, verbose_name="Книга")
+    last_activity = models.DateTimeField(auto_now=True, verbose_name="Последняя активность")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active', verbose_name="Статус")
+    pages_read = models.PositiveIntegerField(default=0, verbose_name="Прочитано страниц в сессии")
 
     class Meta:
         verbose_name = "Сессия чтения"
@@ -30,10 +32,12 @@ class ReadingSession(models.Model):
 
 
 class PageReadingLog(models.Model):
-    session = models.ForeignKey(ReadingSession, on_delete=models.CASCADE, verbose_name="Сессия")
+    session = models.ForeignKey(ReadingSession, on_delete=models.CASCADE, verbose_name="Сессия",
+                                related_name='page_logs')
     page_number = models.PositiveIntegerField(verbose_name="Номер страницы")
-    time_spent = models.DurationField(verbose_name="Время")
-    words_count = models.PositiveIntegerField(verbose_name="Количество слов на странице")
+    time_spent = models.DurationField(verbose_name="Время чтения страницы")
+    words_count = models.PositiveIntegerField(verbose_name="Количество слов на странице", default=0)
+    completed_at = models.DateTimeField(auto_now_add=True, verbose_name="Время завершения страницы")
 
     class Meta:
         unique_together = ['session', 'page_number']
@@ -46,6 +50,20 @@ class PageReadingLog(models.Model):
 
     def __str__(self):
         return f"Страница {self.page_number} ({self.time_spent.total_seconds():.0f}с)"
+
+
+class UserReadingStreak(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reading_streak')
+    current_streak = models.PositiveIntegerField(default=0, verbose_name="Текущий стрик")
+    longest_streak = models.PositiveIntegerField(default=0, verbose_name="Самый длинный стрик")
+    last_read_date = models.DateField(null=True, blank=True, verbose_name="Дата последнего чтения")
+
+    class Meta:
+        verbose_name = "Стрик чтения"
+        verbose_name_plural = "Стрики чтения"
+
+    def __str__(self):
+        return f"{self.user.name}: {self.current_streak} дней"
 
 
 class Test(models.Model):

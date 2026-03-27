@@ -60,11 +60,13 @@ class MyBooksActivity : AppCompatActivity() {
                             .setPositiveButton("OK", null)
                             .show()
                     }
+                } else {
+                    Toast.makeText(this@MyBooksActivity, "Ошибка проверки лимита", Toast.LENGTH_SHORT).show()
                 }
             }
 
             override fun onFailure(call: Call<CheckBookLimitResponse>, t: Throwable) {
-                Toast.makeText(this@MyBooksActivity, "Ошибка проверки лимита", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MyBooksActivity, "Ошибка: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
     }
@@ -92,6 +94,8 @@ class MyBooksActivity : AppCompatActivity() {
                     binding.tvBooksCount.text = booksList.size.toString()
                     val totalPages = booksList.sumOf { it.pages_count }
                     binding.tvPagesCount.text = totalPages.toString()
+                } else {
+                    Toast.makeText(this@MyBooksActivity, "Ошибка загрузки книг", Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -192,6 +196,7 @@ class MyBooksActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val book = books[position]
+
             holder.binding.tvName.text = book.name
             holder.binding.tvPages.text = "${book.pages_count} стр."
             holder.binding.tvGoal.text = "Цель: ${book.daily_goal} стр./день"
@@ -209,6 +214,13 @@ class MyBooksActivity : AppCompatActivity() {
 
             holder.binding.btnDelete.setOnClickListener {
                 deleteBook(book)
+            }
+
+            holder.binding.root.setOnClickListener {
+                val intent = Intent(this@MyBooksActivity, BookDetailActivity::class.java)
+                intent.putExtra("book_id", book.id)
+                intent.putExtra("book_name", book.name)
+                startActivity(intent)
             }
         }
 

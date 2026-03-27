@@ -2,6 +2,7 @@ package com.example.myapplication
 
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.http.*
 
@@ -196,6 +197,65 @@ data class CheckBookLimitResponse(
     val current_count: Int,
     val limit: Int,
     val message: String
+)
+
+
+// Чтение
+data class BookStatsResponse(
+    val book_id: Int,
+    val book_name: String,
+    val total_pages: Int,
+    val pages_read: Int,
+    val progress_percent: Double,
+    val total_time_seconds: Double,
+    val total_time_formatted: String,
+    val avg_time_per_page_seconds: Double,
+    val total_words: Int,
+    val reading_speed_wpm: Double,
+    val total_sessions: Int,
+    val has_active_session: Boolean,
+    val active_session_id: Int?,
+    val last_page_read: Int
+)
+
+data class SessionResponse(
+    val session_id: Int,
+    val start_page: Int,
+    val current_page: Int,
+    val total_pages: Int
+)
+
+data class SavePageRequest(
+    val session_id: Int,
+    val page_number: Int,
+    val time_spent: Int,
+    val words_count: Int
+)
+
+data class SavePageResponse(
+    val success: Boolean,
+    val page_saved: Int,
+    val is_book_finished: Boolean,
+    val pages_read_in_session: Int,
+    val total_pages: Int
+)
+
+data class StreakResponse(
+    val current_streak: Int,
+    val longest_streak: Int,
+    val last_read_date: String?
+)
+
+data class ReadingStatsResponse(
+    val total_pages: Int,
+    val total_time_seconds: Double,
+    val total_time_formatted: String,
+    val total_words: Int,
+    val reading_speed_wpm: Double,
+    val books_in_progress: Int,
+    val books_completed: Int,
+    val total_sessions: Int,
+    val avg_session_duration_seconds: Double
 )
 
 
@@ -398,4 +458,50 @@ interface DjangoApi {
         @Header("Authorization") token: String,
         @Path("childId") childId: Int
     ): Call<CheckBookLimitResponse>
+
+
+    // ==================== ЧТЕНИЕ ====================
+
+    @GET("api/reading/book/{bookId}/stats/")
+    fun getBookStats(
+        @Header("Authorization") token: String,
+        @Path("bookId") bookId: Int
+    ): Call<BookStatsResponse>
+
+    @GET("api/reading/session/{bookId}/")
+    fun getOrCreateSession(
+        @Header("Authorization") token: String,
+        @Path("bookId") bookId: Int
+    ): Call<SessionResponse>
+
+    @POST("api/reading/page/save/")
+    fun savePageRead(
+        @Header("Authorization") token: String,
+        @Body body: SavePageRequest
+    ): Call<SavePageResponse>
+
+    @POST("api/reading/session/{sessionId}/continue/")
+    fun continueReading(
+        @Header("Authorization") token: String,
+        @Path("sessionId") sessionId: Int
+    ): Call<SessionResponse>
+
+    @POST("api/reading/session/{sessionId}/finish/")
+    fun finishReading(
+        @Header("Authorization") token: String,
+        @Path("sessionId") sessionId: Int
+    ): Call<Map<String, Boolean>>
+
+    @GET("api/reading/streak/")
+    fun getUserStreak(@Header("Authorization") token: String): Call<StreakResponse>
+
+    @GET("api/reading/stats/")
+    fun getReadingStats(@Header("Authorization") token: String): Call<ReadingStatsResponse>
+
+    @GET("api/reading/pdf-proxy/{bookId}/")
+    fun getPage(
+        @Header("Authorization") token: String,
+        @Path("bookId") bookId: Int,
+        @Query("page") page: Int
+    ): Call<ResponseBody>
 }

@@ -48,19 +48,16 @@ class HomeActivity : AppCompatActivity() {
             startActivity(Intent(this, ProfileActivity::class.java))
         }
 
-        binding.btnContinueReading.setOnClickListener {
-            Toast.makeText(this, "Скоро здесь будет чтение книг", Toast.LENGTH_SHORT).show()
-        }
-
         binding.btnMyBooks.setOnClickListener {
             startActivity(Intent(this, MyBooksActivity::class.java))
         }
 
         binding.btnStats.setOnClickListener {
-            Toast.makeText(this, "Скоро здесь будет статистика", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, ReadingStatsActivity::class.java))
         }
 
         loadUserStats()
+        loadUserStreak()
         loadRequestsCount()
         startPeriodicRequestsCheck()
     }
@@ -76,6 +73,22 @@ class HomeActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<UserStatsResponse>, t: Throwable) {
+                // Не показываем ошибку
+            }
+        })
+    }
+
+    private fun loadUserStreak() {
+        api.getUserStreak("Token $token").enqueue(object : Callback<StreakResponse> {
+            override fun onResponse(call: Call<StreakResponse>, response: Response<StreakResponse>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val streak = response.body()!!
+                    binding.tvStreakCount.text = streak.current_streak.toString()
+                    binding.tvLongestStreak.text = streak.longest_streak.toString()
+                }
+            }
+
+            override fun onFailure(call: Call<StreakResponse>, t: Throwable) {
                 // Не показываем ошибку
             }
         })
@@ -118,6 +131,7 @@ class HomeActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         loadUserStats()
+        loadUserStreak()
         loadRequestsCount()
     }
 }

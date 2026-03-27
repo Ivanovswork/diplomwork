@@ -85,7 +85,18 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Чтение (заглушка) -->
+        <activity
+            android:name=".BookDetailActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ReadingActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ReadingStatsActivity"
+            android:exported="false" />
+
 
     </application>
 
