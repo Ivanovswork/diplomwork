@@ -18,6 +18,7 @@ class BookDetailActivity : AppCompatActivity() {
     private lateinit var token: String
     private var bookId: Int = 0
     private var bookName: String = ""
+    private var readOnly: Boolean = false  // Флаг для родителя
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,6 +27,7 @@ class BookDetailActivity : AppCompatActivity() {
 
         bookId = intent.getIntExtra("book_id", 0)
         bookName = intent.getStringExtra("book_name") ?: "Книга"
+        readOnly = intent.getBooleanExtra("read_only", false)
 
         val prefs = getSharedPreferences("auth", MODE_PRIVATE)
         token = prefs.getString("token", "") ?: ""
@@ -38,19 +40,33 @@ class BookDetailActivity : AppCompatActivity() {
 
         binding.tvBookTitle.text = bookName
         binding.btnBack.setOnClickListener { finish() }
-        binding.btnRead.setOnClickListener { startReading() }
+
+        // Если родитель смотрит — скрываем кнопку чтения
+        if (readOnly) {
+            binding.btnRead.visibility = android.view.View.GONE
+        } else {
+            binding.btnRead.visibility = android.view.View.VISIBLE
+            binding.btnRead.setOnClickListener { startReading() }
+        }
 
         loadBookStats()
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (bookId != 0) {
+            loadBookStats()  // использует get_book_stats_with_daily_goal
+        }
+    }
+
     private fun loadBookStats() {
-        api.getBookStats("Token $token", bookId).enqueue(object : Callback<BookStatsResponse> {
+        api.getBookStatsWithDaily("Token $token", bookId).enqueue(object : Callback<BookStatsResponse> {
             override fun onResponse(call: Call<BookStatsResponse>, response: Response<BookStatsResponse>) {
                 if (response.isSuccessful && response.body() != null) {
                     val stats = response.body()!!
                     updateUI(stats)
                 } else {
-                    Toast.makeText(this@BookDetailActivity, "Ошибка загрузки статистики", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@BookDetailActivity, "Ошибка загрузки статистики: ${response.code()}", Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -69,6 +85,19 @@ class BookDetailActivity : AppCompatActivity() {
         binding.tvTotalWords.text = stats.total_words.toString()
         binding.tvReadingSpeed.text = "${stats.reading_speed_wpm.toInt()} слов/мин"
         binding.tvTotalSessions.text = stats.total_sessions.toString()
+
+        // Дневная цель
+        binding.tvDailyGoal.text = "${stats.pages_read_today} / ${stats.daily_goal} стр."
+        binding.tvDailyGoalRemaining.text = "Осталось: ${stats.daily_goal_remaining} стр."
+
+        // Цвета
+        if (stats.daily_goal_achieved) {
+            binding.tvDailyGoal.setTextColor(resources.getColor(android.R.color.holo_green_dark, null))
+            binding.tvDailyGoalRemaining.visibility = android.view.View.GONE
+        } else {
+            binding.tvDailyGoal.setTextColor(resources.getColor(android.R.color.white, null))
+            binding.tvDailyGoalRemaining.visibility = android.view.View.VISIBLE
+        }
 
         if (stats.has_active_session) {
             binding.btnRead.text = "Продолжить чтение"

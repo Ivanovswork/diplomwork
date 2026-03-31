@@ -4,15 +4,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/bg_light"
-    android:padding="16dp">
+    android:background="@color/bg_light">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:padding="16dp"
         android:gravity="center_vertical"
-        android:layout_marginBottom="16dp">
+        android:background="@color/bg_white"
+        android:elevation="4dp">
 
         <ImageButton
             android:id="@+id/btnBack"
@@ -27,65 +28,84 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Профиль ребенка"
-            android:textSize="24sp"
+            android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="@color/text_dark"
             android:gravity="center" />
 
-        <ImageButton
-            android:id="@+id/btnAddBook"
+        <View
             android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@android:drawable/ic_input_add"
-            android:background="@android:color/transparent"
-            android:contentDescription="Добавить книгу" />
+            android:layout_height="40dp" />
 
     </LinearLayout>
 
-    <com.google.android.material.card.MaterialCardView
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="2dp">
+        android:layout_height="match_parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp"
-            android:gravity="center">
+            android:padding="16dp">
 
-            <TextView
-                android:id="@+id/tvChildName"
-                android:layout_width="wrap_content"
+            <!-- Информация о ребенке -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Имя ребенка"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_dark" />
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp">
 
-            <TextView
-                android:id="@+id/tvChildEmail"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="child@example.com"
-                android:textSize="14sp"
-                android:textColor="@color/text_light"
-                android:layout_marginTop="4dp" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp"
+                    android:gravity="center">
 
+                    <ImageView
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        android:src="@drawable/ic_profile"
+                        android:background="@color/primary_blue_light"
+                        android:padding="12dp"
+                        android:layout_marginBottom="12dp" />
+
+                    <TextView
+                        android:id="@+id/tvChildName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Имя ребенка"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_dark" />
+
+                    <TextView
+                        android:id="@+id/tvChildEmail"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="child@example.com"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_light"
+                        android:layout_marginTop="4dp" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Статистика книг -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="16dp">
+                android:layout_marginBottom="16dp">
 
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginEnd="8dp"
-                    app:cardCornerRadius="12dp"
+                    app:cardCornerRadius="16dp"
                     app:cardElevation="1dp">
 
                     <LinearLayout
@@ -93,13 +113,13 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="12dp">
+                        android:padding="16dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="📚"
-                            android:textSize="24sp" />
+                            android:textSize="28sp" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -113,9 +133,10 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0"
-                            android:textSize="18sp"
+                            android:textSize="24sp"
                             android:textStyle="bold"
                             android:textColor="@color/primary_blue" />
+
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -124,7 +145,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="8dp"
-                    app:cardCornerRadius="12dp"
+                    app:cardCornerRadius="16dp"
                     app:cardElevation="1dp">
 
                     <LinearLayout
@@ -132,13 +153,13 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="12dp">
+                        android:padding="16dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="📖"
-                            android:textSize="24sp" />
+                            android:textSize="28sp" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -152,31 +173,227 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0"
-                            android:textSize="18sp"
+                            android:textSize="24sp"
                             android:textStyle="bold"
                             android:textColor="@color/primary_blue" />
+
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
             </LinearLayout>
+
+            <!-- Книги ребенка -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="📖 Книги"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_dark"
+                android:layout_marginBottom="12dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
+
+                <EditText
+                    android:id="@+id/etBookSearch"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Поиск книги"
+                    android:padding="12dp"
+                    android:background="@drawable/edit_text_bg"
+                    android:visibility="gone" />
+
+                <Button
+                    android:id="@+id/btnAddBook"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="+ Добавить книгу"
+                    android:backgroundTint="@color/primary_blue"
+                    android:layout_marginStart="8dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="У ребенка нет книг"
+                android:textSize="16sp"
+                android:textColor="@color/text_light"
+                android:gravity="center"
+                android:padding="32dp"
+                android:visibility="gone" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvBooks"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp" />
+
+            <!-- Блок статистики тестов -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="📊 Статистика тестов"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_dark"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="12dp" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/testStatsContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="📝"
+                                android:textSize="24sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Всего тестов"
+                                android:textSize="12sp"
+                                android:textColor="@color/text_light" />
+
+                            <TextView
+                                android:id="@+id/tvTotalTests"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/primary_blue" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="⭐"
+                                android:textSize="24sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Средний балл"
+                                android:textSize="12sp"
+                                android:textColor="@color/text_light" />
+
+                            <TextView
+                                android:id="@+id/tvAverageScore"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0%"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/primary_blue" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="✅"
+                                android:textSize="24sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Пройдено"
+                                android:textSize="12sp"
+                                android:textColor="@color/text_light" />
+
+                            <TextView
+                                android:id="@+id/tvPassedTests"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0 / 0"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/primary_blue" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Результаты тестов"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_dark"
+                        android:layout_marginBottom="8dp" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvTestResults"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/tvNoTestResults"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Нет пройденных тестов"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_light"
+                        android:gravity="center"
+                        android:padding="16dp"
+                        android:visibility="gone" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
         </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
-
-    <TextView
-        android:id="@+id/tvEmpty"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="У ребенка нет книг"
-        android:textSize="16sp"
-        android:textColor="@color/text_light"
-        android:gravity="center"
-        android:padding="32dp"
-        android:visibility="gone" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvBooks"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone" />
+    </ScrollView>
 
 </LinearLayout>

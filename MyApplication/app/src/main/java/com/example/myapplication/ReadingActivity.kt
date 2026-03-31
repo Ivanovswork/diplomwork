@@ -1,6 +1,7 @@
 package com.example.myapplication
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -37,9 +38,11 @@ class ReadingActivity : AppCompatActivity() {
     private var isReading = false
     private var isPageLoaded = false
     private var currentPdfFile: File? = null
+    private var dailyGoalAchievedNotified = false
 
     companion object {
         private const val TAG = "ReadingActivity"
+        private const val REQUEST_CODE_TEST = 1001
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -106,7 +109,7 @@ class ReadingActivity : AppCompatActivity() {
     }
 
     private fun loadPage() {
-        Log.d(TAG, "loadPage: page=$currentPage")
+        Log.d(TAG, "loadPage: page=$currentPage, totalPages=$totalPages")
         isPageLoaded = false
 
         api.getPage("Token $token", bookId, currentPage).enqueue(object : Callback<ResponseBody> {
@@ -158,126 +161,29 @@ class ReadingActivity : AppCompatActivity() {
     <title>Страница $currentPage</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        html, body {
-            width: 100%;
-            height: 100%;
-            background: #1a1a2e;
-            overflow: hidden;
-            position: fixed;
-            top: 0;
-            left: 0;
-        }
-        
-        #pdf-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #1a1a2e;
-            overflow: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        #pdf-canvas {
-            display: block;
-            width: auto;
-            height: auto;
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-            border-radius: 8px;
-            cursor: grab;
-            touch-action: pinch-zoom pan-x pan-y;
-        }
-        
-        #pdf-canvas:active {
-            cursor: grabbing;
-        }
-        
-        .loading {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #e0e7ff;
-            font-size: 18px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            text-align: center;
-            background: rgba(0,0,0,0.8);
-            padding: 20px 32px;
-            border-radius: 48px;
-            backdrop-filter: blur(10px);
-            z-index: 100;
-            white-space: nowrap;
-        }
-        
-        .page-info {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.7);
-            color: #e0e7ff;
-            padding: 8px 20px;
-            border-radius: 40px;
-            font-size: 14px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-weight: 500;
-            backdrop-filter: blur(20px);
-            z-index: 100;
-            pointer-events: none;
-        }
-        
-        @media (max-width: 600px) {
-            .page-info {
-                bottom: 12px;
-                padding: 6px 16px;
-                font-size: 12px;
-            }
-            .loading {
-                font-size: 14px;
-                padding: 16px 24px;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { width: 100%; height: 100%; background: #1a1a2e; overflow: hidden; position: fixed; top: 0; left: 0; }
+        #pdf-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: #1a1a2e; overflow: auto; -webkit-overflow-scrolling: touch; }
+        #pdf-canvas { display: block; width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: 0 8px 32px rgba(0,0,0,0.4); border-radius: 8px; cursor: grab; touch-action: pinch-zoom pan-x pan-y; }
+        #pdf-canvas:active { cursor: grabbing; }
+        .loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #e0e7ff; font-size: 18px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center; background: rgba(0,0,0,0.8); padding: 20px 32px; border-radius: 48px; backdrop-filter: blur(10px); z-index: 100; white-space: nowrap; }
+        .page-info { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: #e0e7ff; padding: 8px 20px; border-radius: 40px; font-size: 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-weight: 500; backdrop-filter: blur(20px); z-index: 100; pointer-events: none; }
+        @media (max-width: 600px) { .page-info { bottom: 12px; padding: 6px 16px; font-size: 12px; } .loading { font-size: 14px; padding: 16px 24px; } }
     </style>
 </head>
 <body>
-    <div id="pdf-container">
-        <div class="loading">📖 Загрузка страницы $currentPage из $totalPages...</div>
-    </div>
+    <div id="pdf-container"><div class="loading">📖 Загрузка страницы $currentPage из $totalPages...</div></div>
     <div class="page-info">Страница <strong>$currentPage</strong> из <strong>$totalPages</strong></div>
-    
     <script>
         (function() {
             console.log('PDF.js viewer starting...');
-            
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-            
             var pdfUrl = '$pdfUrl';
             var container = document.getElementById('pdf-container');
             var loadingDiv = document.querySelector('.loading');
-            
-            var maxScale = 2.5;
-            var minScale = 0.8;
-            var currentScale = 1.2;
-            var currentPage = $currentPage;
-            var totalPages = $totalPages;
-            
+            var maxScale = 2.5, minScale = 0.8, currentScale = 1.2;
             function renderPage(page, scale) {
                 var viewport = page.getViewport({scale: scale});
-                
                 var canvas = document.createElement('canvas');
                 canvas.id = 'pdf-canvas';
                 canvas.width = viewport.width;
@@ -286,59 +192,35 @@ class ReadingActivity : AppCompatActivity() {
                 canvas.style.height = 'auto';
                 canvas.style.maxWidth = '100%';
                 canvas.style.maxHeight = '100%';
-                
                 container.innerHTML = '';
                 container.appendChild(canvas);
-                
                 var context = canvas.getContext('2d');
-                var renderContext = {
-                    canvasContext: context,
-                    viewport: viewport
-                };
-                
-                return page.render(renderContext).promise;
+                return page.render({canvasContext: context, viewport: viewport}).promise;
             }
-            
             function adjustScaleAndRender(page) {
                 var viewport = page.getViewport({scale: 1});
-                var windowWidth = window.innerWidth;
-                var windowHeight = window.innerHeight;
-                
-                var scaleByWidth = (windowWidth - 40) / viewport.width;
-                var scaleByHeight = (windowHeight - 80) / viewport.height;
-                
+                var scaleByWidth = (window.innerWidth - 40) / viewport.width;
+                var scaleByHeight = (window.innerHeight - 80) / viewport.height;
                 currentScale = Math.min(scaleByWidth, scaleByHeight, maxScale);
                 currentScale = Math.max(currentScale, minScale);
-                
                 return renderPage(page, currentScale);
             }
-            
             pdfjsLib.getDocument(pdfUrl).promise
-                .then(function(pdf) {
-                    console.log('PDF loaded, pages:', pdf.numPages);
-                    return pdf.getPage(1);
-                })
+                .then(function(pdf) { return pdf.getPage(1); })
                 .then(function(page) {
-                    console.log('Page loaded, rendering...');
                     loadingDiv.textContent = '🎨 Рендеринг страницы...';
                     return adjustScaleAndRender(page);
                 })
                 .then(function() {
-                    console.log('Page rendered successfully');
                     loadingDiv.style.display = 'none';
                     window.location.href = 'reading://page_loaded';
                 })
                 .catch(function(error) {
-                    console.error('PDF Error:', error);
                     loadingDiv.innerHTML = '❌ Ошибка: ' + error.message;
                     loadingDiv.style.backgroundColor = '#ff6b6b';
-                    loadingDiv.style.color = 'white';
                 });
-            
             window.addEventListener('resize', function() {
-                if (window.pdfPage) {
-                    adjustScaleAndRender(window.pdfPage);
-                }
+                if (window.pdfPage) adjustScaleAndRender(window.pdfPage);
             });
         })();
     </script>
@@ -350,26 +232,47 @@ class ReadingActivity : AppCompatActivity() {
     private fun getOrCreateSession() {
         api.getOrCreateSession("Token $token", bookId).enqueue(object : Callback<SessionResponse> {
             override fun onResponse(call: Call<SessionResponse>, response: Response<SessionResponse>) {
-                Log.d(TAG, "Session response: ${response.code()}")
                 if (response.isSuccessful && response.body() != null) {
                     val session = response.body()!!
                     sessionId = session.session_id
                     currentPage = session.current_page
                     totalPages = session.total_pages
-                    Log.d(TAG, "Session: id=$sessionId, page=$currentPage/$totalPages")
+
+                    updateDailyGoal()  // Загружаем дневную цель при старте
+
                     updateUI()
                     loadPage()
                 } else {
-                    Log.e(TAG, "Session failed: ${response.code()}")
                     Toast.makeText(this@ReadingActivity, "Ошибка сессии", Toast.LENGTH_SHORT).show()
                     finish()
                 }
             }
             override fun onFailure(call: Call<SessionResponse>, t: Throwable) {
-                Log.e(TAG, "Session network error: ${t.message}")
                 Toast.makeText(this@ReadingActivity, "Сеть: ${t.message}", Toast.LENGTH_SHORT).show()
                 finish()
             }
+        })
+    }
+
+    // ========== НОВЫЙ МЕТОД ДЛЯ ОБНОВЛЕНИЯ СТАТИСТИКИ ==========
+    private fun updateDailyGoal() {
+        api.getBookStatsWithDaily("Token $token", bookId).enqueue(object : Callback<BookStatsResponse> {
+            override fun onResponse(call: Call<BookStatsResponse>, response: Response<BookStatsResponse>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val stats = response.body()!!
+                    Log.d(TAG, "Daily goal: pages_read=${stats.pages_read}, pages_today=${stats.pages_read_today}, goal=${stats.daily_goal}")
+
+                    if (!stats.daily_goal_achieved) {
+                        binding.tvDailyGoal.visibility = android.view.View.VISIBLE
+                        binding.tvDailyGoal.text = "Цель: ${stats.pages_read_today}/${stats.daily_goal} стр."
+                        dailyGoalAchievedNotified = false
+                    } else {
+                        binding.tvDailyGoal.visibility = android.view.View.GONE
+                        dailyGoalAchievedNotified = true
+                    }
+                }
+            }
+            override fun onFailure(call: Call<BookStatsResponse>, t: Throwable) {}
         })
     }
 
@@ -409,6 +312,66 @@ class ReadingActivity : AppCompatActivity() {
             return
         }
 
+        // Проверяем, нужно ли проходить тест
+        api.checkTestRequired("Token $token", sessionId).enqueue(object : Callback<CheckTestResponse> {
+            override fun onResponse(call: Call<CheckTestResponse>, response: Response<CheckTestResponse>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val check = response.body()!!
+                    if (check.requires_test) {
+                        showTestRequiredDialog(check)
+                        return
+                    }
+                }
+                performSavePage()
+            }
+            override fun onFailure(call: Call<CheckTestResponse>, t: Throwable) {
+                performSavePage()
+            }
+        })
+    }
+
+    private fun showTestRequiredDialog(check: CheckTestResponse) {
+        val message = if (check.retake) {
+            "Тест не пройден. Перечитайте страницы ${check.start_page}-${check.end_page} и пройдите тест заново."
+        } else {
+            check.message ?: "Пройдите тест перед продолжением чтения"
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Тест на понимание")
+            .setMessage(message)
+            .setPositiveButton("Пройти тест") { _, _ ->
+                val intent = Intent(this, TestActivity::class.java)
+                intent.putExtra("test_id", check.test_id)
+                intent.putExtra("book_id", bookId)
+                intent.putExtra("book_name", bookName)
+                intent.putExtra("start_page", check.start_page ?: 1)
+                intent.putExtra("end_page", check.end_page ?: 10)
+                startActivityForResult(intent, REQUEST_CODE_TEST)
+            }
+            .setNegativeButton("Перечитать страницы") { _, _ ->
+                val startPage = check.start_page ?: 1
+                currentPage = startPage
+                updateUI()
+                loadPage()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE_TEST && resultCode == RESULT_OK) {
+            val testPassed = data?.getBooleanExtra("test_passed", false) ?: false
+            if (testPassed) {
+                performSavePage()
+            } else {
+                Toast.makeText(this, "Тест не пройден. Перечитайте страницы и попробуйте снова.", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun performSavePage() {
         stopTimer()
         val timeSpent = ((System.currentTimeMillis() - startTime) / 1000).toInt()
 
@@ -428,10 +391,38 @@ class ReadingActivity : AppCompatActivity() {
             override fun onResponse(call: Call<SavePageResponse>, response: Response<SavePageResponse>) {
                 binding.btnNextPage.isEnabled = true
                 if (response.isSuccessful && response.body() != null) {
+                    val result = response.body()!!
                     Toast.makeText(this@ReadingActivity, "✅ $currentPage сохранена ($timeSpent сек)", Toast.LENGTH_SHORT).show()
                     currentPdfFile?.delete()
+
+                    // ========== ВАЖНО: ОБНОВЛЯЕМ СТАТИСТИКУ ПОСЛЕ СОХРАНЕНИЯ ==========
+                    updateDailyGoal()
+
+                    // Проверяем, создан ли тест
+                    if (result.test_created) {
+                        Toast.makeText(this@ReadingActivity, "📝 Создан новый тест! Пройдите его перед продолжением.", Toast.LENGTH_LONG).show()
+                        api.checkTestRequired("Token $token", sessionId).enqueue(object : Callback<CheckTestResponse> {
+                            override fun onResponse(call: Call<CheckTestResponse>, response: Response<CheckTestResponse>) {
+                                if (response.isSuccessful && response.body() != null) {
+                                    val check = response.body()!!
+                                    if (check.requires_test) {
+                                        showTestRequiredDialog(check)
+                                        return
+                                    }
+                                }
+                            }
+                            override fun onFailure(call: Call<CheckTestResponse>, t: Throwable) {}
+                        })
+                    }
+
                     currentPage++
-                    if (currentPage > totalPages) currentPage = 1
+
+                    if (currentPage > totalPages) {
+                        Toast.makeText(this@ReadingActivity, "📖 Книга прочитана! Поздравляем!", Toast.LENGTH_LONG).show()
+                        finishReading()
+                        return
+                    }
+
                     updateUI()
                     loadPage()
                 } else {
@@ -454,13 +445,25 @@ class ReadingActivity : AppCompatActivity() {
         stopTimer()
         AlertDialog.Builder(this)
             .setTitle("Завершить чтение")
-            .setMessage("Сохранить прогресс?")
+            .setMessage("Вы действительно хотите завершить чтение?")
             .setPositiveButton("Да") { _, _ ->
-                currentPdfFile?.delete()
-                finish()
+                closeSession()
             }
             .setNegativeButton("Отмена", null)
             .show()
+    }
+
+    private fun closeSession() {
+        api.finishReading("Token $token", sessionId).enqueue(object : Callback<Map<String, Boolean>> {
+            override fun onResponse(call: Call<Map<String, Boolean>>, response: Response<Map<String, Boolean>>) {
+                currentPdfFile?.delete()
+                finish()
+            }
+            override fun onFailure(call: Call<Map<String, Boolean>>, t: Throwable) {
+                currentPdfFile?.delete()
+                finish()
+            }
+        })
     }
 
     override fun onBackPressed() {

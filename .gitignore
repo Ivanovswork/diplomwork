@@ -18,3 +18,50 @@ mobile-app/local.properties
 # OS
 .DS_Store
 Thumbs.db
+
+# Hugging Face models cache
+.cache/huggingface/
+~/.cache/huggingface/
+models/
+*.bin
+*.safetensors
+*.msgpack
+
+# PyTorch cache
+*.pth
+*.pt
+*.pkl
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# IDE
+
+*.swo
+
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+/media/
+/staticfiles/
+
+# Environment variables
+.env.local
+.env.production
+
+# Hugging Face specific
+huggingface/
+.huggingface/
+transformers_cache/
+torch_cache/

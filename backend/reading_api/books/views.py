@@ -626,7 +626,7 @@ def list_my_books(request):
         user=request.user,
         status__in=['in_progress', 'completed']
     ).order_by('-upload_date')
-    serializer = BookListSerializer(books, many=True)
+    serializer = BookListSerializer(books, many=True, context={'request': request})
     return Response({
         "my_books": serializer.data,
         "count": len(serializer.data)
@@ -648,7 +648,7 @@ def list_child_books(request, child_id):
         user_id=child_id,
         status__in=['in_progress', 'completed']
     ).order_by('-upload_date')
-    serializer = BookListSerializer(books, many=True)
+    serializer = BookListSerializer(books, many=True, context={'request': request})
     return Response({
         "child_books": serializer.data,
         "count": len(serializer.data)
@@ -676,6 +676,12 @@ def delete_book(request, book_id):
 
         if not is_owner and not is_parent:
             return Response({"error": "Нет прав для удаления"}, status=status.HTTP_403_FORBIDDEN)
+
+        # Если книга уже завершена, просто удаляем контент
+        if book.status == 'completed':
+            book.content = None
+            book.save(update_fields=['content'])
+            return Response({"message": "Контент книги удален"})
 
         book.content = None
         book.status = 'deleted'
@@ -768,14 +774,14 @@ def get_book_limit(request):
     book_limit = 10 if user.subscription_type == 'active' else 1
     current_count = Book.objects.filter(
         user=user,
-        status__in=['in_progress', 'completed']
+        status='in_progress'
     ).count()
 
     return Response({
         'can_upload': current_count < book_limit,
         'current_count': current_count,
         'limit': book_limit,
-        'message': f'У вас {current_count} из {book_limit} книг'
+        'message': f'У вас {current_count} из {book_limit} активных книг'
     })
 
 
@@ -801,14 +807,14 @@ def get_child_book_limit(request, child_id):
         book_limit = 10 if child.subscription_type == 'active' else 1
         current_count = Book.objects.filter(
             user=child,
-            status__in=['in_progress', 'completed']
+            status='in_progress'
         ).count()
 
         return Response({
             'can_upload': current_count < book_limit,
             'current_count': current_count,
             'limit': book_limit,
-            'message': f'У ребенка {current_count} из {book_limit} книг'
+            'message': f'У ребенка {current_count} из {book_limit} активных книг'
         })
     except User.DoesNotExist:
         return Response({"error": "Ребенок не найден"}, status=status.HTTP_404_NOT_FOUND)
@@ -817,16 +823,20 @@ def get_child_book_limit(request, child_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_user_stats(request):
-    """Получить статистику пользователя (количество книг и страниц)"""
+    """Получить статистику пользователя (количество активных книг и страниц)"""
     user = request.user
 
+    # Только активные книги (in_progress)
     books = Book.objects.filter(
         user=user,
-        status__in=['in_progress', 'completed']
+        status='in_progress'
     )
 
     books_count = books.count()
-    total_pages = books.aggregate(total=models.Sum('pages_count'))['total'] or 0
+
+    # Общее количество страниц из всех книг (включая завершенные)
+    all_books = Book.objects.filter(user=user)
+    total_pages = sum(b.pages_count for b in all_books)
 
     return Response({
         'books_count': books_count,

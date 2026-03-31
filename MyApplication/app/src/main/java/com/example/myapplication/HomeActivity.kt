@@ -62,22 +62,6 @@ class HomeActivity : AppCompatActivity() {
         startPeriodicRequestsCheck()
     }
 
-    private fun loadUserStats() {
-        api.getUserStats("Token $token").enqueue(object : Callback<UserStatsResponse> {
-            override fun onResponse(call: Call<UserStatsResponse>, response: Response<UserStatsResponse>) {
-                if (response.isSuccessful && response.body() != null) {
-                    val stats = response.body()!!
-                    binding.tvBooksCount.text = stats.books_count.toString()
-                    binding.tvPagesCount.text = stats.total_pages.toString()
-                }
-            }
-
-            override fun onFailure(call: Call<UserStatsResponse>, t: Throwable) {
-                // Не показываем ошибку
-            }
-        })
-    }
-
     private fun loadUserStreak() {
         api.getUserStreak("Token $token").enqueue(object : Callback<StreakResponse> {
             override fun onResponse(call: Call<StreakResponse>, response: Response<StreakResponse>) {
@@ -128,9 +112,36 @@ class HomeActivity : AppCompatActivity() {
         handler.removeCallbacks(requestsCountRunnable!!)
     }
 
+
+    private fun loadUserStats() {
+        api.getUserStats("Token $token").enqueue(object : Callback<UserStatsResponse> {
+            override fun onResponse(call: Call<UserStatsResponse>, response: Response<UserStatsResponse>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val stats = response.body()!!
+                    binding.tvBooksCount.text = stats.books_count.toString()
+                    binding.tvPagesCount.text = stats.total_pages.toString()
+                }
+            }
+            override fun onFailure(call: Call<UserStatsResponse>, t: Throwable) {}
+        })
+    }
+
+    private fun loadReadingStats() {
+        api.getReadingStats("Token $token").enqueue(object : Callback<ReadingStatsResponse> {
+            override fun onResponse(call: Call<ReadingStatsResponse>, response: Response<ReadingStatsResponse>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val stats = response.body()!!
+                    // Здесь можно обновить UI, если нужно
+                }
+            }
+            override fun onFailure(call: Call<ReadingStatsResponse>, t: Throwable) { }
+        })
+    }
+
     override fun onResume() {
         super.onResume()
-        loadUserStats()
+        loadUserStats()      // использует getUserStats (books_count, total_pages)
+        loadReadingStats()   // использует getReadingStats (общая статистика чтения)
         loadUserStreak()
         loadRequestsCount()
     }

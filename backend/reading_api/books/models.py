@@ -59,3 +59,13 @@ class Book(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.pages_count} стр.)"
+
+    @property
+    def is_active(self):
+        """Активна ли книга (не удалена и не завершена)"""
+        return self.status == 'in_progress'
+
+    @property
+    def is_completed(self):
+        """Завершена ли книга"""
+        return self.status == 'completed'

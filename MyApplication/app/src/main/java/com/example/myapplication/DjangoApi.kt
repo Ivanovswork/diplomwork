@@ -200,7 +200,7 @@ data class CheckBookLimitResponse(
 )
 
 
-// Чтение
+// Чтение - Статистика книги
 data class BookStatsResponse(
     val book_id: Int,
     val book_name: String,
@@ -215,16 +215,36 @@ data class BookStatsResponse(
     val total_sessions: Int,
     val has_active_session: Boolean,
     val active_session_id: Int?,
-    val last_page_read: Int
+    val last_page_read: Int,
+    val daily_goal: Int,
+    val pages_read_today: Int,
+    val daily_goal_achieved: Boolean,
+    val daily_goal_percent: Int,
+    val daily_goal_remaining: Int
 )
 
+// Чтение - Сессия
 data class SessionResponse(
     val session_id: Int,
     val start_page: Int,
     val current_page: Int,
-    val total_pages: Int
+    val total_pages: Int,
+    val is_book_finished: Boolean? = false
 )
 
+data class SessionProgressResponse(
+    val session_id: Int,
+    val start_page: Int,
+    val end_page: Int?,
+    val pages_read: Int,
+    val status: String,
+    val current_page: Int,
+    val total_pages: Int,
+    val is_active: Boolean,
+    val is_completed: Boolean
+)
+
+// Чтение - Сохранение страницы
 data class SavePageRequest(
     val session_id: Int,
     val page_number: Int,
@@ -237,15 +257,23 @@ data class SavePageResponse(
     val page_saved: Int,
     val is_book_finished: Boolean,
     val pages_read_in_session: Int,
-    val total_pages: Int
+    val total_pages: Int,
+    val remaining_pages: Int,
+    val daily_goal_completed: Boolean = false,
+    val pages_read_today: Int = 0,
+    val daily_goal: Int = 0,
+    val test_created: Boolean = false,      // ← новое поле
+    val test_id: Int? = null                // ← новое поле
 )
 
+// Чтение - Стрик
 data class StreakResponse(
     val current_streak: Int,
     val longest_streak: Int,
     val last_read_date: String?
 )
 
+// Чтение - Общая статистика
 data class ReadingStatsResponse(
     val total_pages: Int,
     val total_time_seconds: Double,
@@ -258,7 +286,78 @@ data class ReadingStatsResponse(
     val avg_session_duration_seconds: Double
 )
 
+// Модели для тестов
+data class TestResponse(
+    val test_id: Int,
+    val status: String,
+    val start_page: Int,
+    val end_page: Int,
+    val questions: List<TestQuestion>,
+    val score: Int,
+    val total: Int
+)
 
+data class TestQuestion(
+    val id: Int,
+    val text: String,
+    val answers: List<TestAnswer>
+)
+
+data class TestAnswer(
+    val id: Int,
+    val text: String
+)
+
+data class SubmitTestRequest(
+    val answers: Map<String, Int>
+)
+
+data class SubmitTestResponse(
+    val correct: Int,
+    val total: Int,
+    val passed: Boolean,
+    val message: String
+)
+
+data class CheckTestResponse(
+    val requires_test: Boolean,
+    val test_id: Int? = null,
+    val message: String? = null,
+    val start_page: Int? = null,
+    val end_page: Int? = null,
+    val retake: Boolean = false
+)
+
+data class BookTestStatsResponse(
+    val total_tests: Int,
+    val average_score: Double,
+    val passed_tests: Int,
+    val results: List<TestResult>
+)
+
+data class TestResult(
+    val id: Int,
+    val test_id: Int,
+    val correct_answers: Int,
+    val total_questions: Int,
+    val score_percent: Int,
+    val completed_at: String,
+    val start_page: Int,
+    val end_page: Int
+)
+
+data class RefreshStatsResponse(
+    val book_id: Int,
+    val book_name: String,
+    val total_pages: Int,
+    val pages_read: Int,
+    val progress_percent: Double,
+    val daily_goal: Int,
+    val pages_read_today: Int,
+    val daily_goal_achieved: Boolean,
+    val daily_goal_percent: Int,
+    val daily_goal_remaining: Int
+)
 // ==================== ИНТЕРФЕЙС API ====================
 
 interface DjangoApi {
@@ -395,7 +494,7 @@ interface DjangoApi {
     fun getMyConnections(@Header("Authorization") token: String): Call<ConnectionsResponse>
 
 
-    // ==================== СТАТИСТИКА ====================
+    // ==================== СТАТИСТИКА ПОЛЬЗОВАТЕЛЯ ====================
 
     @GET("api/books/stats/")
     fun getUserStats(@Header("Authorization") token: String): Call<UserStatsResponse>
@@ -462,23 +561,31 @@ interface DjangoApi {
 
     // ==================== ЧТЕНИЕ ====================
 
+    // Статистика книги
     @GET("api/reading/book/{bookId}/stats/")
     fun getBookStats(
         @Header("Authorization") token: String,
         @Path("bookId") bookId: Int
     ): Call<BookStatsResponse>
 
+    @GET("api/reading/book/{bookId}/refresh-stats/")
+    fun refreshBookStats(
+        @Header("Authorization") token: String,
+        @Path("bookId") bookId: Int
+    ): Call<RefreshStatsResponse>
+
+    // Сессии
     @GET("api/reading/session/{bookId}/")
     fun getOrCreateSession(
         @Header("Authorization") token: String,
         @Path("bookId") bookId: Int
     ): Call<SessionResponse>
 
-    @POST("api/reading/page/save/")
-    fun savePageRead(
+    @GET("api/reading/session/progress/{sessionId}/")
+    fun getSessionProgress(
         @Header("Authorization") token: String,
-        @Body body: SavePageRequest
-    ): Call<SavePageResponse>
+        @Path("sessionId") sessionId: Int
+    ): Call<SessionProgressResponse>
 
     @POST("api/reading/session/{sessionId}/continue/")
     fun continueReading(
@@ -492,11 +599,12 @@ interface DjangoApi {
         @Path("sessionId") sessionId: Int
     ): Call<Map<String, Boolean>>
 
-    @GET("api/reading/streak/")
-    fun getUserStreak(@Header("Authorization") token: String): Call<StreakResponse>
-
-    @GET("api/reading/stats/")
-    fun getReadingStats(@Header("Authorization") token: String): Call<ReadingStatsResponse>
+    // Страницы
+    @POST("api/reading/page/save/")
+    fun savePageRead(
+        @Header("Authorization") token: String,
+        @Body body: SavePageRequest
+    ): Call<SavePageResponse>
 
     @GET("api/reading/pdf-proxy/{bookId}/")
     fun getPage(
@@ -504,4 +612,49 @@ interface DjangoApi {
         @Path("bookId") bookId: Int,
         @Query("page") page: Int
     ): Call<ResponseBody>
+
+    // Стрик и общая статистика
+    @GET("api/reading/streak/")
+    fun getUserStreak(@Header("Authorization") token: String): Call<StreakResponse>
+
+    @GET("api/reading/stats/")
+    fun getReadingStats(@Header("Authorization") token: String): Call<ReadingStatsResponse>
+
+    // Добавь в интерфейс DjangoApi
+    @GET("api/reading/test/{testId}/")
+    fun getTest(
+        @Header("Authorization") token: String,
+        @Path("testId") testId: Int
+    ): Call<TestResponse>
+
+    @POST("api/reading/test/{testId}/submit/")
+    fun submitTest(
+        @Header("Authorization") token: String,
+        @Path("testId") testId: Int,
+        @Body body: SubmitTestRequest
+    ): Call<SubmitTestResponse>
+
+    @GET("api/reading/test/check/{sessionId}/")
+    fun checkTestRequired(
+        @Header("Authorization") token: String,
+        @Path("sessionId") sessionId: Int
+    ): Call<CheckTestResponse>
+
+    @POST("api/reading/test/{testId}/retake/")
+    fun retakeTest(
+        @Header("Authorization") token: String,
+        @Path("testId") testId: Int
+    ): Call<Map<String, Any>>
+
+    @GET("api/reading/book/{bookId}/test-stats/")
+    fun getBookTestStats(
+        @Header("Authorization") token: String,
+        @Path("bookId") bookId: Int
+    ): Call<BookTestStatsResponse>
+
+    @GET("api/reading/book/{bookId}/stats/")
+    fun getBookStatsWithDaily(
+        @Header("Authorization") token: String,
+        @Path("bookId") bookId: Int
+    ): Call<BookStatsResponse>
 }

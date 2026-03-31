@@ -37,58 +37,6 @@ class ConnectionSerializer(serializers.ModelSerializer):
         return 'pending'
 
 
-class BookListSerializer(serializers.ModelSerializer):
-    is_owner = serializers.SerializerMethodField()
-    can_delete = serializers.SerializerMethodField()
-    uploaded_by_name = serializers.SerializerMethodField()
-    uploaded_by_id = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Book
-        fields = ['id', 'name', 'pages_count', 'status', 'daily_goal', 'upload_date',
-                  'is_owner', 'can_delete', 'uploaded_by_name', 'uploaded_by_id']
-
-    def get_is_owner(self, obj):
-        request = self.context.get('request')
-        if request:
-            return obj.user == request.user
-        return False
-
-    def get_can_delete(self, obj):
-        request = self.context.get('request')
-        if not request:
-            return False
-
-        # Владелец книги может удалить
-        if obj.user == request.user:
-            return True
-
-        # Родитель может удалить любую книгу ребенка
-        from .models import UserConnection
-        is_parent = UserConnection.objects.filter(
-            user1=request.user,
-            user2=obj.user,
-            connection_type='parent_child',
-            is_parent_flag=True,
-            is_child_flag=True
-        ).exists()
-
-        if is_parent:
-            return True
-
-        return False
-
-    def get_uploaded_by_name(self, obj):
-        if obj.uploaded_by:
-            return obj.uploaded_by.name
-        return None
-
-    def get_uploaded_by_id(self, obj):
-        if obj.uploaded_by:
-            return obj.uploaded_by.id
-        return None
-
-
 class BookUploadSerializer(serializers.ModelSerializer):
     file = serializers.FileField(write_only=True, required=True)
     daily_goal = serializers.IntegerField(default=5, min_value=1, required=False)
@@ -217,3 +165,61 @@ class BookUploadToChildSerializer(serializers.Serializer):
             uploaded_by=self.context['request'].user
         )
         return book
+
+
+class BookListSerializer(serializers.ModelSerializer):
+    is_owner = serializers.SerializerMethodField()
+    can_delete = serializers.SerializerMethodField()
+    uploaded_by_name = serializers.SerializerMethodField()
+    uploaded_by_id = serializers.SerializerMethodField()
+    is_active = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Book
+        fields = [
+            'id', 'name', 'pages_count', 'status', 'daily_goal',
+            'upload_date', 'is_owner', 'can_delete', 'uploaded_by_name',
+            'uploaded_by_id', 'is_active'
+        ]
+
+    def get_is_owner(self, obj):
+        request = self.context.get('request')
+        if request:
+            return obj.user == request.user
+        return False
+
+    def get_can_delete(self, obj):
+        request = self.context.get('request')
+        if not request:
+            return False
+
+        # Владелец книги может удалить
+        if obj.user == request.user:
+            return True
+
+        # Родитель может удалить любую книгу ребенка
+        is_parent = UserConnection.objects.filter(
+            user1=request.user,
+            user2=obj.user,
+            connection_type='parent_child',
+            is_parent_flag=True,
+            is_child_flag=True
+        ).exists()
+
+        if is_parent:
+            return True
+
+        return False
+
+    def get_uploaded_by_name(self, obj):
+        if obj.uploaded_by:
+            return obj.uploaded_by.name
+        return None
+
+    def get_uploaded_by_id(self, obj):
+        if obj.uploaded_by:
+            return obj.uploaded_by.id
+        return None
+
+    def get_is_active(self, obj):
+        return obj.status == 'in_progress'

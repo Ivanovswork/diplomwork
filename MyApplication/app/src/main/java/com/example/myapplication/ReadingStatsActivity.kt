@@ -37,13 +37,18 @@ class ReadingStatsActivity : AppCompatActivity() {
         loadStats()
     }
 
+    override fun onResume() {
+        super.onResume()
+        loadStats()
+    }
+
     private fun loadStats() {
         api.getReadingStats("Token $token").enqueue(object : Callback<ReadingStatsResponse> {
             override fun onResponse(call: Call<ReadingStatsResponse>, response: Response<ReadingStatsResponse>) {
                 if (response.isSuccessful && response.body() != null) {
                     val stats = response.body()!!
                     binding.tvTotalPages.text = stats.total_pages.toString()
-                    binding.tvTotalTime.text = formatTime(stats.total_time_seconds)
+                    binding.tvTotalTime.text = stats.total_time_formatted
                     binding.tvTotalWords.text = stats.total_words.toString()
                     binding.tvReadingSpeed.text = "${stats.reading_speed_wpm.toInt()} слов/мин"
                     binding.tvBooksInProgress.text = stats.books_in_progress.toString()
