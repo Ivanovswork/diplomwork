@@ -1,6 +1,8 @@
 package com.example.myapplication
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.Toast
@@ -17,13 +19,20 @@ class TestActivity : AppCompatActivity() {
     private lateinit var binding: ActivityTestBinding
     private lateinit var api: DjangoApi
     private lateinit var token: String
+
     private var testId: Int = 0
     private var bookId: Int = 0
     private var bookName: String = ""
     private var startPage: Int = 1
-    private var endPage: Int = 10
+    private var endPage: Int = 2
+
     private var questions = mutableListOf<TestQuestion>()
     private var selectedAnswers = mutableMapOf<Int, Int>()
+    private var testFailed = false
+
+    companion object {
+        private const val TAG = "TestActivity"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,7 +43,15 @@ class TestActivity : AppCompatActivity() {
         bookId = intent.getIntExtra("book_id", 0)
         bookName = intent.getStringExtra("book_name") ?: "Книга"
         startPage = intent.getIntExtra("start_page", 1)
-        endPage = intent.getIntExtra("end_page", 10)
+        endPage = intent.getIntExtra("end_page", 2)
+
+        Log.d(TAG, "onCreate: testId=$testId, bookId=$bookId, pages=$startPage-$endPage")
+
+        if (testId == 0) {
+            Toast.makeText(this, "Ошибка: тест не найден", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
 
         val prefs = getSharedPreferences("auth", MODE_PRIVATE)
         token = prefs.getString("token", "") ?: ""
@@ -49,6 +66,9 @@ class TestActivity : AppCompatActivity() {
         binding.tvPagesRange.text = "Страницы $startPage - $endPage"
         binding.btnBack.setOnClickListener { finish() }
         binding.btnSubmit.setOnClickListener { submitTest() }
+        binding.btnReread.setOnClickListener { startRereadMode() }
+
+        binding.btnReread.visibility = android.view.View.GONE
 
         loadTest()
     }
@@ -59,6 +79,7 @@ class TestActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body() != null) {
                     val test = response.body()!!
                     questions = test.questions.toMutableList()
+                    Log.d(TAG, "loadTest: получено ${questions.size} вопросов")
                     setupQuestions()
                 } else {
                     Toast.makeText(this@TestActivity, "Ошибка загрузки теста", Toast.LENGTH_SHORT).show()
@@ -125,7 +146,6 @@ class TestActivity : AppCompatActivity() {
     }
 
     private fun submitTest() {
-        // Проверяем, что на все вопросы даны ответы
         if (selectedAnswers.size < questions.size) {
             Toast.makeText(this, "Ответьте на все вопросы", Toast.LENGTH_SHORT).show()
             return
@@ -151,12 +171,10 @@ class TestActivity : AppCompatActivity() {
                         setResult(RESULT_OK, intent)
                         finish()
                     } else {
+                        testFailed = true
+                        binding.btnSubmit.visibility = android.view.View.GONE
+                        binding.btnReread.visibility = android.view.View.VISIBLE
                         Toast.makeText(this@TestActivity, result.message, Toast.LENGTH_LONG).show()
-                        // Показываем кнопку для пересдачи
-                        binding.btnRetake.visibility = android.view.View.VISIBLE
-                        binding.btnRetake.setOnClickListener {
-                            retakeTest()
-                        }
                     }
                 } else {
                     Toast.makeText(this@TestActivity, "Ошибка отправки", Toast.LENGTH_SHORT).show()
@@ -171,26 +189,25 @@ class TestActivity : AppCompatActivity() {
         })
     }
 
-    private fun retakeTest() {
-        api.retakeTest("Token $token", testId).enqueue(object : Callback<Map<String, Any>> {
-            override fun onResponse(call: Call<Map<String, Any>>, response: Response<Map<String, Any>>) {
-                if (response.isSuccessful && response.body() != null) {
-                    val newTestId = response.body()!!["test_id"] as? Int
-                    if (newTestId != null) {
-                        testId = newTestId
-                        selectedAnswers.clear()
-                        loadTest()
-                        binding.btnRetake.visibility = android.view.View.GONE
-                        Toast.makeText(this@TestActivity, "Новый тест создан", Toast.LENGTH_SHORT).show()
-                    }
-                } else {
-                    Toast.makeText(this@TestActivity, "Ошибка создания нового теста", Toast.LENGTH_SHORT).show()
-                }
-            }
+    private fun startRereadMode() {
+        val intent = Intent()
+        intent.putExtra("test_passed", false)
+        intent.putExtra("reread_needed", true)
+        intent.putExtra("start_page", startPage)
+        intent.putExtra("end_page", endPage)
+        setResult(RESULT_OK, intent)
+        finish()
+    }
 
-            override fun onFailure(call: Call<Map<String, Any>>, t: Throwable) {
-                Toast.makeText(this@TestActivity, "Ошибка: ${t.message}", Toast.LENGTH_SHORT).show()
-            }
-        })
+    override fun onBackPressed() {
+        if (testFailed) {
+            val intent = Intent()
+            intent.putExtra("test_passed", false)
+            intent.putExtra("test_failed", true)
+            setResult(RESULT_OK, intent)
+        } else {
+            setResult(RESULT_CANCELED)
+        }
+        super.onBackPressed()
     }
 }

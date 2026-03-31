@@ -18,7 +18,7 @@ class BookDetailActivity : AppCompatActivity() {
     private lateinit var token: String
     private var bookId: Int = 0
     private var bookName: String = ""
-    private var readOnly: Boolean = false  // Флаг для родителя
+    private var readOnly: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,7 +41,6 @@ class BookDetailActivity : AppCompatActivity() {
         binding.tvBookTitle.text = bookName
         binding.btnBack.setOnClickListener { finish() }
 
-        // Если родитель смотрит — скрываем кнопку чтения
         if (readOnly) {
             binding.btnRead.visibility = android.view.View.GONE
         } else {
@@ -55,7 +54,7 @@ class BookDetailActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (bookId != 0) {
-            loadBookStats()  // использует get_book_stats_with_daily_goal
+            loadBookStats()
         }
     }
 
@@ -90,7 +89,6 @@ class BookDetailActivity : AppCompatActivity() {
         binding.tvDailyGoal.text = "${stats.pages_read_today} / ${stats.daily_goal} стр."
         binding.tvDailyGoalRemaining.text = "Осталось: ${stats.daily_goal_remaining} стр."
 
-        // Цвета
         if (stats.daily_goal_achieved) {
             binding.tvDailyGoal.setTextColor(resources.getColor(android.R.color.holo_green_dark, null))
             binding.tvDailyGoalRemaining.visibility = android.view.View.GONE

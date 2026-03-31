@@ -229,7 +229,13 @@ data class SessionResponse(
     val start_page: Int,
     val current_page: Int,
     val total_pages: Int,
-    val is_book_finished: Boolean? = false
+    val is_book_finished: Boolean? = false,
+    val block_number: Int? = null,
+    val block_start_page: Int? = null,
+    val block_end_page: Int? = null,
+    val has_test: Boolean? = false,
+    val test_status: String? = null, // "pending", "passed", "failed"
+    val test_id: Int? = null
 )
 
 data class SessionProgressResponse(
@@ -259,11 +265,14 @@ data class SavePageResponse(
     val pages_read_in_session: Int,
     val total_pages: Int,
     val remaining_pages: Int,
-    val daily_goal_completed: Boolean = false,
-    val pages_read_today: Int = 0,
-    val daily_goal: Int = 0,
-    val test_created: Boolean = false,      // ← новое поле
-    val test_id: Int? = null                // ← новое поле
+    val daily_goal_completed: Boolean,
+    val pages_read_today: Int,
+    val daily_goal: Int,
+    val test_created: Boolean,
+    val test_id: Int?,
+    val total_pages_read: Int,
+    val block_end_page: Int?,
+    val block_start_page: Int?
 )
 
 // Чтение - Стрик
@@ -321,7 +330,7 @@ data class SubmitTestResponse(
 
 data class CheckTestResponse(
     val requires_test: Boolean,
-    val test_id: Int? = null,
+    val test_id: Int,
     val message: String? = null,
     val start_page: Int? = null,
     val end_page: Int? = null,
@@ -657,4 +666,5 @@ interface DjangoApi {
         @Header("Authorization") token: String,
         @Path("bookId") bookId: Int
     ): Call<BookStatsResponse>
+
 }

@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.View
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -38,7 +39,12 @@ class ReadingActivity : AppCompatActivity() {
     private var isReading = false
     private var isPageLoaded = false
     private var currentPdfFile: File? = null
-    private var dailyGoalAchievedNotified = false
+    private var isBookFinished = false
+    private var blockStartPage: Int = 1
+    private var blockEndPage: Int = 2
+    private var isWaitingForTest: Boolean = false
+    private var isInReviewMode: Boolean = false
+    private var pendingTestId: Int? = null
 
     companion object {
         private const val TAG = "ReadingActivity"
@@ -52,7 +58,6 @@ class ReadingActivity : AppCompatActivity() {
 
         bookId = intent.getIntExtra("book_id", 0)
         bookName = intent.getStringExtra("book_name") ?: "Книга"
-        Log.d(TAG, "onCreate: bookId=$bookId, bookName=$bookName")
 
         val prefs = getSharedPreferences("auth", MODE_PRIVATE)
         token = prefs.getString("token", "") ?: ""
@@ -65,15 +70,91 @@ class ReadingActivity : AppCompatActivity() {
 
         binding.tvBookTitle.text = bookName
         binding.btnBack.setOnClickListener { finishReading() }
-        binding.btnNextPage.setOnClickListener { saveCurrentPage() }
+        binding.btnNextPage.setOnClickListener { onNextPageClick() }
 
         setupWebView()
         getOrCreateSession()
     }
 
+    private fun onNextPageClick() {
+        if (isInReviewMode) {
+            if (currentPage < blockEndPage) {
+                currentPage++
+                loadPage()
+            } else {
+                createNewTestAndOpen()
+            }
+        } else if (isWaitingForTest) {
+            Toast.makeText(this, "Сначала пройдите тест!", Toast.LENGTH_SHORT).show()
+        } else {
+            saveCurrentPage()
+        }
+    }
+
+    private fun createNewTestAndOpen() {
+        binding.btnNextPage.isEnabled = false
+        binding.btnNextPage.text = "Создание теста..."
+
+        api.retakeTest("Token $token", pendingTestId ?: 0).enqueue(object : Callback<Map<String, Any>> {
+            override fun onResponse(call: Call<Map<String, Any>>, response: Response<Map<String, Any>>) {
+                binding.btnNextPage.isEnabled = true
+                binding.btnNextPage.text = "Далее"
+
+                Log.d(TAG, "retakeTest response code: ${response.code()}")
+
+                if (response.isSuccessful && response.body() != null) {
+                    val responseBody = response.body()!!
+                    Log.d(TAG, "retakeTest response body: $responseBody")
+
+                    // Пробуем получить test_id как Int, Double или String
+                    val newTestId = when (val id = responseBody["test_id"]) {
+                        is Int -> id
+                        is Double -> id.toInt()
+                        is String -> id.toIntOrNull()
+                        else -> null
+                    }
+
+                    Log.d(TAG, "createNewTestAndOpen: newTestId=$newTestId")
+
+                    if (newTestId != null && newTestId > 0) {
+                        pendingTestId = newTestId
+                        isWaitingForTest = true
+                        isInReviewMode = false
+
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            startTestActivity()
+                        }, 300)
+                    } else {
+                        Toast.makeText(this@ReadingActivity, "Ошибка: тест не создан (newTestId=$newTestId)", Toast.LENGTH_SHORT).show()
+                        isInReviewMode = true
+                        currentPage = blockStartPage
+                        updateUI()
+                        loadPage()
+                    }
+                } else {
+                    Toast.makeText(this@ReadingActivity, "Ошибка создания теста", Toast.LENGTH_SHORT).show()
+                    isInReviewMode = true
+                    currentPage = blockStartPage
+                    updateUI()
+                    loadPage()
+                }
+            }
+
+            override fun onFailure(call: Call<Map<String, Any>>, t: Throwable) {
+                binding.btnNextPage.isEnabled = true
+                binding.btnNextPage.text = "Далее"
+                Log.e(TAG, "retakeTest failure: ${t.message}")
+                Toast.makeText(this@ReadingActivity, "Ошибка: ${t.message}", Toast.LENGTH_SHORT).show()
+                isInReviewMode = true
+                currentPage = blockStartPage
+                updateUI()
+                loadPage()
+            }
+        })
+    }
+
     @SuppressLint("SetJavaScriptEnabled")
     private fun setupWebView() {
-        Log.d(TAG, "setupWebView")
         binding.webView.settings.apply {
             javaScriptEnabled = true
             builtInZoomControls = true
@@ -87,20 +168,22 @@ class ReadingActivity : AppCompatActivity() {
             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
             cacheMode = WebSettings.LOAD_NO_CACHE
             setSupportZoom(true)
-            defaultTextEncodingName = "utf-8"
         }
 
         binding.webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
-                Log.d(TAG, "onPageFinished: $url")
+                if (!isInReviewMode && !isWaitingForTest) {
+                    startTimer()
+                }
             }
 
             override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
                 if (url == "reading://page_loaded") {
                     isPageLoaded = true
-                    startTimer()
-                    Toast.makeText(this@ReadingActivity, "📖 Страница $currentPage готова", Toast.LENGTH_SHORT).show()
+                    if (!isInReviewMode && !isWaitingForTest) {
+                        startTimer()
+                    }
                     return true
                 }
                 return false
@@ -109,12 +192,10 @@ class ReadingActivity : AppCompatActivity() {
     }
 
     private fun loadPage() {
-        Log.d(TAG, "loadPage: page=$currentPage, totalPages=$totalPages")
         isPageLoaded = false
 
         api.getPage("Token $token", bookId, currentPage).enqueue(object : Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                Log.d(TAG, "getPage response: ${response.code()}")
                 if (response.isSuccessful && response.body() != null) {
                     try {
                         val pdfBytes = response.body()!!.bytes()
@@ -122,8 +203,6 @@ class ReadingActivity : AppCompatActivity() {
                         FileOutputStream(currentPdfFile!!).use { fos ->
                             fos.write(pdfBytes)
                         }
-                        Log.d(TAG, "PDF saved: ${currentPdfFile!!.length()} bytes")
-
                         val pdfUrl = "file://${currentPdfFile!!.absolutePath}"
                         val viewerHtml = createPdfViewerHtml(pdfUrl)
                         binding.webView.loadDataWithBaseURL(
@@ -133,19 +212,14 @@ class ReadingActivity : AppCompatActivity() {
                             "UTF-8",
                             null
                         )
-
                     } catch (e: Exception) {
-                        Log.e(TAG, "PDF error: ${e.message}", e)
-                        Toast.makeText(this@ReadingActivity, "Ошибка PDF: ${e.message}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@ReadingActivity, "Ошибка загрузки PDF", Toast.LENGTH_LONG).show()
                     }
                 } else {
-                    Log.e(TAG, "getPage failed: ${response.code()}")
-                    Toast.makeText(this@ReadingActivity, "Сервер: ${response.code()}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@ReadingActivity, "Ошибка загрузки страницы", Toast.LENGTH_LONG).show()
                 }
             }
-
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e(TAG, "Network failure: ${t.message}", t)
                 Toast.makeText(this@ReadingActivity, "Сеть: ${t.message}", Toast.LENGTH_LONG).show()
             }
         })
@@ -157,72 +231,47 @@ class ReadingActivity : AppCompatActivity() {
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
-    <title>Страница $currentPage</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Чтение</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        html, body { width: 100%; height: 100%; background: #1a1a2e; overflow: hidden; position: fixed; top: 0; left: 0; }
-        #pdf-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: #1a1a2e; overflow: auto; -webkit-overflow-scrolling: touch; }
-        #pdf-canvas { display: block; width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: 0 8px 32px rgba(0,0,0,0.4); border-radius: 8px; cursor: grab; touch-action: pinch-zoom pan-x pan-y; }
-        #pdf-canvas:active { cursor: grabbing; }
-        .loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #e0e7ff; font-size: 18px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center; background: rgba(0,0,0,0.8); padding: 20px 32px; border-radius: 48px; backdrop-filter: blur(10px); z-index: 100; white-space: nowrap; }
-        .page-info { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: #e0e7ff; padding: 8px 20px; border-radius: 40px; font-size: 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-weight: 500; backdrop-filter: blur(20px); z-index: 100; pointer-events: none; }
-        @media (max-width: 600px) { .page-info { bottom: 12px; padding: 6px 16px; font-size: 12px; } .loading { font-size: 14px; padding: 16px 24px; } }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; background: #1a1a2e; overflow: hidden; }
+        #pdf-container { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; overflow: auto; }
+        canvas { max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: 0 8px 32px rgba(0,0,0,0.4); border-radius: 8px; }
+        .loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; background: rgba(0,0,0,0.7); padding: 20px; border-radius: 12px; }
+        .page-info { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 8px 20px; border-radius: 40px; font-size: 14px; }
     </style>
 </head>
 <body>
-    <div id="pdf-container"><div class="loading">📖 Загрузка страницы $currentPage из $totalPages...</div></div>
-    <div class="page-info">Страница <strong>$currentPage</strong> из <strong>$totalPages</strong></div>
+    <div id="pdf-container"><div class="loading">📖 Загрузка...</div></div>
+    <div class="page-info">Страница $currentPage из $totalPages</div>
     <script>
-        (function() {
-            console.log('PDF.js viewer starting...');
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-            var pdfUrl = '$pdfUrl';
-            var container = document.getElementById('pdf-container');
-            var loadingDiv = document.querySelector('.loading');
-            var maxScale = 2.5, minScale = 0.8, currentScale = 1.2;
-            function renderPage(page, scale) {
-                var viewport = page.getViewport({scale: scale});
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        var pdfUrl = '$pdfUrl';
+        var container = document.getElementById('pdf-container');
+        var loadingDiv = document.querySelector('.loading');
+        pdfjsLib.getDocument(pdfUrl).promise
+            .then(function(pdf) { return pdf.getPage(1); })
+            .then(function(page) {
+                var viewport = page.getViewport({scale: 1});
+                var scale = Math.min((window.innerWidth - 40) / viewport.width, (window.innerHeight - 80) / viewport.height, 2.0);
+                var scaledViewport = page.getViewport({scale: scale});
                 var canvas = document.createElement('canvas');
-                canvas.id = 'pdf-canvas';
-                canvas.width = viewport.width;
-                canvas.height = viewport.height;
-                canvas.style.width = 'auto';
-                canvas.style.height = 'auto';
-                canvas.style.maxWidth = '100%';
-                canvas.style.maxHeight = '100%';
+                canvas.width = scaledViewport.width;
+                canvas.height = scaledViewport.height;
                 container.innerHTML = '';
                 container.appendChild(canvas);
                 var context = canvas.getContext('2d');
-                return page.render({canvasContext: context, viewport: viewport}).promise;
-            }
-            function adjustScaleAndRender(page) {
-                var viewport = page.getViewport({scale: 1});
-                var scaleByWidth = (window.innerWidth - 40) / viewport.width;
-                var scaleByHeight = (window.innerHeight - 80) / viewport.height;
-                currentScale = Math.min(scaleByWidth, scaleByHeight, maxScale);
-                currentScale = Math.max(currentScale, minScale);
-                return renderPage(page, currentScale);
-            }
-            pdfjsLib.getDocument(pdfUrl).promise
-                .then(function(pdf) { return pdf.getPage(1); })
-                .then(function(page) {
-                    loadingDiv.textContent = '🎨 Рендеринг страницы...';
-                    return adjustScaleAndRender(page);
-                })
-                .then(function() {
-                    loadingDiv.style.display = 'none';
-                    window.location.href = 'reading://page_loaded';
-                })
-                .catch(function(error) {
-                    loadingDiv.innerHTML = '❌ Ошибка: ' + error.message;
-                    loadingDiv.style.backgroundColor = '#ff6b6b';
-                });
-            window.addEventListener('resize', function() {
-                if (window.pdfPage) adjustScaleAndRender(window.pdfPage);
+                return page.render({canvasContext: context, viewport: scaledViewport}).promise;
+            })
+            .then(function() {
+                loadingDiv.style.display = 'none';
+                window.location.href = 'reading://page_loaded';
+            })
+            .catch(function(error) {
+                loadingDiv.innerHTML = '❌ Ошибка: ' + error.message;
             });
-        })();
     </script>
 </body>
 </html>
@@ -237,61 +286,156 @@ class ReadingActivity : AppCompatActivity() {
                     sessionId = session.session_id
                     currentPage = session.current_page
                     totalPages = session.total_pages
+                    blockStartPage = session.block_start_page ?: 1
+                    blockEndPage = session.block_end_page ?: 2
+                    isBookFinished = session.is_book_finished ?: false
 
-                    updateDailyGoal()  // Загружаем дневную цель при старте
+                    if (isBookFinished) {
+                        finish()
+                        return
+                    }
 
+                    checkTestForCurrentBlock()
                     updateUI()
                     loadPage()
                 } else {
-                    Toast.makeText(this@ReadingActivity, "Ошибка сессии", Toast.LENGTH_SHORT).show()
                     finish()
                 }
             }
             override fun onFailure(call: Call<SessionResponse>, t: Throwable) {
-                Toast.makeText(this@ReadingActivity, "Сеть: ${t.message}", Toast.LENGTH_SHORT).show()
                 finish()
             }
         })
     }
 
-    // ========== НОВЫЙ МЕТОД ДЛЯ ОБНОВЛЕНИЯ СТАТИСТИКИ ==========
-    private fun updateDailyGoal() {
-        api.getBookStatsWithDaily("Token $token", bookId).enqueue(object : Callback<BookStatsResponse> {
-            override fun onResponse(call: Call<BookStatsResponse>, response: Response<BookStatsResponse>) {
+    private fun checkTestForCurrentBlock() {
+        api.checkTestRequired("Token $token", sessionId).enqueue(object : Callback<CheckTestResponse> {
+            override fun onResponse(call: Call<CheckTestResponse>, response: Response<CheckTestResponse>) {
                 if (response.isSuccessful && response.body() != null) {
-                    val stats = response.body()!!
-                    Log.d(TAG, "Daily goal: pages_read=${stats.pages_read}, pages_today=${stats.pages_read_today}, goal=${stats.daily_goal}")
-
-                    if (!stats.daily_goal_achieved) {
-                        binding.tvDailyGoal.visibility = android.view.View.VISIBLE
-                        binding.tvDailyGoal.text = "Цель: ${stats.pages_read_today}/${stats.daily_goal} стр."
-                        dailyGoalAchievedNotified = false
+                    val check = response.body()!!
+                    if (check.requires_test) {
+                        isWaitingForTest = true
+                        pendingTestId = check.test_id
+                        showTestDialog()
                     } else {
-                        binding.tvDailyGoal.visibility = android.view.View.GONE
-                        dailyGoalAchievedNotified = true
+                        isWaitingForTest = false
+                        isInReviewMode = false
+                        pendingTestId = null
+                        updateUI()
                     }
                 }
             }
-            override fun onFailure(call: Call<BookStatsResponse>, t: Throwable) {}
+            override fun onFailure(call: Call<CheckTestResponse>, t: Throwable) {}
         })
+    }
+
+    private fun showTestDialog() {
+        Log.d(TAG, "showTestDialog: called with pendingTestId=$pendingTestId")
+
+        if (pendingTestId == null || pendingTestId == 0) {
+            Log.e(TAG, "showTestDialog: pendingTestId is null or 0")
+            Toast.makeText(this, "Ошибка: тест не найден", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Тест на понимание")
+        builder.setMessage("Необходимо пройти тест, чтобы продолжить чтение.")
+        builder.setPositiveButton("Пройти тест") { _, _ ->
+            Log.d(TAG, "showTestDialog: user clicked Пройти тест")
+            startTestActivity()
+        }
+        builder.setCancelable(false)
+
+        try {
+            builder.show()
+            Log.d(TAG, "showTestDialog: dialog shown successfully")
+        } catch (e: Exception) {
+            Log.e(TAG, "showTestDialog: error showing dialog", e)
+        }
+    }
+
+    private fun startTestActivity() {
+        Log.d(TAG, "startTestActivity: pendingTestId=$pendingTestId, bookId=$bookId")
+
+        if (pendingTestId == null || pendingTestId == 0) {
+            Log.e(TAG, "startTestActivity: pendingTestId is null or 0")
+            Toast.makeText(this, "Ошибка: тест не найден", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val intent = Intent(this, TestActivity::class.java)
+        intent.putExtra("test_id", pendingTestId ?: 0)
+        intent.putExtra("book_id", bookId)
+        intent.putExtra("book_name", bookName)
+        intent.putExtra("start_page", blockStartPage)
+        intent.putExtra("end_page", blockEndPage)
+
+        Log.d(TAG, "startTestActivity: starting TestActivity with testId=${pendingTestId}")
+        startActivityForResult(intent, REQUEST_CODE_TEST)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE_TEST && resultCode == RESULT_OK) {
+            val testPassed = data?.getBooleanExtra("test_passed", false) ?: false
+            val rereadNeeded = data?.getBooleanExtra("reread_needed", false) ?: false
+            val testFailed = data?.getBooleanExtra("test_failed", false) ?: false
+
+            if (testPassed) {
+                isWaitingForTest = false
+                isInReviewMode = false
+                getOrCreateSession()
+                Toast.makeText(this, "Тест пройден! Продолжайте чтение.", Toast.LENGTH_SHORT).show()
+            } else if (rereadNeeded) {
+                val startPage = data?.getIntExtra("start_page", blockStartPage) ?: blockStartPage
+                isWaitingForTest = false
+                isInReviewMode = true
+                currentPage = startPage
+                updateUI()
+                loadPage()
+                Toast.makeText(this, "Перечитайте страницы $startPage-$blockEndPage", Toast.LENGTH_LONG).show()
+            } else if (testFailed) {
+                isWaitingForTest = true
+                updateUI()
+                Toast.makeText(this, "Тест не пройден! Нужно пройти тест, чтобы продолжить.", Toast.LENGTH_LONG).show()
+            } else {
+                isWaitingForTest = true
+                updateUI()
+                Toast.makeText(this, "Сначала пройдите тест!", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun updateUI() {
         binding.tvPageInfo.text = "$currentPage / $totalPages"
-        binding.btnNextPage.isEnabled = true
-        binding.btnNextPage.text = if (currentPage >= totalPages) "Завершить" else "Далее"
+
+        when {
+            isInReviewMode -> {
+                binding.btnNextPage.text = "Далее"
+                binding.btnNextPage.isEnabled = true
+            }
+            isWaitingForTest -> {
+                binding.btnNextPage.text = "Заблокировано"
+                binding.btnNextPage.isEnabled = false
+            }
+            else -> {
+                binding.btnNextPage.text = if (currentPage >= totalPages) "Завершить" else "Далее"
+                binding.btnNextPage.isEnabled = true
+            }
+        }
     }
 
     private fun startTimer() {
-        if (!isReading && isPageLoaded) {
+        if (!isReading && !isInReviewMode && !isWaitingForTest) {
             startTime = System.currentTimeMillis()
             isReading = true
             timerRunnable = object : Runnable {
                 override fun run() {
                     if (isReading) {
                         val elapsed = (System.currentTimeMillis() - startTime) / 1000
-                        val minutes = (elapsed / 60).toInt()
-                        val seconds = (elapsed % 60).toInt()
+                        val minutes = elapsed / 60
+                        val seconds = elapsed % 60
                         binding.tvTimer.text = String.format("%02d:%02d", minutes, seconds)
                         timerHandler.postDelayed(this, 1000)
                     }
@@ -308,81 +452,26 @@ class ReadingActivity : AppCompatActivity() {
 
     private fun saveCurrentPage() {
         if (!isPageLoaded) {
-            Toast.makeText(this, "⏳ Загрузка страницы...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Подождите, страница загружается", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Проверяем, нужно ли проходить тест
-        api.checkTestRequired("Token $token", sessionId).enqueue(object : Callback<CheckTestResponse> {
-            override fun onResponse(call: Call<CheckTestResponse>, response: Response<CheckTestResponse>) {
-                if (response.isSuccessful && response.body() != null) {
-                    val check = response.body()!!
-                    if (check.requires_test) {
-                        showTestRequiredDialog(check)
-                        return
-                    }
-                }
-                performSavePage()
-            }
-            override fun onFailure(call: Call<CheckTestResponse>, t: Throwable) {
-                performSavePage()
-            }
-        })
-    }
-
-    private fun showTestRequiredDialog(check: CheckTestResponse) {
-        val message = if (check.retake) {
-            "Тест не пройден. Перечитайте страницы ${check.start_page}-${check.end_page} и пройдите тест заново."
-        } else {
-            check.message ?: "Пройдите тест перед продолжением чтения"
+        if (currentPage >= totalPages) {
+            finishReading()
+            return
         }
 
-        AlertDialog.Builder(this)
-            .setTitle("Тест на понимание")
-            .setMessage(message)
-            .setPositiveButton("Пройти тест") { _, _ ->
-                val intent = Intent(this, TestActivity::class.java)
-                intent.putExtra("test_id", check.test_id)
-                intent.putExtra("book_id", bookId)
-                intent.putExtra("book_name", bookName)
-                intent.putExtra("start_page", check.start_page ?: 1)
-                intent.putExtra("end_page", check.end_page ?: 10)
-                startActivityForResult(intent, REQUEST_CODE_TEST)
-            }
-            .setNegativeButton("Перечитать страницы") { _, _ ->
-                val startPage = check.start_page ?: 1
-                currentPage = startPage
-                updateUI()
-                loadPage()
-            }
-            .setCancelable(false)
-            .show()
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CODE_TEST && resultCode == RESULT_OK) {
-            val testPassed = data?.getBooleanExtra("test_passed", false) ?: false
-            if (testPassed) {
-                performSavePage()
-            } else {
-                Toast.makeText(this, "Тест не пройден. Перечитайте страницы и попробуйте снова.", Toast.LENGTH_LONG).show()
-            }
-        }
-    }
-
-    private fun performSavePage() {
         stopTimer()
         val timeSpent = ((System.currentTimeMillis() - startTime) / 1000).toInt()
 
         if (timeSpent < 5) {
-            Toast.makeText(this, "Прочитай хотя бы 5 сек 😊", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Прочитайте страницу хотя бы 5 секунд", Toast.LENGTH_SHORT).show()
             startTimer()
             return
         }
 
         binding.btnNextPage.isEnabled = false
-        binding.btnNextPage.text = "Сохраняем..."
+        binding.btnNextPage.text = "Сохранение..."
 
         val wordsCount = 250 + (Math.random() * 200).toInt()
         val request = SavePageRequest(sessionId, currentPage, timeSpent, wordsCount)
@@ -392,34 +481,26 @@ class ReadingActivity : AppCompatActivity() {
                 binding.btnNextPage.isEnabled = true
                 if (response.isSuccessful && response.body() != null) {
                     val result = response.body()!!
-                    Toast.makeText(this@ReadingActivity, "✅ $currentPage сохранена ($timeSpent сек)", Toast.LENGTH_SHORT).show()
                     currentPdfFile?.delete()
-
-                    // ========== ВАЖНО: ОБНОВЛЯЕМ СТАТИСТИКУ ПОСЛЕ СОХРАНЕНИЯ ==========
-                    updateDailyGoal()
-
-                    // Проверяем, создан ли тест
-                    if (result.test_created) {
-                        Toast.makeText(this@ReadingActivity, "📝 Создан новый тест! Пройдите его перед продолжением.", Toast.LENGTH_LONG).show()
-                        api.checkTestRequired("Token $token", sessionId).enqueue(object : Callback<CheckTestResponse> {
-                            override fun onResponse(call: Call<CheckTestResponse>, response: Response<CheckTestResponse>) {
-                                if (response.isSuccessful && response.body() != null) {
-                                    val check = response.body()!!
-                                    if (check.requires_test) {
-                                        showTestRequiredDialog(check)
-                                        return
-                                    }
-                                }
-                            }
-                            override fun onFailure(call: Call<CheckTestResponse>, t: Throwable) {}
-                        })
-                    }
-
                     currentPage++
 
-                    if (currentPage > totalPages) {
-                        Toast.makeText(this@ReadingActivity, "📖 Книга прочитана! Поздравляем!", Toast.LENGTH_LONG).show()
-                        finishReading()
+                    if (result.is_book_finished) {
+                        Toast.makeText(this@ReadingActivity, "Книга прочитана!", Toast.LENGTH_LONG).show()
+                        finish()
+                        return
+                    }
+
+                    if (currentPage > blockEndPage) {
+                        if (result.test_created && result.test_id != null) {
+                            isWaitingForTest = true
+                            pendingTestId = result.test_id
+                            showTestDialog()
+                        } else {
+                            blockStartPage = ((currentPage - 1) / 2) * 2 + 1
+                            blockEndPage = blockStartPage + 1
+                            updateUI()
+                            loadPage()
+                        }
                         return
                     }
 
@@ -431,11 +512,10 @@ class ReadingActivity : AppCompatActivity() {
                     startTimer()
                 }
             }
-
             override fun onFailure(call: Call<SavePageResponse>, t: Throwable) {
                 binding.btnNextPage.isEnabled = true
                 binding.btnNextPage.text = "Далее"
-                Toast.makeText(this@ReadingActivity, "Сеть: ${t.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ReadingActivity, "Ошибка: ${t.message}", Toast.LENGTH_SHORT).show()
                 startTimer()
             }
         })
@@ -447,23 +527,19 @@ class ReadingActivity : AppCompatActivity() {
             .setTitle("Завершить чтение")
             .setMessage("Вы действительно хотите завершить чтение?")
             .setPositiveButton("Да") { _, _ ->
-                closeSession()
+                api.finishReading("Token $token", sessionId).enqueue(object : Callback<Map<String, Boolean>> {
+                    override fun onResponse(call: Call<Map<String, Boolean>>, response: Response<Map<String, Boolean>>) {
+                        currentPdfFile?.delete()
+                        finish()
+                    }
+                    override fun onFailure(call: Call<Map<String, Boolean>>, t: Throwable) {
+                        currentPdfFile?.delete()
+                        finish()
+                    }
+                })
             }
             .setNegativeButton("Отмена", null)
             .show()
-    }
-
-    private fun closeSession() {
-        api.finishReading("Token $token", sessionId).enqueue(object : Callback<Map<String, Boolean>> {
-            override fun onResponse(call: Call<Map<String, Boolean>>, response: Response<Map<String, Boolean>>) {
-                currentPdfFile?.delete()
-                finish()
-            }
-            override fun onFailure(call: Call<Map<String, Boolean>>, t: Throwable) {
-                currentPdfFile?.delete()
-                finish()
-            }
-        })
     }
 
     override fun onBackPressed() {

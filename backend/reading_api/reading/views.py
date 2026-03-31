@@ -19,6 +19,68 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from .models import ReadingSession, PageReadingLog, UserReadingStreak, Test, Question, Answer, UserTestResult
 
 # ==================== МОДЕЛЬ ДЛЯ ГЕНЕРАЦИИ ВОПРОСОВ ====================
+# def generate_questions_gigachat(content, num_questions=3):
+#     """Генерация вопросов через GigaChat API"""
+#     print(f"DEBUG: Генерация {num_questions} вопросов через GigaChat")
+#     print(f"DEBUG: Длина текста: {len(content)} символов")
+#
+#     truncated_content = content[:2000]
+#
+#     prompt = f"""Ты --- эксперт по созданию тестов. На основе текста создай {num_questions} вопросов.
+#
+# Текст:
+# {truncated_content}
+#
+# ПРАВИЛА:
+# 1. Вопросы должны быть ТОЛЬКО на русском языке
+# 2. Каждый вопрос должен иметь ровно 3 варианта ответа
+# 3. Только один вариант ответа правильный
+# 4. Используй ТОЛЬКО факты из текста
+# 5. ОТВЕТЬ ТОЛЬКО В ФОРМАТЕ JSON. НИКАКОГО ДРУГОГО ТЕКСТА.
+#
+# Формат должен быть строго таким:
+# {{
+#     "questions": [
+#         {{
+#             "question": "текст вопроса",
+#             "answers": [
+#                 {{"text": "вариант 1", "is_correct": false}},
+#                 {{"text": "вариант 2", "is_correct": true}},
+#                 {{"text": "вариант 3", "is_correct": false}}
+#             ]
+#         }}
+#     ]
+# }}
+#
+# JSON:"""
+#
+#     try:
+#         from gigachat import GigaChat
+#
+#         with GigaChat(
+#                 credentials=settings.GIGACHAT_API_KEY,
+#                 verify_ssl_certs=False,
+#                 timeout=60
+#         ) as giga:
+#             response = giga.chat(prompt)
+#             generated_text = response.choices[0].message.content
+#             print(f"DEBUG: Получен ответ длиной {len(generated_text)} символов")
+#             print(f"DEBUG: Ответ (первые 500 символов):\n{generated_text[:500]}")
+#
+#             questions = extract_json_questions(generated_text, num_questions)
+#             if questions:
+#                 print(f"DEBUG: Успешно получено {len(questions)} вопросов")
+#                 return questions
+#             else:
+#                 print("DEBUG: Не удалось извлечь вопросы из ответа")
+#                 return None
+#
+#     except Exception as e:
+#         print(f"DEBUG: Ошибка GigaChat: {e}")
+#         import traceback
+#         traceback.print_exc()
+#         return None
+
 def generate_questions_gigachat(content, num_questions=3):
     """Генерация вопросов через GigaChat API"""
     print(f"DEBUG: Генерация {num_questions} вопросов через GigaChat")
@@ -26,27 +88,43 @@ def generate_questions_gigachat(content, num_questions=3):
 
     truncated_content = content[:2000]
 
-    prompt = f"""Ты — эксперт по созданию тестов. На основе текста создай {num_questions} вопросов.
+    prompt = f"""Ты — эксперт по созданию тестов. На основе текста создай ровно 3 вопроса.
 
 Текст:
 {truncated_content}
 
 ПРАВИЛА:
-1. Вопросы должны быть ТОЛЬКО на русском языке
-2. Вопросы должны проверять ПОНИМАНИЕ ключевых фактов из текста
-3. Каждый вопрос должен иметь ровно 3 варианта ответа
-4. Только один вариант ответа правильный
-5. Используй ТОЛЬКО факты из текста, никаких выдумок
+1. Вопросы только на русском языке
+2. У каждого вопроса ровно 3 варианта ответа
+3. Только один вариант ответа правильный
+4. Используй ТОЛЬКО факты из текста
+5. ОТВЕТЬ ТОЛЬКО В ФОРМАТЕ JSON
 
-ОТВЕТЬ ТОЛЬКО В ФОРМАТЕ JSON. Никакого другого текста. Используй эту структуру:
+Формат:
 {{
     "questions": [
         {{
-            "question": "текст вопроса",
+            "question": "текст вопроса 1",
             "answers": [
-                {{"text": "вариант ответа 1", "is_correct": false}},
-                {{"text": "вариант ответа 2", "is_correct": true}},
-                {{"text": "вариант ответа 3", "is_correct": false}}
+                {{"text": "вариант 1", "is_correct": false}},
+                {{"text": "вариант 2", "is_correct": true}},
+                {{"text": "вариант 3", "is_correct": false}}
+            ]
+        }},
+        {{
+            "question": "текст вопроса 2",
+            "answers": [
+                {{"text": "вариант 1", "is_correct": false}},
+                {{"text": "вариант 2", "is_correct": true}},
+                {{"text": "вариант 3", "is_correct": false}}
+            ]
+        }},
+        {{
+            "question": "текст вопроса 3",
+            "answers": [
+                {{"text": "вариант 1", "is_correct": false}},
+                {{"text": "вариант 2", "is_correct": true}},
+                {{"text": "вариант 3", "is_correct": false}}
             ]
         }}
     ]
@@ -55,96 +133,156 @@ def generate_questions_gigachat(content, num_questions=3):
 JSON:"""
 
     try:
+        from gigachat import GigaChat
+
         with GigaChat(
                 credentials=settings.GIGACHAT_API_KEY,
                 verify_ssl_certs=False,
-                timeout=60
+                timeout=90
         ) as giga:
             response = giga.chat(prompt)
             generated_text = response.choices[0].message.content
-
             print(f"DEBUG: Получен ответ длиной {len(generated_text)} символов")
-            print(generated_text)
-            questions = extract_json_questions(generated_text, num_questions)
-            if questions:
-                print(f"DEBUG: Успешно получено {len(questions)} вопросов")
+            print(f"DEBUG: Ответ:\n{generated_text}")
 
+            questions = extract_json_questions(generated_text)
+            if questions and len(questions) == 3:
+                print(f"DEBUG: Успешно получено 3 вопроса")
                 return questions
-
-            return None
+            else:
+                print(f"DEBUG: Получено {len(questions) if questions else 0} вопросов, ожидалось 3")
+                return None
 
     except Exception as e:
         print(f"DEBUG: Ошибка GigaChat: {e}")
         return None
 
+import json
+import re
 
-def extract_json_questions(text, num_questions=3):
-    """Извлекает JSON с вопросами из текста (исправленная версия)"""
-    import json
-    import re
+import json
+import re
 
-    # Очищаем текст от возможных лишних символов
+
+def extract_json_questions(text):
+    """Надежный парсер JSON с вопросами"""
     text = text.strip()
 
-    # Пробуем найти JSON объект с полем "questions"
-    # Ищем от { до } с учетом вложенности
+    # 1. Пробуем найти полный JSON объект
+    start = text.find('{')
+    if start == -1:
+        return None
+
     brace_count = 0
-    start_idx = -1
-    for i, ch in enumerate(text):
+    for i, ch in enumerate(text[start:], start):
         if ch == '{':
-            if brace_count == 0:
-                start_idx = i
             brace_count += 1
         elif ch == '}':
             brace_count -= 1
-            if brace_count == 0 and start_idx != -1:
-                json_candidate = text[start_idx:i + 1]
+            if brace_count == 0:
+                json_str = text[start:i + 1]
                 try:
-                    data = json.loads(json_candidate)
-                    if isinstance(data, dict) and 'questions' in data:
+                    data = json.loads(json_str)
+                    if 'questions' in data and isinstance(data['questions'], list):
                         questions = data['questions']
-                        if isinstance(questions, list):
-                            valid = []
-                            for q in questions[:num_questions]:
-                                if isinstance(q, dict) and 'question' in q and 'answers' in q:
-                                    if isinstance(q['answers'], list) and len(q['answers']) >= 2:
-                                        # Проверяем и исправляем структуру
-                                        for a in q['answers']:
-                                            if 'is_correct' not in a:
-                                                a['is_correct'] = False
-                                        has_correct = any(a.get('is_correct', False) for a in q['answers'])
-                                        if not has_correct:
-                                            q['answers'][0]['is_correct'] = True
-                                        valid.append(q)
-                            if valid:
-                                return valid
+                        if len(questions) == 3:
+                            return questions
                 except json.JSONDecodeError:
                     continue
+                break
 
-    # Если не нашли, пробуем найти массив
+    # 2. Если не нашли, ищем отдельные объекты вопросов
+    question_pattern = r'{[^{}]*"question"[^{}]*"answers"[^{}]*\[[^\]]*\][^{}]*}'
+    matches = re.findall(question_pattern, text, re.DOTALL)
+
+    if len(matches) >= 3:
+        valid_questions = []
+        for match in matches[:3]:
+            try:
+                # Исправляем возможные ошибки в JSON
+                fixed_match = match
+                # Добавляем недостающие кавычки
+                fixed_match = re.sub(r'([{,])\s*([a-zA-Zа-яА-Я_]+)\s*:', r'\1"\2":', fixed_match)
+                # Удаляем trailing commas
+                fixed_match = re.sub(r',\s*}', '}', fixed_match)
+                fixed_match = re.sub(r',\s*]', ']', fixed_match)
+
+                q = json.loads(fixed_match)
+                if 'question' in q and 'answers' in q:
+                    if isinstance(q['answers'], list) and len(q['answers']) >= 3:
+                        # Нормализуем ответы
+                        for a in q['answers']:
+                            if 'is_correct' not in a:
+                                a['is_correct'] = False
+                        # Убеждаемся, что есть правильный ответ
+                        has_correct = any(a.get('is_correct', False) for a in q['answers'])
+                        if not has_correct and len(q['answers']) > 0:
+                            q['answers'][0]['is_correct'] = True
+                        valid_questions.append(q)
+            except json.JSONDecodeError:
+                continue
+
+        if len(valid_questions) == 3:
+            return valid_questions
+
+    # 3. Пробуем найти массив вопросов
     array_pattern = r'\[\s*\{[\s\S]*?\}\s*\]'
     match = re.search(array_pattern, text)
     if match:
         try:
             questions = json.loads(match.group())
-            if isinstance(questions, list):
-                valid = []
-                for q in questions[:num_questions]:
-                    if isinstance(q, dict) and 'question' in q and 'answers' in q:
-                        if isinstance(q['answers'], list) and len(q['answers']) >= 2:
-                            for a in q['answers']:
-                                if 'is_correct' not in a:
-                                    a['is_correct'] = False
-                            has_correct = any(a.get('is_correct', False) for a in q['answers'])
-                            if not has_correct:
-                                q['answers'][0]['is_correct'] = True
-                            valid.append(q)
-                if valid:
-                    return valid
+            if isinstance(questions, list) and len(questions) >= 3:
+                valid_questions = []
+                for q in questions[:3]:
+                    if 'question' in q and 'answers' in q:
+                        for a in q['answers']:
+                            if 'is_correct' not in a:
+                                a['is_correct'] = False
+                        has_correct = any(a.get('is_correct', False) for a in q['answers'])
+                        if not has_correct and len(q['answers']) > 0:
+                            q['answers'][0]['is_correct'] = True
+                        valid_questions.append(q)
+                if len(valid_questions) == 3:
+                    return valid_questions
         except json.JSONDecodeError:
             pass
 
+    # 4. Пробуем извлечь по одному вопросу из текста
+    # Ищем все вхождения "question"
+    question_matches = []
+    for i in range(3):
+        q_pattern = r'"question"\s*:\s*"([^"]+)"'
+        q_matches = re.findall(q_pattern, text)
+        if len(q_matches) >= i + 1:
+            # Нашли вопрос, ищем к нему ответы
+            q_text = q_matches[i]
+
+            # Ищем answers
+            a_pattern = r'"answers"\s*:\s*\[\s*\{[^}]*\}(?:\s*,\s*\{[^}]*\}){2}\s*\]'
+            a_match = re.search(a_pattern, text)
+            if a_match:
+                answers_str = a_match.group()
+                try:
+                    answers = json.loads(answers_str.split(':', 1)[1].strip())
+                    if isinstance(answers, list) and len(answers) >= 3:
+                        for a in answers:
+                            if 'is_correct' not in a:
+                                a['is_correct'] = False
+                        has_correct = any(a.get('is_correct', False) for a in answers)
+                        if not has_correct:
+                            answers[0]['is_correct'] = True
+                        question_matches.append({
+                            'question': q_text,
+                            'answers': answers[:3]
+                        })
+                except json.JSONDecodeError:
+                    pass
+
+    if len(question_matches) == 3:
+        return question_matches
+
     return None
+
 
 def create_test_for_session(session, start_page, end_page):
     """Создать тест для сессии на основе прочитанных страниц"""
@@ -158,14 +296,13 @@ def create_test_for_session(session, start_page, end_page):
             if page_num < len(doc):
                 content += doc[page_num].get_text()
         doc.close()
-
         print(f"DEBUG: Получен текст из {end_page - start_page + 1} страниц, длина={len(content)}")
 
-        # Генерируем вопросы через GigaChat (быстро!)
+        # Генерируем вопросы через GigaChat
         questions_data = generate_questions_gigachat(content, num_questions=3)
 
         if not questions_data:
-            print("DEBUG: Не удалось сгенерировать вопросы через GigaChat, тест НЕ создается")
+            print("DEBUG: Не удалось сгенерировать вопросы, тест НЕ создается")
             return None
 
         # Создаем тест
@@ -176,19 +313,23 @@ def create_test_for_session(session, start_page, end_page):
             total_questions=len(questions_data),
             status='pending'
         )
+        print(f"DEBUG: Тест создан, ID={test.id}")
 
         # Создаем вопросы и ответы
-        for q_data in questions_data:
+        for idx, q_data in enumerate(questions_data):
             question = Question.objects.create(
                 test=test,
                 text=q_data['question']
             )
-            for a_data in q_data['answers']:
+            print(f"DEBUG:   Вопрос {idx + 1}: {q_data['question'][:50]}...")
+
+            for a_idx, a_data in enumerate(q_data['answers']):
                 Answer.objects.create(
                     question=question,
                     text=a_data['text'],
                     is_correct=a_data['is_correct']
                 )
+                print(f"DEBUG:     Ответ {a_idx + 1}: {a_data['text'][:30]}... (correct={a_data['is_correct']})")
 
         print(f"DEBUG: Тест создан успешно, ID={test.id}, вопросов={test.total_questions}")
         return test
@@ -378,6 +519,7 @@ def get_book_stats_with_daily_goal(request, book_id):
 @permission_classes([IsAuthenticated])
 def get_or_create_session(request, book_id):
     """Получить активную сессию или создать новую"""
+
     try:
         book = Book.objects.get(id=book_id, user=request.user, status__in=['in_progress', 'completed'])
     except Book.DoesNotExist:
@@ -403,6 +545,7 @@ def get_or_create_session(request, book_id):
             start_page = 1
 
         if start_page > book.pages_count:
+            # Книга полностью прочитана
             return Response({
                 'session_id': None,
                 'start_page': book.pages_count,
@@ -421,11 +564,11 @@ def get_or_create_session(request, book_id):
 
     current_page = active_session.end_page + 1 if active_session.end_page else active_session.start_page
 
+    # Проверяем, не закончена ли книга
     if current_page > book.pages_count:
         active_session.status = 'completed'
         active_session.end_datetime = timezone.now()
         active_session.save()
-
         book.status = 'completed'
         book.save(update_fields=['status'])
 
@@ -438,12 +581,39 @@ def get_or_create_session(request, book_id):
             'message': 'Книга прочитана!'
         })
 
+    # Определяем текущий блок (по 2 страницы)
+    block_number = (current_page - 1) // 2 + 1
+    block_start_page = (block_number - 1) * 2 + 1
+    block_end_page = min(block_number * 2, book.pages_count)
+
+    # Проверяем, есть ли тест для этого блока
+    test = Test.objects.filter(
+        session__book=book,
+        start_page=block_start_page,
+        end_page=block_end_page
+    ).first()
+
+    has_test = False
+    test_status = None
+    test_id = None
+
+    if test:
+        has_test = True
+        test_id = test.id
+        test_status = test.status
+
     return Response({
         'session_id': active_session.id,
         'start_page': active_session.start_page,
         'current_page': current_page,
         'total_pages': book.pages_count,
-        'is_book_finished': False
+        'is_book_finished': False,
+        'block_number': block_number,
+        'block_start_page': block_start_page,
+        'block_end_page': block_end_page,
+        'has_test': has_test,
+        'test_status': test_status,
+        'test_id': test_id
     })
 
 
@@ -452,38 +622,25 @@ def get_or_create_session(request, book_id):
 def save_page_read(request):
     """Сохранить прочитанную страницу"""
 
-    print("=" * 50)
-    print("SAVE PAGE READ - REQUEST DATA:")
-    print(f"session_id: {request.data.get('session_id')}")
-    print(f"page_number: {request.data.get('page_number')}")
-    print(f"time_spent: {request.data.get('time_spent')}")
-    print(f"words_count: {request.data.get('words_count')}")
-    print("=" * 50)
-
     session_id = request.data.get('session_id')
     page_number = request.data.get('page_number')
     time_spent_seconds = request.data.get('time_spent', 30)
     words_count = request.data.get('words_count', 0)
 
     if not session_id or not page_number:
-        print(f"ERROR: Missing session_id or page_number")
         return Response({"error": "Нужны session_id и page_number"}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         session = ReadingSession.objects.get(id=session_id, status='active', book__user=request.user)
-        print(f"Session found: id={session.id}, book_id={session.book.id}")
     except ReadingSession.DoesNotExist:
-        print(f"ERROR: Session not found")
         return Response({"error": "Активная сессия не найдена"}, status=status.HTTP_404_NOT_FOUND)
 
     if PageReadingLog.objects.filter(session=session, page_number=page_number).exists():
-        print(f"ERROR: Page already saved")
         return Response({"error": "Страница уже сохранена"}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         time_spent = timedelta(seconds=float(time_spent_seconds))
-    except (TypeError, ValueError) as e:
-        print(f"ERROR: Invalid time_spent")
+    except (TypeError, ValueError):
         return Response({"error": "Неверное значение time_spent"}, status=status.HTTP_400_BAD_REQUEST)
 
     now = timezone.now()
@@ -495,53 +652,32 @@ def save_page_read(request):
     is_child_reading = book.user == request.user
 
     # Создаем лог страницы
-    try:
-        page_log = PageReadingLog.objects.create(
-            session=session,
-            page_number=page_number,
-            time_spent=time_spent,
-            words_count=words_count,
-            completed_at=now
-        )
-        print(f"Page log created: id={page_log.id}, page={page_number}")
-    except Exception as e:
-        print(f"ERROR creating page log: {e}")
-        return Response({"error": f"Ошибка создания лога: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    page_log = PageReadingLog.objects.create(
+        session=session,
+        page_number=page_number,
+        time_spent=time_spent,
+        words_count=words_count,
+        completed_at=now
+    )
 
     # Обновляем сессию
     session.end_page = page_number
     session.pages_read += 1
     session.last_activity = now
     session.save()
-    print(f"Session updated: end_page={session.end_page}, pages_read={session.pages_read}")
 
-    # Подсчет прочитанных страниц
     total_pages_read = PageReadingLog.objects.filter(session__book=book).count()
-    print(f"Total pages read for book {book.id}: {total_pages_read}")
-
-    # Проверяем дневную цель
-    pages_read_today = PageReadingLog.objects.filter(
-        session__book=book,
-        completed_at__date=today
-    ).count()
-
+    pages_read_today = PageReadingLog.objects.filter(session__book=book, completed_at__date=today).count()
     daily_goal_completed = pages_read_today >= daily_goal
-    print(f"Daily goal: pages_today={pages_read_today}, goal={daily_goal}, completed={daily_goal_completed}")
 
-    # Проверяем, закончена ли книга
     is_book_finished = page_number >= book.pages_count
 
     if is_book_finished:
         session.status = 'completed'
         session.end_datetime = now
         session.save()
-        print("Session marked as completed")
-
-        # Обновляем статус книги на completed (не deleted!)
-        if book.status != 'completed':
-            book.status = 'completed'
-            book.save(update_fields=['status'])
-            print(f"Book {book.id} marked as completed")
+        book.status = 'completed'
+        book.save(update_fields=['status'])
 
     if daily_goal_completed:
         update_streak(request.user, today, daily_goal)
@@ -549,15 +685,16 @@ def save_page_read(request):
     # ========== СОЗДАНИЕ ТЕСТА (каждые 2 страницы) ==========
     test_created = False
     test_id = None
+    block_start_page = None
+    block_end_page = None
 
     if is_book_uploaded_by_parent and is_child_reading:
-        print(f"DEBUG: Создание теста для книги {book.id}, страница {page_number}")
-
         block_number = (page_number - 1) // 2 + 1
         test_start_page = (block_number - 1) * 2 + 1
         test_end_page = min(block_number * 2, book.pages_count)
 
-        print(f"DEBUG: Блок {block_number}: страницы {test_start_page}-{test_end_page}")
+        block_start_page = test_start_page
+        block_end_page = test_end_page
 
         pages_in_block = PageReadingLog.objects.filter(
             session__book=book,
@@ -566,7 +703,6 @@ def save_page_read(request):
         ).count()
 
         expected_pages = test_end_page - test_start_page + 1
-        print(f"DEBUG: Прочитано страниц в блоке: {pages_in_block}, ожидается: {expected_pages}")
 
         if pages_in_block >= expected_pages:
             existing_test = Test.objects.filter(
@@ -576,20 +712,10 @@ def save_page_read(request):
             ).first()
 
             if not existing_test:
-                print(f"DEBUG: Создаем новый тест для блока {test_start_page}-{test_end_page}")
                 test = create_test_for_session(session, test_start_page, test_end_page)
                 if test:
                     test_created = True
                     test_id = test.id
-                    print(f"DEBUG: Тест создан, ID={test_id}")
-                else:
-                    print(f"DEBUG: Ошибка создания теста (API не вернул вопросы)")
-            else:
-                print(f"DEBUG: Тест уже существует, ID={existing_test.id}")
-        else:
-            print(f"DEBUG: Не все страницы блока прочитаны")
-    else:
-        print(f"DEBUG: Условия не выполнены для создания теста")
 
     response_data = {
         'success': True,
@@ -603,11 +729,10 @@ def save_page_read(request):
         'daily_goal': daily_goal,
         'test_created': test_created,
         'test_id': test_id,
-        'total_pages_read': total_pages_read
+        'total_pages_read': total_pages_read,
+        'block_end_page': block_end_page,
+        'block_start_page': block_start_page
     }
-
-    print(f"Response data: {response_data}")
-    print("=" * 50)
 
     return Response(response_data)
 
@@ -804,9 +929,9 @@ def check_test_required(request, session_id):
     if not is_book_uploaded_by_parent or is_child_reading:
         return Response({'requires_test': False})
 
-    next_page = session.end_page + 1 if session.end_page else session.start_page
-
-    block_number = (next_page - 1) // 2 + 1
+    # Определяем текущий блок на основе последней сохраненной страницы
+    last_page = session.end_page if session.end_page else session.start_page
+    block_number = (last_page - 1) // 2 + 1
     test_start_page = (block_number - 1) * 2 + 1
     test_end_page = min(block_number * 2, book.pages_count)
 
@@ -823,7 +948,8 @@ def check_test_required(request, session_id):
                 'test_id': test.id,
                 'message': 'Пройдите тест перед продолжением чтения',
                 'start_page': test_start_page,
-                'end_page': test_end_page
+                'end_page': test_end_page,
+                'retake': False
             })
         elif test.status == 'failed':
             return Response({
@@ -916,11 +1042,18 @@ def submit_test(request, test_id):
 @permission_classes([IsAuthenticated])
 def retake_test(request, test_id):
     """Пересдать тест (создать новый с новыми вопросами)"""
+    print("=" * 50)
+    print("RETAKE TEST CALLED")
+    print(f"test_id: {test_id}")
+
     try:
         old_test = Test.objects.get(id=test_id, session__book__user=request.user)
+        print(f"Old test found: id={old_test.id}, pages={old_test.start_page}-{old_test.end_page}")
     except Test.DoesNotExist:
+        print("ERROR: Test not found")
         return Response({"error": "Тест не найден"}, status=status.HTTP_404_NOT_FOUND)
 
+    # Получаем текст страниц для этого блока
     content = ""
     doc = fitz.open(stream=old_test.session.book.content, filetype="pdf")
     for page_num in range(old_test.start_page - 1, old_test.end_page):
@@ -928,11 +1061,18 @@ def retake_test(request, test_id):
             content += doc[page_num].get_text()
     doc.close()
 
-    questions_data = generate_questions_with_russian_model(content)
+    print(f"Content length: {len(content)} characters")
+
+    # Генерируем вопросы
+    questions_data = generate_questions_gigachat(content, num_questions=3)
 
     if not questions_data:
+        print("ERROR: Failed to generate questions")
         return Response({"error": "Ошибка генерации вопросов"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    print(f"Generated {len(questions_data)} questions")
+
+    # Создаем новый тест
     new_test = Test.objects.create(
         session=old_test.session,
         start_page=old_test.start_page,
@@ -941,22 +1081,32 @@ def retake_test(request, test_id):
         status='pending'
     )
 
-    for q_data in questions_data:
+    print(f"New test created: id={new_test.id}")
+
+    # Создаем вопросы и ответы
+    for idx, q_data in enumerate(questions_data):
         question = Question.objects.create(
             test=new_test,
             text=q_data['question']
         )
-        for a_data in q_data['answers']:
+        print(f"  Question {idx + 1}: {q_data['question'][:50]}...")
+
+        for a_idx, a_data in enumerate(q_data['answers']):
             Answer.objects.create(
                 question=question,
                 text=a_data['text'],
                 is_correct=a_data['is_correct']
             )
+            print(f"    Answer {a_idx + 1}: {a_data['text'][:30]}... (correct={a_data['is_correct']})")
 
+    print(f"Test {new_test.id} created successfully")
+    print("=" * 50)
+
+    # ВАЖНО: возвращаем объект с полем test_id
     return Response({
         'test_id': new_test.id,
         'message': 'Новый тест создан'
-    })
+    }, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
@@ -1022,4 +1172,31 @@ def get_book_test_stats(request, book_id):
         'average_score': round(total_score / total_tests, 1) if total_tests > 0 else 0,
         'passed_tests': passed_tests,
         'results': results_data
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_block_text(request, book_id, block_number):
+    """Получить текст блока страниц для перечитывания"""
+    try:
+        book = Book.objects.get(id=book_id, user=request.user)
+    except Book.DoesNotExist:
+        return Response({"error": "Книга не найдена"}, status=status.HTTP_404_NOT_FOUND)
+
+    block_start_page = (block_number - 1) * 2 + 1
+    block_end_page = min(block_number * 2, book.pages_count)
+
+    content = ""
+    doc = fitz.open(stream=book.content, filetype="pdf")
+    for page_num in range(block_start_page - 1, block_end_page):
+        if page_num < len(doc):
+            content += doc[page_num].get_text()
+    doc.close()
+
+    return Response({
+        'block_number': block_number,
+        'start_page': block_start_page,
+        'end_page': block_end_page,
+        'content': content[:5000]  # Ограничиваем для чтения
     })

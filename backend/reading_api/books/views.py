@@ -826,13 +826,9 @@ def get_user_stats(request):
     """Получить статистику пользователя (количество активных книг и страниц)"""
     user = request.user
 
-    # Только активные книги (in_progress)
-    books = Book.objects.filter(
-        user=user,
-        status='in_progress'
-    )
-
-    books_count = books.count()
+    # Активные книги (in_progress)
+    active_books = Book.objects.filter(user=user, status='in_progress')
+    books_count = active_books.count()
 
     # Общее количество страниц из всех книг (включая завершенные)
     all_books = Book.objects.filter(user=user)

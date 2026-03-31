@@ -4,7 +4,7 @@ Content-Type: application/json
 
 {
   "name": "Иван Ивановcкий",
-  "email": "dyplom_reading2@mail.ru",
+  "email": "dyplom_reading3@mail.ru",
   "password": "Qwerty4321",
   "password_confirm": "Qwerty4321",
   "subscription_type": "inactive"
