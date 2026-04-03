@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from PyPDF2 import PdfReader, PdfWriter
 import fitz
+from datetime import date, datetime
 
 from books.models import Book, UserConnection
 from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -430,7 +431,6 @@ def get_book_stats(request, book_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_book_stats_with_daily_goal(request, book_id):
-    """Получить статистику книги с дневной целью"""
     try:
         book = Book.objects.get(id=book_id, status__in=['in_progress', 'completed'])
     except Book.DoesNotExist:
@@ -446,50 +446,31 @@ def get_book_stats_with_daily_goal(request, book_id):
     ).exists()
 
     if not is_owner and not is_parent:
-        return Response({"error": "Нет доступа"}, status=status.HTTP_403_FORBIDDEN)
+        return Response({"error": "Нет доступа к этой книге"}, status=status.HTTP_403_FORBIDDEN)
 
-    today = date.today()
-
-    # ВСЕ логи страниц по этой книге
+    today = timezone.now().date()
     all_page_logs = PageReadingLog.objects.filter(session__book=book)
 
-    # Общее количество прочитанных страниц
     total_pages_read = all_page_logs.count()
-
-    # Страницы, прочитанные сегодня
     pages_read_today = all_page_logs.filter(completed_at__date=today).count()
 
-    # Завершенные сессии для времени
     completed_logs = all_page_logs.filter(session__status='completed')
-    total_time = completed_logs.aggregate(total=models.Sum('time_spent'))['total'] or timedelta(0)
+    total_time = completed_logs.aggregate(total=Sum('time_spent'))['total'] or timedelta(0)
     total_seconds = total_time.total_seconds()
 
-    # Среднее время на страницу
     avg_time_per_page = total_seconds / total_pages_read if total_pages_read > 0 else 0
-
-    # Всего слов
-    total_words = all_page_logs.aggregate(total=models.Sum('words_count'))['total'] or 0
-
-    # Скорость чтения
+    total_words = all_page_logs.aggregate(total=Sum('words_count'))['total'] or 0
     reading_speed = (total_words / (total_seconds / 60)) if total_seconds > 0 else 0
-
-    # Всего сессий
     total_sessions = ReadingSession.objects.filter(book=book).count()
-
-    # Активная сессия
     active_session = ReadingSession.objects.filter(book=book, status='active').first()
 
-    # Дневная цель
     daily_goal = book.daily_goal
     daily_goal_achieved = pages_read_today >= daily_goal
     daily_goal_percent = min(100, int((pages_read_today / daily_goal) * 100)) if daily_goal > 0 else 0
     daily_goal_remaining = max(0, daily_goal - pages_read_today)
 
-    # Последняя прочитанная страница
     last_page_log = all_page_logs.order_by('-completed_at').first()
     last_page_read = last_page_log.page_number if last_page_log else 0
-
-    # Прогресс
     progress_percent = round((total_pages_read / book.pages_count * 100), 1) if book.pages_count > 0 else 0
 
     return Response({

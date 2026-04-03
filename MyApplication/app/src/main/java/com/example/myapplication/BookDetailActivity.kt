@@ -2,14 +2,17 @@ package com.example.myapplication
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.myapplication.databinding.ActivityBookDetailBinding
+import okhttp3.OkHttpClient
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 class BookDetailActivity : AppCompatActivity() {
 
@@ -19,6 +22,10 @@ class BookDetailActivity : AppCompatActivity() {
     private var bookId: Int = 0
     private var bookName: String = ""
     private var readOnly: Boolean = false
+
+    companion object {
+        private const val TAG = "BookDetailActivity"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,8 +39,24 @@ class BookDetailActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("auth", MODE_PRIVATE)
         token = prefs.getString("token", "") ?: ""
 
+        // Добавляем логирование через OkHttp Interceptor
+        val client = OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val request = chain.request()
+                Log.d(TAG, "Request: ${request.method} ${request.url}")
+                val response = chain.proceed(request)
+                val body = response.peekBody(Long.MAX_VALUE)
+                Log.d(TAG, "Response: ${response.code}")
+                Log.d(TAG, "Body: ${body.string()}")
+                response
+            }
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .build()
+
         val retrofit = Retrofit.Builder()
             .baseUrl("http://10.0.2.2:8000/")
+            .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
         api = retrofit.create(DjangoApi::class.java)
@@ -63,40 +86,60 @@ class BookDetailActivity : AppCompatActivity() {
             override fun onResponse(call: Call<BookStatsResponse>, response: Response<BookStatsResponse>) {
                 if (response.isSuccessful && response.body() != null) {
                     val stats = response.body()!!
+                    Log.d(TAG, "=== ПАРСИНГ УСПЕШЕН ===")
+                    Log.d(TAG, "daily_goal: ${stats.daily_goal}")
+                    Log.d(TAG, "pages_read_today: ${stats.pages_read_today}")
+                    Log.d(TAG, "daily_goal_achieved: ${stats.daily_goal_achieved}")
+                    Log.d(TAG, "daily_goal_percent: ${stats.daily_goal_percent}")
+                    Log.d(TAG, "daily_goal_remaining: ${stats.daily_goal_remaining}")
                     updateUI(stats)
                 } else {
-                    Toast.makeText(this@BookDetailActivity, "Ошибка загрузки статистики: ${response.code()}", Toast.LENGTH_SHORT).show()
+                    Log.e(TAG, "Response не успешен: ${response.code()}")
+                    Toast.makeText(this@BookDetailActivity, "Ошибка: ${response.code()}", Toast.LENGTH_SHORT).show()
                 }
             }
 
             override fun onFailure(call: Call<BookStatsResponse>, t: Throwable) {
+                Log.e(TAG, "Failure: ${t.message}")
                 Toast.makeText(this@BookDetailActivity, "Ошибка: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
     }
 
     private fun updateUI(stats: BookStatsResponse) {
+        // Прогресс чтения
         binding.tvPagesRead.text = "${stats.pages_read} / ${stats.total_pages}"
         binding.progressBar.progress = stats.progress_percent.toInt()
         binding.tvProgressPercent.text = "${stats.progress_percent.toInt()}%"
-        binding.tvTotalTime.text = formatTime(stats.total_time_seconds)
+
+        // Время
+        binding.tvTotalTime.text = stats.total_time_formatted
         binding.tvAvgTimePerPage.text = formatTime(stats.avg_time_per_page_seconds)
+
+        // Слова и скорость
         binding.tvTotalWords.text = stats.total_words.toString()
         binding.tvReadingSpeed.text = "${stats.reading_speed_wpm.toInt()} слов/мин"
+
+        // Сессии
         binding.tvTotalSessions.text = stats.total_sessions.toString()
 
-        // Дневная цель
+        // ========== ДНЕВНАЯ ЦЕЛЬ ==========
         binding.tvDailyGoal.text = "${stats.pages_read_today} / ${stats.daily_goal} стр."
-        binding.tvDailyGoalRemaining.text = "Осталось: ${stats.daily_goal_remaining} стр."
+
+        val remaining = stats.daily_goal_remaining
+        binding.tvDailyGoalRemaining.text = if (remaining > 0) "Осталось: $remaining стр." else "Цель достигнута!"
+
+        binding.dailyGoalProgress.progress = stats.daily_goal_percent
 
         if (stats.daily_goal_achieved) {
-            binding.tvDailyGoal.setTextColor(resources.getColor(android.R.color.holo_green_dark, null))
-            binding.tvDailyGoalRemaining.visibility = android.view.View.GONE
+            binding.tvDailyGoalStatus.text = "✅ Дневная цель выполнена! 🎉"
+            binding.tvDailyGoalStatus.setTextColor(resources.getColor(android.R.color.holo_green_dark, null))
         } else {
-            binding.tvDailyGoal.setTextColor(resources.getColor(android.R.color.white, null))
-            binding.tvDailyGoalRemaining.visibility = android.view.View.VISIBLE
+            binding.tvDailyGoalStatus.text = "📖 Осталось $remaining стр."
+            binding.tvDailyGoalStatus.setTextColor(resources.getColor(android.R.color.holo_orange_dark, null))
         }
 
+        // Кнопка чтения
         if (stats.has_active_session) {
             binding.btnRead.text = "Продолжить чтение"
         } else {

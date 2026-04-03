@@ -12,6 +12,7 @@ from .serializers import (
     ConnectionRequestSerializer, ConnectionSerializer,
     BookUploadSerializer, BookUploadToChildSerializer, BookListSerializer
 )
+from reading.models import PageReadingLog
 
 User = get_user_model()
 
@@ -823,18 +824,27 @@ def get_child_book_limit(request, child_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_user_stats(request):
-    """Получить статистику пользователя (количество активных книг и страниц)"""
+    """Получить статистику пользователя (количество книг и страниц)"""
     user = request.user
 
-    # Активные книги (in_progress)
-    active_books = Book.objects.filter(user=user, status='in_progress')
-    books_count = active_books.count()
+    # Активные книги (в процессе чтения)
+    books_in_progress = Book.objects.filter(user=user, status='in_progress').count()
 
-    # Общее количество страниц из всех книг (включая завершенные)
-    all_books = Book.objects.filter(user=user)
-    total_pages = sum(b.pages_count for b in all_books)
+    # Завершенные книги
+    books_completed = Book.objects.filter(user=user, status='completed').count()
+
+    # Общее количество книг
+    books_count = books_in_progress + books_completed
+
+    # Общее количество прочитанных страниц (из логов чтения)
+    total_pages = PageReadingLog.objects.filter(
+        session__book__user=user,
+        session__status='completed'
+    ).count()
 
     return Response({
         'books_count': books_count,
-        'total_pages': total_pages
+        'total_pages': total_pages,
+        'books_in_progress': books_in_progress,
+        'books_completed': books_completed
     })

@@ -5,6 +5,7 @@ import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.http.*
+import com.google.gson.annotations.SerializedName
 
 
 // ==================== МОДЕЛИ ДАННЫХ ====================
@@ -150,7 +151,9 @@ data class RequestsCountResponse(
 // Статистика пользователя
 data class UserStatsResponse(
     val books_count: Int,
-    val total_pages: Int
+    val total_pages: Int,
+    val books_in_progress: Int = 0,
+    val books_completed: Int = 0
 )
 
 
@@ -202,25 +205,25 @@ data class CheckBookLimitResponse(
 
 // Чтение - Статистика книги
 data class BookStatsResponse(
-    val book_id: Int,
-    val book_name: String,
-    val total_pages: Int,
-    val pages_read: Int,
-    val progress_percent: Double,
-    val total_time_seconds: Double,
-    val total_time_formatted: String,
-    val avg_time_per_page_seconds: Double,
-    val total_words: Int,
-    val reading_speed_wpm: Double,
-    val total_sessions: Int,
-    val has_active_session: Boolean,
-    val active_session_id: Int?,
-    val last_page_read: Int,
-    val daily_goal: Int,
-    val pages_read_today: Int,
-    val daily_goal_achieved: Boolean,
-    val daily_goal_percent: Int,
-    val daily_goal_remaining: Int
+    @SerializedName("book_id") val book_id: Int,
+    @SerializedName("book_name") val book_name: String,
+    @SerializedName("total_pages") val total_pages: Int,
+    @SerializedName("pages_read") val pages_read: Int,
+    @SerializedName("progress_percent") val progress_percent: Double,
+    @SerializedName("total_time_seconds") val total_time_seconds: Double,
+    @SerializedName("total_time_formatted") val total_time_formatted: String,
+    @SerializedName("avg_time_per_page_seconds") val avg_time_per_page_seconds: Double,
+    @SerializedName("total_words") val total_words: Int,
+    @SerializedName("reading_speed_wpm") val reading_speed_wpm: Double,
+    @SerializedName("total_sessions") val total_sessions: Int,
+    @SerializedName("has_active_session") val has_active_session: Boolean,
+    @SerializedName("active_session_id") val active_session_id: Int?,
+    @SerializedName("last_page_read") val last_page_read: Int,
+    @SerializedName("daily_goal") val daily_goal: Int,
+    @SerializedName("pages_read_today") val pages_read_today: Int,
+    @SerializedName("daily_goal_achieved") val daily_goal_achieved: Boolean,
+    @SerializedName("daily_goal_percent") val daily_goal_percent: Int,
+    @SerializedName("daily_goal_remaining") val daily_goal_remaining: Int
 )
 
 // Чтение - Сессия
@@ -661,7 +664,7 @@ interface DjangoApi {
         @Path("bookId") bookId: Int
     ): Call<BookTestStatsResponse>
 
-    @GET("api/reading/book/{bookId}/stats/")
+    @GET("api/reading/book/{bookId}/stats-with-daily/")  // ← должно быть так
     fun getBookStatsWithDaily(
         @Header("Authorization") token: String,
         @Path("bookId") bookId: Int

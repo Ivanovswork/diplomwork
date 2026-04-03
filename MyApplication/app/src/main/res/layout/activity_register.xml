@@ -3,32 +3,50 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_white">
+    android:fillViewport="true"
+    android:background="@color/bg_light">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="32dp"
-        android:gravity="center">
+        android:padding="24dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_arrow_back"
+            android:background="@android:color/transparent"
+            android:contentDescription="Назад"
+            android:layout_marginBottom="24dp" />
 
         <TextView
-            android:id="@+id/tvRegisterTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Регистрация"
-            android:textSize="36sp"
+            android:textSize="28sp"
             android:textStyle="bold"
             android:textColor="@color/text_dark"
-            android:layout_marginBottom="48dp" />
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Создай аккаунт и начни читать"
+            android:textSize="14sp"
+            android:textColor="@color/text_light"
+            android:layout_marginBottom="32dp" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="16dp"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             app:boxStrokeColor="@color/primary_blue"
-            app:hintTextColor="@color/text_light">
+            app:hintTextColor="@color/text_light"
+            app:startIconDrawable="@drawable/ic_person"
+            app:startIconTint="@color/text_light">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etName"
@@ -36,16 +54,18 @@
                 android:layout_height="wrap_content"
                 android:hint="Имя"
                 android:textColor="@color/text_dark"
-                android:textSize="18sp" />
+                android:textSize="16sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="16dp"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             app:boxStrokeColor="@color/primary_blue"
-            app:hintTextColor="@color/text_light">
+            app:hintTextColor="@color/text_light"
+            app:startIconDrawable="@drawable/ic_email"
+            app:startIconTint="@color/text_light">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etEmail"
@@ -54,17 +74,19 @@
                 android:hint="Email"
                 android:inputType="textEmailAddress"
                 android:textColor="@color/text_dark"
-                android:textSize="18sp" />
+                android:textSize="16sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="40dp"
+            android:layout_marginBottom="24dp"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             app:boxStrokeColor="@color/primary_blue"
             app:hintTextColor="@color/text_light"
-            app:passwordToggleEnabled="true">
+            app:passwordToggleEnabled="true"
+            app:startIconDrawable="@drawable/ic_lock"
+            app:startIconTint="@color/text_light">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPassword"
@@ -73,20 +95,20 @@
                 android:hint="Пароль"
                 android:inputType="textPassword"
                 android:textColor="@color/text_dark"
-                android:textSize="18sp" />
+                android:textSize="16sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnRegister"
             style="@style/Widget.MaterialComponents.Button"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="56dp"
             android:text="Зарегистрироваться"
-            android:textSize="20sp"
+            android:textSize="16sp"
             android:textAllCaps="false"
-            android:textColor="@color/bg_white"
-            app:cornerRadius="30dp"
-            app:backgroundTint="@color/primary_blue" />
+            app:cornerRadius="28dp"
+            app:backgroundTint="@color/primary_blue"
+            android:layout_marginBottom="16dp" />
 
         <TextView
             android:id="@+id/tvGoToLogin"
@@ -94,10 +116,10 @@
             android:layout_height="wrap_content"
             android:text="Уже есть аккаунт? Войти"
             android:textColor="@color/accent_purple"
-            android:textSize="16sp"
+            android:textSize="14sp"
             android:clickable="true"
             android:focusable="true"
-            android:layout_marginTop="24dp" />
+            android:layout_gravity="center" />
 
     </LinearLayout>
 </ScrollView>
