@@ -1312,3 +1312,74 @@ def get_child_book_stats(request, child_id, book_id):
         'avg_test_score_percent': round(avg_percent, 1),
         'test_results': results_data
     })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_leaderboard(request):
+    """Получить лидерборд друзей пользователя"""
+    # Получаем всех друзей пользователя
+    friends = UserConnection.objects.filter(
+        models.Q(user1=request.user) | models.Q(user2=request.user),
+        connection_type='friendship',
+        is_parent_flag=True,
+        is_child_flag=True
+    ).select_related('user1', 'user2')
+
+    friend_ids = []
+    for conn in friends:
+        friend = conn.user2 if conn.user1 == request.user else conn.user1
+        friend_ids.append(friend.id)
+
+    # Добавляем самого пользователя
+    friend_ids.append(request.user.id)
+
+    # Собираем статистику для каждого пользователя
+    result = []
+    for user_id in friend_ids:
+        user = User.objects.get(id=user_id)
+
+        # Получаем стрик
+        streak, _ = UserReadingStreak.objects.get_or_create(user=user)
+
+        # Получаем общее количество прочитанных страниц
+        page_logs = PageReadingLog.objects.filter(
+            session__book__user=user,
+            session__status='completed'
+        )
+        total_pages = page_logs.count()
+
+        # Получаем общее время чтения
+        total_time = page_logs.aggregate(total=models.Sum('time_spent'))['total'] or timedelta(0)
+        total_seconds = total_time.total_seconds()
+
+        # Получаем количество книг
+        books_count = Book.objects.filter(user=user, status__in=['in_progress', 'completed']).count()
+
+        # Получаем средний процент тестов
+        test_results = UserTestResult.objects.filter(user=user)
+        total_tests = test_results.count()
+        if total_tests > 0:
+            avg_score = test_results.aggregate(avg=models.Avg('correct_answers'))['avg'] or 0
+            avg_percent = (avg_score / 3 * 100)
+        else:
+            avg_percent = 0
+
+        result.append({
+            'user_id': user.id,
+            'name': user.name,
+            'email': user.email,
+            'current_streak': streak.current_streak,
+            'longest_streak': streak.longest_streak,
+            'total_pages': total_pages,
+            'total_time_seconds': total_seconds,
+            'total_time_formatted': format_time(total_seconds),
+            'books_count': books_count,
+            'test_avg_percent': round(avg_percent, 1),
+            'is_current_user': user.id == request.user.id
+        })
+
+    # Сортируем по стрику (по убыванию)
+    result.sort(key=lambda x: x['current_streak'], reverse=True)
+
+    return Response({'leaderboard': result})

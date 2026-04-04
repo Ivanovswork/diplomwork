@@ -14,21 +14,15 @@
         <androidx.appcompat.widget.Toolbar
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Reading Tracker"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="@color/primary_blue" />
+            app:title="Reading Tracker"
+            app:titleTextColor="@color/text_dark"
+            app:titleMarginStart="16dp">
 
             <FrameLayout
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:paddingEnd="16dp">
 
                 <ImageButton
                     android:id="@+id/btnProfile"
@@ -40,15 +34,17 @@
 
                 <View
                     android:id="@+id/badgeRequests"
-                    android:layout_width="10dp"
-                    android:layout_height="10dp"
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
                     android:background="@drawable/badge_red_circle"
                     android:visibility="gone"
                     android:layout_marginStart="24dp"
-                    android:layout_marginTop="8dp" />
+                    android:layout_marginTop="4dp" />
+
             </FrameLayout>
 
         </androidx.appcompat.widget.Toolbar>
+
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -62,7 +58,7 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Карточка профиля -->
+            <!-- Карточка профиля (кликабельная) -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardProfile"
                 android:layout_width="match_parent"
@@ -109,13 +105,9 @@
                             android:text="user@example.com"
                             android:textSize="14sp"
                             android:textColor="@color/text_light" />
+
                     </LinearLayout>
 
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_chevron_right"
-                        android:alpha="0.5" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -164,6 +156,7 @@
                             android:textSize="28sp"
                             android:textStyle="bold"
                             android:textColor="#FF9800" />
+
                     </LinearLayout>
 
                     <LinearLayout
@@ -187,7 +180,9 @@
                             android:textSize="20sp"
                             android:textStyle="bold"
                             android:textColor="#FF9800" />
+
                     </LinearLayout>
+
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -203,7 +198,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginEnd="8dp"
-                    app:cardCornerRadius="20dp"
+                    app:cardCornerRadius="16dp"
                     app:cardElevation="1dp">
 
                     <LinearLayout
@@ -211,7 +206,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="20dp">
+                        android:padding="16dp">
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -224,17 +219,17 @@
                             android:layout_height="wrap_content"
                             android:text="Книг"
                             android:textSize="12sp"
-                            android:textColor="@color/text_light"
-                            android:layout_marginTop="8dp" />
+                            android:textColor="@color/text_light" />
 
                         <TextView
                             android:id="@+id/tvBooksCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0"
-                            android:textSize="28sp"
+                            android:textSize="24sp"
                             android:textStyle="bold"
                             android:textColor="@color/primary_blue" />
+
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -243,7 +238,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="8dp"
-                    app:cardCornerRadius="20dp"
+                    app:cardCornerRadius="16dp"
                     app:cardElevation="1dp">
 
                     <LinearLayout
@@ -251,12 +246,12 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="20dp">
+                        android:padding="16dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="📖"
+                            android:text="📄"
                             android:textSize="28sp" />
 
                         <TextView
@@ -264,48 +259,141 @@
                             android:layout_height="wrap_content"
                             android:text="Страниц"
                             android:textSize="12sp"
-                            android:textColor="@color/text_light"
-                            android:layout_marginTop="8dp" />
+                            android:textColor="@color/text_light" />
 
                         <TextView
                             android:id="@+id/tvPagesCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0"
-                            android:textSize="28sp"
+                            android:textSize="24sp"
                             android:textStyle="bold"
                             android:textColor="@color/primary_blue" />
+
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
+
             </LinearLayout>
 
             <!-- Кнопка "Мои книги" -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnMyBooks"
-                style="@style/Widget.MaterialComponents.Button"
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:text="📚 Мои книги"
-                android:textSize="16sp"
-                android:textAllCaps="false"
-                app:cornerRadius="28dp"
-                app:backgroundTint="@color/primary_blue"
-                android:layout_marginBottom="12dp" />
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📖 Мои книги"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_dark"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Управляй своей библиотекой"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_light"
+                        android:layout_marginBottom="16dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnMyBooks"
+                        style="@style/Widget.MaterialComponents.Button"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:text="Перейти к книгам"
+                        android:textAllCaps="false"
+                        android:textColor="@color/primary_blue"
+                        app:cornerRadius="22dp"
+                        app:strokeColor="@color/primary_blue"
+                        app:strokeWidth="1dp"
+                        app:backgroundTint="@android:color/transparent" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- Кнопка "Статистика" -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnStats"
-                style="@style/Widget.MaterialComponents.Button"
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:text="📊 Статистика чтения"
-                android:textSize="16sp"
-                android:textAllCaps="false"
-                app:cornerRadius="28dp"
-                app:strokeColor="@color/primary_blue"
-                app:strokeWidth="1dp"
-                app:backgroundTint="@android:color/transparent"
-                android:textColor="@color/primary_blue" />
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📊 Статистика"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_dark"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Следи за своим прогрессом"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_light"
+                        android:layout_marginBottom="16dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnStats"
+                        style="@style/Widget.MaterialComponents.Button"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:text="Посмотреть статистику"
+                        android:textAllCaps="false"
+                        android:textColor="@color/primary_blue"
+                        app:cornerRadius="22dp"
+                        app:strokeColor="@color/primary_blue"
+                        app:strokeWidth="1dp"
+                        app:backgroundTint="@android:color/transparent" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Лидерборд -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🏆 Таблица лидеров"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_dark"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="12dp" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvLeaderboard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false" />
+
+            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

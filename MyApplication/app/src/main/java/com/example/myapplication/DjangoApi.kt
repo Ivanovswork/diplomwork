@@ -415,6 +415,24 @@ data class ChildTestResult(
     val start_page: Int,
     val end_page: Int
 )
+
+data class LeaderboardUser(
+    val user_id: Int,
+    val name: String,
+    val email: String,
+    val current_streak: Int,
+    val longest_streak: Int,
+    val total_pages: Int,
+    val total_time_seconds: Double,
+    val total_time_formatted: String,
+    val books_count: Int,
+    val test_avg_percent: Double,
+    val is_current_user: Boolean
+)
+
+data class LeaderboardResponse(
+    val leaderboard: List<LeaderboardUser>
+)
 // ==================== ИНТЕРФЕЙС API ====================
 
 interface DjangoApi {
@@ -727,4 +745,9 @@ interface DjangoApi {
         @Path("childId") childId: Int,
         @Path("bookId") bookId: Int
     ): Call<ChildBookStatsResponse>
+
+    @GET("api/reading/leaderboard/")
+    fun getLeaderboard(
+        @Header("Authorization") token: String
+    ): Call<LeaderboardResponse>
 }

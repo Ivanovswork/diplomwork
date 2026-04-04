@@ -30,4 +30,6 @@ urlpatterns = [
 
     path('child/<int:child_id>/full-stats/', views.get_child_full_stats, name='child_full_stats'),
     path('child/<int:child_id>/book/<int:book_id>/stats/', views.get_child_book_stats, name='child_book_stats'),
+
+    path('leaderboard/', views.get_leaderboard, name='leaderboard'),
 ]
