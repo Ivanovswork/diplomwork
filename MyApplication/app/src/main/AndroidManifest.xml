@@ -101,6 +101,9 @@
             android:name=".TestActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".ChildBookStatsActivity"
+            android:exported="false" />
 
     </application>
 

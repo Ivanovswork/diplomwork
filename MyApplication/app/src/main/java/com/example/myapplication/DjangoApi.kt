@@ -370,6 +370,51 @@ data class RefreshStatsResponse(
     val daily_goal_percent: Int,
     val daily_goal_remaining: Int
 )
+
+data class ChildFullStatsResponse(
+    val child_id: Int,
+    val child_name: String,
+    val child_email: String,
+    val books_count: Int,
+    val total_pages: Int,
+    val total_tests: Int,
+    val passed_tests: Int,
+    val avg_score_percent: Double,
+    val total_reading_time_seconds: Double,
+    val total_reading_time_formatted: String,
+    val total_words: Int,
+    val reading_speed_wpm: Double
+)
+
+data class ChildBookStatsResponse(
+    val book_id: Int,
+    val book_name: String,
+    val total_pages: Int,
+    val pages_read: Int,
+    val progress_percent: Double,
+    val total_time_seconds: Double,
+    val total_time_formatted: String,
+    val avg_time_per_page_seconds: Double,
+    val total_words: Int,
+    val reading_speed_wpm: Double,
+    val total_sessions: Int,
+    val has_active_session: Boolean,
+    val last_page_read: Int,
+    val total_tests: Int,
+    val passed_tests: Int,
+    val avg_test_score_percent: Double,
+    val test_results: List<ChildTestResult>
+)
+
+data class ChildTestResult(
+    val test_id: Int,
+    val correct_answers: Int,
+    val total_questions: Int,
+    val score_percent: Int,
+    val completed_at: String,
+    val start_page: Int,
+    val end_page: Int
+)
 // ==================== ИНТЕРФЕЙС API ====================
 
 interface DjangoApi {
@@ -670,4 +715,16 @@ interface DjangoApi {
         @Path("bookId") bookId: Int
     ): Call<BookStatsResponse>
 
+    @GET("api/reading/child/{childId}/full-stats/")
+    fun getChildFullStats(
+        @Header("Authorization") token: String,
+        @Path("childId") childId: Int
+    ): Call<ChildFullStatsResponse>
+
+    @GET("api/reading/child/{childId}/book/{bookId}/stats/")
+    fun getChildBookStats(
+        @Header("Authorization") token: String,
+        @Path("childId") childId: Int,
+        @Path("bookId") bookId: Int
+    ): Call<ChildBookStatsResponse>
 }

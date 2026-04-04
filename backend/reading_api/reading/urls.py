@@ -27,4 +27,7 @@ urlpatterns = [
     path('streak/', views.get_user_streak, name='user_streak'),
     path('stats/', views.get_reading_stats, name='reading_stats'),
     path('block/<int:book_id>/<int:block_number>/', views.get_block_text, name='block_text'),
+
+    path('child/<int:child_id>/full-stats/', views.get_child_full_stats, name='child_full_stats'),
+    path('child/<int:child_id>/book/<int:book_id>/stats/', views.get_child_book_stats, name='child_book_stats'),
 ]

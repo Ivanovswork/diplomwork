@@ -18,6 +18,8 @@ from books.models import Book, UserConnection
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from .models import ReadingSession, PageReadingLog, UserReadingStreak, Test, Question, Answer, UserTestResult
+from users.models import User
+
 
 # ==================== МОДЕЛЬ ДЛЯ ГЕНЕРАЦИИ ВОПРОСОВ ====================
 # def generate_questions_gigachat(content, num_questions=3):
@@ -1180,4 +1182,133 @@ def get_block_text(request, book_id, block_number):
         'start_page': block_start_page,
         'end_page': block_end_page,
         'content': content[:5000]  # Ограничиваем для чтения
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_child_full_stats(request, child_id):
+    """Полная статистика ребенка для родителя"""
+    try:
+        child = User.objects.get(id=child_id)
+    except User.DoesNotExist:
+        return Response({"error": "Ребенок не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Проверка: текущий пользователь - родитель ребенка
+    is_parent = UserConnection.objects.filter(
+        user1=request.user,
+        user2=child,
+        connection_type='parent_child',
+        is_parent_flag=True,
+        is_child_flag=True
+    ).exists()
+
+    if not is_parent:
+        return Response({"error": "Нет доступа"}, status=status.HTTP_403_FORBIDDEN)
+
+    # Статистика по книгам
+    books = Book.objects.filter(user=child, status__in=['in_progress', 'completed'])
+    books_count = books.count()
+    total_pages = books.aggregate(total=models.Sum('pages_count'))['total'] or 0
+
+    # Статистика по тестам
+    test_results = UserTestResult.objects.filter(user=child)
+    total_tests = test_results.count()
+    passed_tests = test_results.filter(correct_answers__gte=2).count()
+    avg_score = test_results.aggregate(avg=models.Avg('correct_answers'))['avg'] or 0
+    avg_percent = (avg_score / 3 * 100) if total_tests > 0 else 0
+
+    # Статистика чтения
+    page_logs = PageReadingLog.objects.filter(session__book__user=child, session__status='completed')
+    total_time = page_logs.aggregate(total=models.Sum('time_spent'))['total'] or timedelta(0)
+    total_seconds = total_time.total_seconds()
+    total_words = page_logs.aggregate(total=models.Sum('words_count'))['total'] or 0
+    reading_speed = (total_words / (total_seconds / 60)) if total_seconds > 0 else 0
+
+    return Response({
+        'child_id': child.id,
+        'child_name': child.name,
+        'child_email': child.email,
+        'books_count': books_count,
+        'total_pages': total_pages,
+        'total_tests': total_tests,
+        'passed_tests': passed_tests,
+        'avg_score_percent': round(avg_percent, 1),
+        'total_reading_time_seconds': total_seconds,
+        'total_reading_time_formatted': format_time(total_seconds),
+        'total_words': total_words,
+        'reading_speed_wpm': round(reading_speed, 0)
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_child_book_stats(request, child_id, book_id):
+    """Статистика конкретной книги ребенка для родителя"""
+    try:
+        book = Book.objects.get(id=book_id, user_id=child_id, status__in=['in_progress', 'completed'])
+    except Book.DoesNotExist:
+        return Response({"error": "Книга не найдена"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Проверка: текущий пользователь - родитель ребенка
+    is_parent = UserConnection.objects.filter(
+        user1=request.user,
+        user2_id=child_id,
+        connection_type='parent_child',
+        is_parent_flag=True,
+        is_child_flag=True
+    ).exists()
+
+    if not is_parent:
+        return Response({"error": "Нет доступа"}, status=status.HTTP_403_FORBIDDEN)
+
+    # Статистика по книге
+    all_page_logs = PageReadingLog.objects.filter(session__book=book)
+    total_pages_read = all_page_logs.count()
+    completed_logs = all_page_logs.filter(session__status='completed')
+    total_time = completed_logs.aggregate(total=models.Sum('time_spent'))['total'] or timedelta(0)
+    total_seconds = total_time.total_seconds()
+    avg_time_per_page = total_seconds / total_pages_read if total_pages_read > 0 else 0
+    total_words = all_page_logs.aggregate(total=models.Sum('words_count'))['total'] or 0
+    reading_speed = (total_words / (total_seconds / 60)) if total_seconds > 0 else 0
+    total_sessions = ReadingSession.objects.filter(book=book).count()
+
+    # Статистика тестов по этой книге
+    test_results = UserTestResult.objects.filter(user_id=child_id, book=book)
+    total_tests = test_results.count()
+    passed_tests = test_results.filter(correct_answers__gte=2).count()
+    avg_score = test_results.aggregate(avg=models.Avg('correct_answers'))['avg'] or 0
+    avg_percent = (avg_score / 3 * 100) if total_tests > 0 else 0
+
+    # Результаты тестов детально
+    results_data = []
+    for r in test_results.order_by('-completed_at'):
+        results_data.append({
+            'test_id': r.test.id,
+            'correct_answers': r.correct_answers,
+            'total_questions': r.total_questions,
+            'score_percent': r.score_percent,
+            'completed_at': r.completed_at.isoformat(),
+            'start_page': r.test.start_page,
+            'end_page': r.test.end_page
+        })
+
+    return Response({
+        'book_id': book.id,
+        'book_name': book.name,
+        'total_pages': book.pages_count,
+        'pages_read': total_pages_read,
+        'progress_percent': round((total_pages_read / book.pages_count * 100), 1) if book.pages_count > 0 else 0,
+        'total_time_seconds': total_seconds,
+        'total_time_formatted': format_time(total_seconds),
+        'avg_time_per_page_seconds': round(avg_time_per_page, 1),
+        'total_words': total_words,
+        'reading_speed_wpm': round(reading_speed, 0),
+        'total_sessions': total_sessions,
+        'has_active_session': ReadingSession.objects.filter(book=book, status='active').exists(),
+        'last_page_read': all_page_logs.order_by('-completed_at').first().page_number if all_page_logs.exists() else 0,
+        'total_tests': total_tests,
+        'passed_tests': passed_tests,
+        'avg_test_score_percent': round(avg_percent, 1),
+        'test_results': results_data
     })
