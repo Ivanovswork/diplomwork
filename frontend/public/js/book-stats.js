@@ -13,6 +13,11 @@ async function loadBookStats() {
   currentBookId = bookId;
   
   try {
+    const user = await apiRequest('/users/me/', 'GET');
+    document.getElementById('headerUserName').textContent = user.name || '';
+  } catch (e) {}
+  
+  try {
     const stats = await apiRequest(`/reading/book/${bookId}/stats-with-daily/`, 'GET');
     
     currentBookName = stats.book_name;
@@ -59,18 +64,30 @@ async function loadBookStats() {
     }
     
     // Кнопка начала чтения
-    document.getElementById('startReadingBtn').onclick = () => {
-      window.location.href = `/reading.html?id=${bookId}`;
-    };
+    const startBtn = document.getElementById('startReadingBtn');
+    if (startBtn) {
+      startBtn.onclick = () => {
+        window.location.href = `/reading.html?id=${bookId}`;
+      };
+    }
     
     // Кнопка удаления
-    document.getElementById('deleteBookBtn').onclick = () => {
-      showDeleteModal();
-    };
+    const deleteBtn = document.getElementById('deleteBookBtn');
+    if (deleteBtn) {
+      deleteBtn.onclick = () => showDeleteModal();
+    }
     
   } catch (error) {
     console.error('Error loading book stats:', error);
   }
+}
+
+function formatTime(seconds) {
+  if (!seconds) return '0с';
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  if (mins > 0) return `${mins}м ${secs}с`;
+  return `${secs}с`;
 }
 
 function showDeleteModal() {
@@ -96,7 +113,7 @@ async function confirmDelete() {
     });
     
     if (response.ok) {
-      alert('Книга успешно удалена');
+      alert(`Книга "${currentBookName}" успешно удалена`);
       window.location.href = '/';
     } else {
       const error = await response.json();
@@ -105,14 +122,6 @@ async function confirmDelete() {
   } catch (error) {
     alert('Ошибка при удалении книги');
   }
-}
-
-function formatTime(seconds) {
-  if (!seconds) return '0с';
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  if (mins > 0) return `${mins}м ${secs}с`;
-  return `${secs}с`;
 }
 
 document.addEventListener('DOMContentLoaded', () => {

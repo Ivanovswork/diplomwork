@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Статистика ребенка</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="header">
+    <div style="display: flex; align-items: center; gap: 20px;">
+      <button class="btn-back" onclick="window.location.href='/'">← Назад</button>
+      <div class="logo" id="childName">Статистика ребенка</div>
+    </div>
+    <div class="user-info">
+      <span class="user-name" id="headerUserName"></span>
+      <button class="btn-logout" onclick="logout()">Выйти</button>
+    </div>
+  </header>
+  
+  <div class="child-stats-container">
+    <!-- Общая статистика -->
+    <div class="stats-card">
+      <h3>📊 Общая статистика</h3>
+      <div class="stats-grid-2cols">
+        <div class="stat-large">
+          <div class="stat-large-icon">📚</div>
+          <div class="stat-large-value" id="childBooksCount">0</div>
+          <div class="stat-large-label">Всего книг</div>
+        </div>
+        <div class="stat-large">
+          <div class="stat-large-icon">📄</div>
+          <div class="stat-large-value" id="childPagesCount">0</div>
+          <div class="stat-large-label">Всего страниц</div>
+        </div>
+        <div class="stat-large">
+          <div class="stat-large-icon">📝</div>
+          <div class="stat-large-value" id="childTotalTests">0</div>
+          <div class="stat-large-label">Всего тестов</div>
+        </div>
+        <div class="stat-large">
+          <div class="stat-large-icon">✅</div>
+          <div class="stat-large-value" id="childPassedTests">0</div>
+          <div class="stat-large-label">Пройдено тестов</div>
+        </div>
+        <div class="stat-large">
+          <div class="stat-large-icon">📊</div>
+          <div class="stat-large-value" id="childAvgScore">0%</div>
+          <div class="stat-large-label">Средний балл</div>
+        </div>
+        <div class="stat-large">
+          <div class="stat-large-icon">⏱️</div>
+          <div class="stat-large-value" id="childReadingTime">0</div>
+          <div class="stat-large-label">Общее время</div>
+        </div>
+        <div class="stat-large">
+          <div class="stat-large-icon">⚡</div>
+          <div class="stat-large-value" id="childReadingSpeed">0</div>
+          <div class="stat-large-label">Скорость чтения</div>
+        </div>
+        <div class="stat-large">
+          <div class="stat-large-icon">📝</div>
+          <div class="stat-large-value" id="childTotalWords">0</div>
+          <div class="stat-large-label">Всего слов</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Книги ребенка -->
+    <div class="child-books-section">
+      <div class="child-books-header">
+        <h3>📖 Книги ребенка</h3>
+      </div>
+      <div id="childBooksList" class="child-books-list"></div>
+    </div>
+  </div>
+  
+  <script src="/js/main.js"></script>
+  <script src="/js/child-stats.js"></script>
+</body>
+</html>

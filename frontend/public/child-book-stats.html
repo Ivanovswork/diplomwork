@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Статистика книги</title>
+  <title>Статистика книги ребенка</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
   <header class="header">
     <div style="display: flex; align-items: center; gap: 20px;">
-      <button class="btn-back" onclick="window.location.href='/'">← Назад</button>
+      <button class="btn-back" onclick="window.history.back()">← Назад</button>
       <div class="logo" id="bookTitle">Статистика книги</div>
     </div>
     <div class="user-info">
@@ -107,11 +107,8 @@
       </div>
     </div>
     
-    <!-- Кнопки действий -->
-    <div class="action-buttons">
-      <button id="startReadingBtn" class="btn-start">📖 Начать чтение</button>
-      <button id="deleteBookBtn" class="btn-delete">🗑️ Удалить книгу</button>
-    </div>
+    <!-- Кнопка удаления (только для родителя) -->
+    <button id="deleteBookBtn" class="btn-delete" style="display: none;">🗑️ Удалить книгу</button>
   </div>
   
   <!-- Модальное окно подтверждения удаления -->
@@ -128,6 +125,6 @@
   </div>
   
   <script src="/js/main.js"></script>
-  <script src="/js/book-stats.js"></script>
+  <script src="/js/child-book-stats.js"></script>
 </body>
 </html>

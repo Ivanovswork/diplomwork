@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Reading Tracker</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -10,15 +10,52 @@
   <header class="header">
     <div class="logo">📚 Reading Tracker</div>
     <div class="user-info">
-      <span class="user-name" id="userName">Читатель</span>
+      <span class="user-name" id="userName"></span>
       <button class="btn-logout" onclick="logout()">Выйти</button>
     </div>
   </header>
   
-  <div class="dashboard">
-    <!-- Левая колонка -->
+  <div class="dashboard-full">
+    <!-- Левая колонка - Социальная -->
+    <div class="social-column">
+      <!-- Друзья -->
+      <div class="social-card">
+        <div class="social-header">
+          <h3>👥 Друзья</h3>
+          <button class="social-add-btn" id="showAddFriendBtn">+ Добавить</button>
+        </div>
+        <div id="friendsList" class="social-list"></div>
+      </div>
+      
+      <!-- Запросы в друзья -->
+      <div id="friendRequestsCard" class="social-card" style="display: none;">
+        <div class="social-header">
+          <h3>📨 Запросы в друзья</h3>
+        </div>
+        <div id="friendRequestsList" class="social-list"></div>
+      </div>
+      
+      <!-- Дети -->
+      <div class="social-card">
+        <div class="social-header">
+          <h3>👶 Дети</h3>
+          <button class="social-add-btn" id="showAddChildBtn">+ Добавить</button>
+        </div>
+        <div id="childrenList" class="social-list"></div>
+      </div>
+      
+      <!-- Запросы от родителей -->
+      <div id="parentRequestsCard" class="social-card" style="display: none;">
+        <div class="social-header">
+          <h3>📨 Запросы от родителей</h3>
+        </div>
+        <div id="parentRequestsList" class="social-list"></div>
+      </div>
+    </div>
+    
+    <!-- Центральная колонка -->
     <div class="main-column">
-      <!-- 1. СТРИК -->
+      <!-- Стрик -->
       <div class="streak-card">
         <div class="streak-icon">🔥</div>
         <div class="streak-info">
@@ -32,55 +69,55 @@
         </div>
       </div>
       
-      <!-- 2. АКТИВНЫЕ КНИГИ -->
+      <!-- Активные книги -->
       <div class="books-section">
         <div class="books-header">
           <h2>📖 Активные книги</h2>
           <button class="btn-add" id="showUploadBtn">+ Добавить книгу</button>
         </div>
-        <div id="booksList" class="books-grid"></div>
+        <div id="booksList" class="books-list"></div>
       </div>
       
-      <!-- 3. ДЕТАЛЬНАЯ СТАТИСТИКА -->
+      <!-- Детальная статистика -->
       <div class="stats-section">
         <h2 class="section-title">📊 Детальная статистика</h2>
-        <div class="stats-grid">
-          <div class="stat-item">
+        <div class="stats-grid-4">
+          <div class="stat-card">
             <div class="stat-icon">📄</div>
             <div class="stat-value" id="totalPagesAll">0</div>
             <div class="stat-label">Всего страниц</div>
           </div>
-          <div class="stat-item">
+          <div class="stat-card">
             <div class="stat-icon">⏱️</div>
             <div class="stat-value" id="totalTimeAll">0</div>
             <div class="stat-label">Общее время</div>
           </div>
-          <div class="stat-item">
+          <div class="stat-card">
             <div class="stat-icon">📝</div>
             <div class="stat-value" id="totalWordsAll">0</div>
             <div class="stat-label">Всего слов</div>
           </div>
-          <div class="stat-item">
+          <div class="stat-card">
             <div class="stat-icon">⚡</div>
             <div class="stat-value" id="readingSpeedAll">0</div>
             <div class="stat-label">Скорость чтения</div>
           </div>
-          <div class="stat-item">
+          <div class="stat-card">
             <div class="stat-icon">📚</div>
             <div class="stat-value" id="booksInProgress">0</div>
             <div class="stat-label">В процессе</div>
           </div>
-          <div class="stat-item">
+          <div class="stat-card">
             <div class="stat-icon">✅</div>
             <div class="stat-value" id="booksCompleted">0</div>
             <div class="stat-label">Завершено</div>
           </div>
-          <div class="stat-item">
+          <div class="stat-card">
             <div class="stat-icon">🎯</div>
             <div class="stat-value" id="totalSessionsAll">0</div>
             <div class="stat-label">Всего сессий</div>
           </div>
-          <div class="stat-item">
+          <div class="stat-card">
             <div class="stat-icon">⏱️</div>
             <div class="stat-value" id="avgSessionTime">0</div>
             <div class="stat-label">Среднее время сессии</div>
@@ -90,10 +127,10 @@
     </div>
     
     <!-- Правая колонка - Лидерборд -->
-    <div class="sidebar">
-      <div class="leaderboard">
+    <div class="leaderboard-column">
+      <div class="leaderboard-card">
         <div class="leaderboard-header">
-          <h2>🏆 Лидерборд</h2>
+          <h3>🏆 Лидерборд</h3>
           <span class="leaderboard-subtitle">Рейтинг читателей</span>
         </div>
         <div id="leaderboardList" class="leaderboard-list"></div>
@@ -101,7 +138,45 @@
     </div>
   </div>
   
-  <!-- Модальное окно для загрузки книги -->
+  <!-- Модальные окна (оставляем как есть) -->
+  <div id="addFriendModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>👥 Добавить друга</h3>
+        <button class="modal-close" onclick="closeAddFriendModal()">×</button>
+      </div>
+      <form id="addFriendForm">
+        <div class="form-group">
+          <label>Email друга</label>
+          <input type="email" id="friendEmail" placeholder="friend@example.com" required>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn-submit">Отправить запрос</button>
+          <button type="button" class="btn-cancel" onclick="closeAddFriendModal()">Отмена</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <div id="addChildModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>👶 Добавить ребенка</h3>
+        <button class="modal-close" onclick="closeAddChildModal()">×</button>
+      </div>
+      <form id="addChildForm">
+        <div class="form-group">
+          <label>Email ребенка</label>
+          <input type="email" id="childEmail" placeholder="child@example.com" required>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn-submit">Отправить запрос</button>
+          <button type="button" class="btn-cancel" onclick="closeAddChildModal()">Отмена</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
   <div id="uploadModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -125,6 +200,39 @@
         <div class="modal-buttons">
           <button type="submit" class="btn-submit">📤 Загрузить</button>
           <button type="button" class="btn-cancel" onclick="closeUploadModal()">Отмена</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <div id="uploadChildBookModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>📖 Добавить книгу ребенку</h3>
+        <button class="modal-close" onclick="closeUploadChildBookModal()">×</button>
+      </div>
+      <form id="uploadChildBookForm">
+        <input type="hidden" id="targetChildId">
+        <div class="form-group">
+          <label>Ребенок</label>
+          <input type="text" id="targetChildName" readonly>
+        </div>
+        <div class="form-group">
+          <label>Название книги</label>
+          <input type="text" id="childBookName" placeholder="Введите название" required>
+        </div>
+        <div class="form-group">
+          <label>Дневная цель (страниц)</label>
+          <input type="number" id="childDailyGoal" value="10" min="1" required>
+        </div>
+        <div class="form-group">
+          <label>Файл PDF</label>
+          <input type="file" id="childBookFile" accept=".pdf" required>
+          <div class="file-info" id="childFileInfo"></div>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn-submit">📤 Загрузить</button>
+          <button type="button" class="btn-cancel" onclick="closeUploadChildBookModal()">Отмена</button>
         </div>
       </form>
     </div>
