@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Статистика книги</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="header">
+    <div style="display: flex; align-items: center; gap: 20px;">
+      <button class="btn-back" onclick="window.location.href='/'">← Назад</button>
+      <div class="logo" id="bookTitle">Статистика книги</div>
+    </div>
+    <button class="btn-logout" onclick="logout()">Выйти</button>
+  </header>
+  
+  <div class="book-stats-compact">
+    <!-- Прогресс и дневная цель в одной строке -->
+    <div class="stats-row-2cols">
+      <div class="stats-card">
+        <h3>📊 Прогресс чтения</h3>
+        <div class="big-number">
+          <span class="big-value" id="pagesRead">0</span>
+          <span class="big-sep">/</span>
+          <span class="big-total" id="totalPages">0</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        <div class="progress-percent" id="progressPercent">0%</div>
+      </div>
+      
+      <div class="stats-card goal-card">
+        <h3>🎯 Дневная цель</h3>
+        <div class="big-number">
+          <span class="big-value" id="pagesReadToday">0</span>
+          <span class="big-sep">/</span>
+          <span class="big-total" id="dailyGoal">0</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill goal-fill" id="dailyGoalFill" style="width: 0%"></div>
+        </div>
+        <div class="goal-status" id="goalStatus"></div>
+      </div>
+    </div>
+    
+    <!-- 4 карточки статистики -->
+    <div class="stats-row-4cols">
+      <div class="stat-small">
+        <div class="stat-small-icon">⏱️</div>
+        <div class="stat-small-value" id="totalTime">0</div>
+        <div class="stat-small-label">общее время</div>
+      </div>
+      <div class="stat-small">
+        <div class="stat-small-icon">📝</div>
+        <div class="stat-small-value" id="totalWords">0</div>
+        <div class="stat-small-label">всего слов</div>
+      </div>
+      <div class="stat-small">
+        <div class="stat-small-icon">⚡</div>
+        <div class="stat-small-value" id="readingSpeed">0</div>
+        <div class="stat-small-label">слов/мин</div>
+      </div>
+      <div class="stat-small">
+        <div class="stat-small-icon">⏱️</div>
+        <div class="stat-small-value" id="avgTimePerPage">0</div>
+        <div class="stat-small-label">время/стр</div>
+      </div>
+    </div>
+    
+    <!-- Сессии и тесты в одной строке -->
+    <div class="stats-row-2cols">
+      <div class="stats-card">
+        <h3>📈 Сессии чтения</h3>
+        <div class="info-row">
+          <span>Всего сессий</span>
+          <strong id="totalSessions">0</strong>
+        </div>
+        <div class="info-row">
+          <span>Активная сессия</span>
+          <strong id="hasActiveSession">Нет</strong>
+        </div>
+        <div class="info-row">
+          <span>Последняя страница</span>
+          <strong id="lastPageRead">0</strong>
+        </div>
+      </div>
+      
+      <div class="stats-card" id="testStatsCard" style="display: none;">
+        <h3>📝 Тесты</h3>
+        <div class="info-row">
+          <span>Всего тестов</span>
+          <strong id="totalTests">0</strong>
+        </div>
+        <div class="info-row">
+          <span>Пройдено</span>
+          <strong id="passedTests">0</strong>
+        </div>
+        <div class="info-row">
+          <span>Средний балл</span>
+          <strong id="avgTestScore">0%</strong>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Кнопки действий -->
+    <div class="action-buttons">
+      <button id="startReadingBtn" class="btn-start">📖 Начать чтение</button>
+      <button id="deleteBookBtn" class="btn-delete">🗑️ Удалить книгу</button>
+    </div>
+  </div>
+  
+  <!-- Модальное окно подтверждения удаления -->
+  <div id="deleteModal" class="modal">
+    <div class="modal-content">
+      <h3>🗑️ Удалить книгу?</h3>
+      <p>Вы уверены, что хотите удалить книгу <strong id="deleteBookName"></strong>?</p>
+      <p style="font-size: 12px; color: #ef4444; margin-top: 8px;">Это действие нельзя отменить. Вся статистика по книге будет потеряна.</p>
+      <div class="modal-buttons">
+        <button class="btn-confirm-delete" onclick="confirmDelete()">Да, удалить</button>
+        <button class="btn-cancel" onclick="closeDeleteModal()">Отмена</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="/js/main.js"></script>
+  <script src="/js/book-stats.js"></script>
+</body>
+</html>
