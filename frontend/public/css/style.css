@@ -1180,3 +1180,112 @@ body {
   gap: 12px;
   margin-top: 8px;
 }
+
+/* Кнопка удаления */
+.social-action-btn.delete-btn {
+  background: #ef4444;
+}
+
+.social-action-btn.delete-btn:hover {
+  background: #dc2626;
+}
+
+/* Цвета для разных типов кнопок */
+.social-action-btn {
+  background: #3b82f6;
+}
+
+.social-action-btn.add-book {
+  background: #10b981;
+}
+
+.social-action-btn.add-book:hover {
+  background: #059669;
+}
+
+.social-action-btn:hover {
+  background: #2563eb;
+}
+
+/* Стили для запросов */
+.request-item {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.request-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.request-avatar {
+  font-size: 32px;
+}
+
+.request-info {
+  flex: 1;
+}
+
+.request-name {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.request-email {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.request-type {
+  font-size: 12px;
+  color: #3b82f6;
+  margin-bottom: 12px;
+  padding: 4px 8px;
+  background: #eff6ff;
+  border-radius: 12px;
+  display: inline-block;
+}
+
+.request-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.request-accept {
+  flex: 1;
+  background: #10b981;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 20px;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.request-reject {
+  flex: 1;
+  background: #ef4444;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 20px;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.request-accept:hover {
+  background: #059669;
+}
+
+.request-reject:hover {
+  background: #dc2626;
+}

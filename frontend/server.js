@@ -17,6 +17,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Логирование всех запросов
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 // ==================== АУТЕНТИФИКАЦИЯ ====================
 
 app.post('/api/users/register/', async (req, res) => {
@@ -163,8 +169,27 @@ app.post('/api/books/friends/reject/', async (req, res) => {
 
 app.post('/api/books/friends/remove/', async (req, res) => {
   const token = req.headers.authorization;
+  const { target_user_id } = req.body;
+  console.log('Remove friend - target_user_id:', target_user_id);
   try {
-    const response = await axios.post(`${DJANGO_API_URL}/books/friends/remove/`, req.body, {
+    const response = await axios.post(`${DJANGO_API_URL}/books/friends/remove/`, 
+      { target_user_id: target_user_id },
+      { headers: { Authorization: token } }
+    );
+    console.log('Remove friend response:', response.data);
+    res.json(response.data);
+  } catch (error) {
+    console.error('Remove friend error:', error.response?.status, error.response?.data);
+    res.status(error.response?.status || 500).json(error.response?.data || { error: 'Ошибка сервера' });
+  }
+});
+
+// ==================== РОДИТЕЛЬСКИЙ КОНТРОЛЬ ====================
+
+app.get('/api/books/parent/children/', async (req, res) => {
+  const token = req.headers.authorization;
+  try {
+    const response = await axios.get(`${DJANGO_API_URL}/books/parent/children/`, {
       headers: { Authorization: token }
     });
     res.json(response.data);
@@ -173,12 +198,10 @@ app.post('/api/books/friends/remove/', async (req, res) => {
   }
 });
 
-// ==================== ДЕТИ (РОДИТЕЛЬСКИЙ КОНТРОЛЬ) ====================
-
-app.get('/api/books/parent/children/', async (req, res) => {
+app.get('/api/books/parent/parents/', async (req, res) => {
   const token = req.headers.authorization;
   try {
-    const response = await axios.get(`${DJANGO_API_URL}/books/parent/children/`, {
+    const response = await axios.get(`${DJANGO_API_URL}/books/parent/parents/`, {
       headers: { Authorization: token }
     });
     res.json(response.data);
@@ -213,10 +236,12 @@ app.post('/api/books/parent/request-by-email/', async (req, res) => {
 
 app.post('/api/books/connections/confirm/', async (req, res) => {
   const token = req.headers.authorization;
+  const { target_parent_id } = req.body;
   try {
-    const response = await axios.post(`${DJANGO_API_URL}/books/connections/confirm/`, req.body, {
-      headers: { Authorization: token }
-    });
+    const response = await axios.post(`${DJANGO_API_URL}/books/connections/confirm/`, 
+      { target_parent_id: target_parent_id },
+      { headers: { Authorization: token } }
+    );
     res.json(response.data);
   } catch (error) {
     res.status(error.response?.status || 500).json(error.response?.data || { error: 'Ошибка сервера' });
@@ -225,10 +250,12 @@ app.post('/api/books/connections/confirm/', async (req, res) => {
 
 app.post('/api/books/connections/reject/', async (req, res) => {
   const token = req.headers.authorization;
+  const { target_parent_id } = req.body;
   try {
-    const response = await axios.post(`${DJANGO_API_URL}/books/connections/reject/`, req.body, {
-      headers: { Authorization: token }
-    });
+    const response = await axios.post(`${DJANGO_API_URL}/books/connections/reject/`, 
+      { target_parent_id: target_parent_id },
+      { headers: { Authorization: token } }
+    );
     res.json(response.data);
   } catch (error) {
     res.status(error.response?.status || 500).json(error.response?.data || { error: 'Ошибка сервера' });
@@ -237,36 +264,42 @@ app.post('/api/books/connections/reject/', async (req, res) => {
 
 app.post('/api/books/connections/unlink-child/', async (req, res) => {
   const token = req.headers.authorization;
+  const { target_parent_id } = req.body;
+  console.log('Unlink child - target_parent_id:', target_parent_id);
   try {
-    const response = await axios.post(`${DJANGO_API_URL}/books/connections/unlink-child/`, req.body, {
-      headers: { Authorization: token }
-    });
+    const response = await axios.post(`${DJANGO_API_URL}/books/connections/unlink-child/`, 
+      { target_parent_id: target_parent_id },
+      { headers: { Authorization: token } }
+    );
+    console.log('Unlink child response:', response.data);
     res.json(response.data);
   } catch (error) {
+    console.error('Unlink child error:', error.response?.status, error.response?.data);
     res.status(error.response?.status || 500).json(error.response?.data || { error: 'Ошибка сервера' });
   }
 });
 
-// ==================== КНИГИ РЕБЕНКА ====================
-
-app.get('/api/books/books/child/:childId/', async (req, res) => {
+app.post('/api/books/connections/unlink-parent/', async (req, res) => {
   const token = req.headers.authorization;
-  const { childId } = req.params;
+  const { target_child_id } = req.body;
+  console.log('Unlink parent - target_child_id:', target_child_id);
   try {
-    const response = await axios.get(`${DJANGO_API_URL}/books/books/child/${childId}/`, {
-      headers: { Authorization: token }
-    });
+    const response = await axios.post(`${DJANGO_API_URL}/books/connections/unlink-parent/`, 
+      { target_child_id: target_child_id },
+      { headers: { Authorization: token } }
+    );
+    console.log('Unlink parent response:', response.data);
     res.json(response.data);
   } catch (error) {
+    console.error('Unlink parent error:', error.response?.status, error.response?.data);
     res.status(error.response?.status || 500).json(error.response?.data || { error: 'Ошибка сервера' });
   }
 });
 
-app.get('/api/reading/child/:childId/full-stats/', async (req, res) => {
+app.get('/api/books/connections/requests-count/', async (req, res) => {
   const token = req.headers.authorization;
-  const { childId } = req.params;
   try {
-    const response = await axios.get(`${DJANGO_API_URL}/reading/child/${childId}/full-stats/`, {
+    const response = await axios.get(`${DJANGO_API_URL}/books/connections/requests-count/`, {
       headers: { Authorization: token }
     });
     res.json(response.data);
@@ -275,25 +308,25 @@ app.get('/api/reading/child/:childId/full-stats/', async (req, res) => {
   }
 });
 
-app.get('/api/reading/child/:childId/book/:bookId/stats/', async (req, res) => {
-  const token = req.headers.authorization;
-  const { childId, bookId } = req.params;
-  try {
-    const response = await axios.get(`${DJANGO_API_URL}/reading/child/${childId}/book/${bookId}/stats/`, {
-      headers: { Authorization: token }
-    });
-    res.json(response.data);
-  } catch (error) {
-    res.status(error.response?.status || 500).json(error.response?.data || { error: 'Ошибка сервера' });
-  }
-});
-
-// ==================== КНИГИ (общие) ====================
+// ==================== КНИГИ ====================
 
 app.get('/api/books/my/', async (req, res) => {
   const token = req.headers.authorization;
   try {
     const response = await axios.get(`${DJANGO_API_URL}/books/books/my/`, {
+      headers: { Authorization: token }
+    });
+    res.json(response.data);
+  } catch (error) {
+    res.status(error.response?.status || 500).json(error.response?.data || { error: 'Ошибка сервера' });
+  }
+});
+
+app.get('/api/books/books/:bookId/', async (req, res) => {
+  const token = req.headers.authorization;
+  const { bookId } = req.params;
+  try {
+    const response = await axios.get(`${DJANGO_API_URL}/books/books/${bookId}/`, {
       headers: { Authorization: token }
     });
     res.json(response.data);
@@ -365,19 +398,6 @@ app.post('/api/books/books/child/', upload.single('file'), async (req, res) => {
   }
 });
 
-app.get('/api/reading/book/:bookId/stats-with-daily/', async (req, res) => {
-  const token = req.headers.authorization;
-  const { bookId } = req.params;
-  try {
-    const response = await axios.get(`${DJANGO_API_URL}/reading/book/${bookId}/stats-with-daily/`, {
-      headers: { Authorization: token }
-    });
-    res.json(response.data);
-  } catch (error) {
-    res.status(error.response?.status || 500).json(error.response?.data || { error: 'Ошибка сервера' });
-  }
-});
-
 app.delete('/api/books/books/:bookId/delete/', async (req, res) => {
   const token = req.headers.authorization;
   const { bookId } = req.params;
@@ -391,10 +411,13 @@ app.delete('/api/books/books/:bookId/delete/', async (req, res) => {
   }
 });
 
-app.get('/api/books/connections/requests-count/', async (req, res) => {
+// ==================== КНИГИ РЕБЕНКА ====================
+
+app.get('/api/books/books/child/:childId/', async (req, res) => {
   const token = req.headers.authorization;
+  const { childId } = req.params;
   try {
-    const response = await axios.get(`${DJANGO_API_URL}/books/connections/requests-count/`, {
+    const response = await axios.get(`${DJANGO_API_URL}/books/books/child/${childId}/`, {
       headers: { Authorization: token }
     });
     res.json(response.data);
@@ -403,12 +426,13 @@ app.get('/api/books/connections/requests-count/', async (req, res) => {
   }
 });
 
-// Информация о книге
-app.get('/api/books/books/:bookId/', async (req, res) => {
+// ==================== СТАТИСТИКА КНИГ ====================
+
+app.get('/api/reading/book/:bookId/stats-with-daily/', async (req, res) => {
   const token = req.headers.authorization;
   const { bookId } = req.params;
   try {
-    const response = await axios.get(`${DJANGO_API_URL}/books/books/${bookId}/`, {
+    const response = await axios.get(`${DJANGO_API_URL}/reading/book/${bookId}/stats-with-daily/`, {
       headers: { Authorization: token }
     });
     res.json(response.data);
@@ -416,6 +440,36 @@ app.get('/api/books/books/:bookId/', async (req, res) => {
     res.status(error.response?.status || 500).json(error.response?.data || { error: 'Ошибка сервера' });
   }
 });
+
+// ==================== СТАТИСТИКА РЕБЕНКА ====================
+
+app.get('/api/reading/child/:childId/full-stats/', async (req, res) => {
+  const token = req.headers.authorization;
+  const { childId } = req.params;
+  try {
+    const response = await axios.get(`${DJANGO_API_URL}/reading/child/${childId}/full-stats/`, {
+      headers: { Authorization: token }
+    });
+    res.json(response.data);
+  } catch (error) {
+    res.status(error.response?.status || 500).json(error.response?.data || { error: 'Ошибка сервера' });
+  }
+});
+
+app.get('/api/reading/child/:childId/book/:bookId/stats/', async (req, res) => {
+  const token = req.headers.authorization;
+  const { childId, bookId } = req.params;
+  try {
+    const response = await axios.get(`${DJANGO_API_URL}/reading/child/${childId}/book/${bookId}/stats/`, {
+      headers: { Authorization: token }
+    });
+    res.json(response.data);
+  } catch (error) {
+    res.status(error.response?.status || 500).json(error.response?.data || { error: 'Ошибка сервера' });
+  }
+});
+
+// ==================== ЗАПУСК СЕРВЕРА ====================
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

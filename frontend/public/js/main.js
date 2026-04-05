@@ -45,6 +45,7 @@ async function login(email, password) {
   if (data.token) {
     setToken(data.token);
     if (data.user) {
+      localStorage.setItem('user_id', data.user.id);
       localStorage.setItem('user_name', data.user.name);
       localStorage.setItem('user_email', data.user.email);
     }
@@ -65,6 +66,7 @@ async function register(name, email, password, passwordConfirm) {
   if (data.token) {
     setToken(data.token);
     if (data.user) {
+      localStorage.setItem('user_id', data.user.id);
       localStorage.setItem('user_name', data.user.name);
       localStorage.setItem('user_email', data.user.email);
     }

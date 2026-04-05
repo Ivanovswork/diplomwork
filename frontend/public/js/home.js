@@ -3,20 +3,21 @@
 async function loadHomePage() {
   try {
     console.log('Loading home page...');
-    
+
     showLoadingIndicators();
-    
+
     const [
-      user, 
-      stats, 
-      streak, 
-      books, 
-      leaderboard, 
-      readingStats, 
-      friends, 
-      friendRequests, 
-      children, 
-      parentRequests
+      user,
+      stats,
+      streak,
+      books,
+      leaderboard,
+      readingStats,
+      friends,
+      friendRequests,
+      children,
+      parentRequests,
+      parents,
     ] = await Promise.all([
       apiRequest('/users/me/', 'GET'),
       apiRequest('/books/stats/', 'GET'),
@@ -27,13 +28,16 @@ async function loadHomePage() {
       apiRequest('/books/friends/', 'GET'),
       apiRequest('/books/friends/requests/', 'GET'),
       apiRequest('/books/parent/children/', 'GET'),
-      apiRequest('/books/connections/parent-requests/', 'GET')
+      apiRequest('/books/connections/parent-requests/', 'GET'),
+      apiRequest('/books/parent/parents/', 'GET'),
     ]);
-    
+
     console.log('Friends:', friends);
     console.log('Children:', children);
-    console.log('Books:', books);
-    
+    console.log('Parents:', parents);
+    console.log('Friend requests:', friendRequests);
+    console.log('Parent requests:', parentRequests);
+
     updateUserInfo(user);
     updateStreak(streak);
     updateReadingStats(readingStats);
@@ -43,7 +47,7 @@ async function loadHomePage() {
     renderFriendRequests(friendRequests.friend_requests || []);
     renderChildren(children.children || []);
     renderParentRequests(parentRequests.parent_requests || []);
-    
+    renderParents(parents.parents || []);
   } catch (error) {
     console.error('Error loading home page:', error);
     showErrorMessage();
@@ -51,16 +55,30 @@ async function loadHomePage() {
 }
 
 function showLoadingIndicators() {
-  const elements = ['booksList', 'friendsList', 'childrenList', 'leaderboardList'];
-  elements.forEach(id => {
+  const elements = [
+    'booksList',
+    'friendsList',
+    'childrenList',
+    'parentsList',
+    'leaderboardList',
+    'friendRequestsList',
+    'parentRequestsList',
+  ];
+  elements.forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = '<div class="loading-placeholder">Загрузка...</div>';
   });
 }
 
 function showErrorMessage() {
-  const elements = ['booksList', 'friendsList', 'childrenList', 'leaderboardList'];
-  elements.forEach(id => {
+  const elements = [
+    'booksList',
+    'friendsList',
+    'childrenList',
+    'parentsList',
+    'leaderboardList',
+  ];
+  elements.forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = '<div class="error-placeholder">Ошибка загрузки</div>';
   });
@@ -68,7 +86,7 @@ function showErrorMessage() {
 
 function updateUserInfo(user) {
   const userNameElements = document.querySelectorAll('.user-name');
-  userNameElements.forEach(el => {
+  userNameElements.forEach((el) => {
     if (el) el.textContent = user.name || '';
   });
 }
@@ -86,31 +104,34 @@ function updateReadingStats(stats) {
   document.getElementById('booksInProgress').textContent = stats.books_in_progress || 0;
   document.getElementById('booksCompleted').textContent = stats.books_completed || 0;
   document.getElementById('totalSessionsAll').textContent = stats.total_sessions || 0;
-  
+
   const avgSecs = stats.avg_session_duration_seconds || 0;
   const avgMins = Math.floor(avgSecs / 60);
   const avgSecsRem = Math.floor(avgSecs % 60);
-  document.getElementById('avgSessionTime').textContent = avgMins > 0 ? `${avgMins}м ${avgSecsRem}с` : `${avgSecsRem}с`;
+  document.getElementById('avgSessionTime').textContent =
+    avgMins > 0 ? `${avgMins}м ${avgSecsRem}с` : `${avgSecsRem}с`;
 }
 
 // ==================== КНИГИ ====================
 
 function renderBooks(books) {
   const container = document.getElementById('booksList');
-  
+
   if (!books || books.length === 0) {
     container.innerHTML = '<div class="empty-state">У вас пока нет активных книг</div>';
     return;
   }
-  
-  const activeBooks = books.filter(book => book.status === 'in_progress');
-  
+
+  const activeBooks = books.filter((book) => book.status === 'in_progress');
+
   if (activeBooks.length === 0) {
     container.innerHTML = '<div class="empty-state">Нет активных книг</div>';
     return;
   }
-  
-  container.innerHTML = activeBooks.map(book => `
+
+  container.innerHTML = activeBooks
+    .map(
+      (book) => `
     <div class="book-item" onclick="window.location.href='/book-stats.html?id=${book.id}'">
       <div class="book-info">
         <div class="book-name">${escapeHtml(book.name)}</div>
@@ -118,65 +139,118 @@ function renderBooks(books) {
       </div>
       <div class="book-arrow">→</div>
     </div>
-  `).join('');
+  `
+    )
+    .join('');
 }
 
 // ==================== ДРУЗЬЯ ====================
 
 function renderFriends(friends) {
   const container = document.getElementById('friendsList');
-  
+
   if (!friends || friends.length === 0) {
     container.innerHTML = '<div class="empty-state">Нет друзей</div>';
     return;
   }
-  
-  container.innerHTML = friends.map(friend => `
+
+  container.innerHTML = friends
+    .map(
+      (friend) => `
     <div class="social-item">
-      <div class="social-avatar">👤</div>
+      <div class="social-avatar">📖</div>
       <div class="social-info">
         <div class="social-name">${escapeHtml(friend.name)}</div>
         <div class="social-email">${escapeHtml(friend.email)}</div>
       </div>
       <div class="social-actions">
-        <button class="social-action-btn" onclick="viewFriendStats(${friend.id}, '${escapeHtml(friend.name)}')">Статистика</button>
+        <button class="social-action-btn" onclick="viewFriendStats(${friend.id}, '${escapeHtml(
+        friend.name
+      )}')">Статистика</button>
+        <button class="social-action-btn delete-btn" onclick="removeFriend(${friend.id}, '${escapeHtml(
+        friend.name
+      )}')">Удалить</button>
       </div>
     </div>
-  `).join('');
+  `
+    )
+    .join('');
 }
 
 async function viewFriendStats(userId, userName) {
   alert(`Статистика друга ${userName} будет доступна в следующей версии`);
 }
 
+// Удаление друга: передаём ID пользователя (не connection_id)
+async function removeFriend(userId, friendName) {
+  if (!confirm(`Вы уверены, что хотите удалить друга "${friendName}"?`)) return;
+
+  const token = getToken();
+  const url = `${API_URL}/books/friends/remove/`;
+
+  console.log('Removing friend with userId:', userId);
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Token ${token}`,
+      },
+      body: JSON.stringify({ target_user_id: userId }),
+    });
+
+    const result = await response.json();
+    console.log('Remove friend response:', result);
+
+    if (response.ok && (result.message || result.success)) {
+      alert('Друг удален');
+      loadHomePage();
+    } else {
+      alert(result.error || 'Ошибка при удалении друга');
+    }
+  } catch (error) {
+    console.error('Error removing friend:', error);
+    alert('Ошибка при удалении друга');
+  }
+}
+
 function renderFriendRequests(requests) {
   const container = document.getElementById('friendRequestsList');
   const card = document.getElementById('friendRequestsCard');
-  
+
   if (!requests || requests.length === 0) {
     if (card) card.style.display = 'none';
     return;
   }
-  
+
   if (card) card.style.display = 'block';
-  container.innerHTML = requests.map(req => `
-    <div class="social-item request-item">
-      <div class="social-avatar">👤</div>
-      <div class="social-info">
-        <div class="social-name">${escapeHtml(req.user1_data?.name || 'Пользователь')}</div>
-        <div class="social-email">${escapeHtml(req.user1_data?.email || '')}</div>
+  container.innerHTML = requests
+    .map(
+      (req) => `
+    <div class="request-item">
+      <div class="request-header">
+        <div class="request-avatar">👤</div>
+        <div class="request-info">
+          <div class="request-name">${escapeHtml(req.user1_data?.name || 'Пользователь')}</div>
+          <div class="request-email">${escapeHtml(req.user1_data?.email || '')}</div>
+        </div>
       </div>
+      <div class="request-type">📨 Запрос в друзья</div>
       <div class="request-buttons">
-        <button class="request-accept" onclick="acceptFriendRequest(${req.id})">Принять</button>
-        <button class="request-reject" onclick="rejectFriendRequest(${req.id})">Отклонить</button>
+        <button class="request-accept" onclick="acceptFriendRequest(${req.user1_data.id}, ${req.id})">✓ Принять</button>
+        <button class="request-reject" onclick="rejectFriendRequest(${req.user1_data.id}, ${req.id})">✗ Отклонить</button>
       </div>
     </div>
-  `).join('');
+  `
+    )
+    .join('');
 }
 
-async function acceptFriendRequest(connectionId) {
+// Принять запрос в друзья: передаём ID пользователя (отправителя)
+async function acceptFriendRequest(userId, connectionId) {
   try {
-    const result = await apiRequest('/books/friends/confirm/', 'POST', { target_user_id: connectionId });
+    const result = await apiRequest('/books/friends/confirm/', 'POST', { target_user_id: userId });
     if (result.message) {
       alert('Запрос принят!');
       loadHomePage();
@@ -188,9 +262,10 @@ async function acceptFriendRequest(connectionId) {
   }
 }
 
-async function rejectFriendRequest(connectionId) {
+// Отклонить запрос в друзья: передаём ID пользователя (отправителя)
+async function rejectFriendRequest(userId, connectionId) {
   try {
-    const result = await apiRequest('/books/friends/reject/', 'POST', { target_user_id: connectionId });
+    const result = await apiRequest('/books/friends/reject/', 'POST', { target_user_id: userId });
     if (result.message) {
       alert('Запрос отклонен');
       loadHomePage();
@@ -206,13 +281,15 @@ async function rejectFriendRequest(connectionId) {
 
 function renderChildren(children) {
   const container = document.getElementById('childrenList');
-  
+
   if (!children || children.length === 0) {
     container.innerHTML = '<div class="empty-state">Нет детей</div>';
     return;
   }
-  
-  container.innerHTML = children.map(child => `
+
+  container.innerHTML = children
+    .map(
+      (child) => `
     <div class="social-item child-item">
       <div class="social-avatar">👶</div>
       <div class="social-info">
@@ -220,45 +297,96 @@ function renderChildren(children) {
         <div class="social-email">${escapeHtml(child.email)}</div>
       </div>
       <div class="social-actions">
-        <button class="social-action-btn" onclick="viewChildStats(${child.id}, '${escapeHtml(child.name)}')">Статистика</button>
-        <button class="social-action-btn add-book" onclick="showUploadChildBookModal(${child.id}, '${escapeHtml(child.name)}')">Добавить книгу</button>
+        <button class="social-action-btn" onclick="viewChildStats(${child.id}, '${escapeHtml(
+        child.name
+      )}')">Статистика</button>
+        <button class="social-action-btn add-book" onclick="showUploadChildBookModal(${child.id}, '${escapeHtml(
+        child.name
+      )}')">Добавить книгу</button>
+        <button class="social-action-btn delete-btn" onclick="unlinkChild(${child.id}, '${escapeHtml(
+        child.name
+      )}')">Отвязать</button>
       </div>
     </div>
-  `).join('');
+  `
+    )
+    .join('');
 }
 
 function viewChildStats(childId, childName) {
   window.location.href = `/child-stats.html?id=${childId}&name=${encodeURIComponent(childName)}`;
 }
 
+// Отвязка ребёнка: родитель отправляет target_child_id
+async function unlinkChild(childId, childName) {
+  if (!confirm(`Вы уверены, что хотите отвязать ребенка "${childName}"?`)) return;
+
+  const token = getToken();
+  const url = `${API_URL}/books/connections/unlink-parent/`;
+
+  console.log('Unlinking child with childId:', childId);
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Token ${token}`,
+      },
+      body: JSON.stringify({ target_child_id: childId }),
+    });
+
+    const result = await response.json();
+    console.log('Unlink child response:', result);
+
+    if (response.ok && result.message) {
+      alert('Ребенок отвязан');
+      loadHomePage();
+    } else {
+      alert(result.error || 'Ошибка при отвязке ребенка');
+    }
+  } catch (error) {
+    console.error('Error unlinking child:', error);
+    alert('Ошибка при отвязке ребенка');
+  }
+}
+
 function renderParentRequests(requests) {
   const container = document.getElementById('parentRequestsList');
   const card = document.getElementById('parentRequestsCard');
-  
+
   if (!requests || requests.length === 0) {
     if (card) card.style.display = 'none';
     return;
   }
-  
+
   if (card) card.style.display = 'block';
-  container.innerHTML = requests.map(req => `
-    <div class="social-item request-item">
-      <div class="social-avatar">👨‍👩‍👧</div>
-      <div class="social-info">
-        <div class="social-name">${escapeHtml(req.user1_data?.name || 'Родитель')}</div>
-        <div class="social-email">${escapeHtml(req.user1_data?.email || '')}</div>
+  container.innerHTML = requests
+    .map(
+      (req) => `
+    <div class="request-item">
+      <div class="request-header">
+        <div class="request-avatar">👪</div>
+        <div class="request-info">
+          <div class="request-name">${escapeHtml(req.user1_data?.name || 'Родитель')}</div>
+          <div class="request-email">${escapeHtml(req.user1_data?.email || '')}</div>
+        </div>
       </div>
+      <div class="request-type">🔐 Запрос на родительский контроль</div>
       <div class="request-buttons">
-        <button class="request-accept" onclick="acceptParentRequest(${req.id})">Принять</button>
-        <button class="request-reject" onclick="rejectParentRequest(${req.id})">Отклонить</button>
+        <button class="request-accept" onclick="acceptParentRequest(${req.user1_data.id}, ${req.id})">✓ Принять</button>
+        <button class="request-reject" onclick="rejectParentRequest(${req.user1_data.id}, ${req.id})">✗ Отклонить</button>
       </div>
     </div>
-  `).join('');
+  `
+    )
+    .join('');
 }
 
-async function acceptParentRequest(connectionId) {
+// Принять запрос родителя: передаём ID родителя (отправителя)
+async function acceptParentRequest(parentUserId, connectionId) {
   try {
-    const result = await apiRequest('/books/connections/confirm/', 'POST', { target_parent_id: connectionId });
+    const result = await apiRequest('/books/connections/confirm/', 'POST', { target_parent_id: parentUserId });
     if (result.message) {
       alert('Запрос принят!');
       loadHomePage();
@@ -270,9 +398,10 @@ async function acceptParentRequest(connectionId) {
   }
 }
 
-async function rejectParentRequest(connectionId) {
+// Отклонить запрос родителя: передаём ID родителя (отправителя)
+async function rejectParentRequest(parentUserId, connectionId) {
   try {
-    const result = await apiRequest('/books/connections/reject/', 'POST', { target_parent_id: connectionId });
+    const result = await apiRequest('/books/connections/reject/', 'POST', { target_parent_id: parentUserId });
     if (result.message) {
       alert('Запрос отклонен');
       loadHomePage();
@@ -284,45 +413,74 @@ async function rejectParentRequest(connectionId) {
   }
 }
 
+// ==================== РОДИТЕЛИ (без кнопки отвязать) ====================
+
+function renderParents(parents) {
+  const container = document.getElementById('parentsList');
+
+  if (!parents || parents.length === 0) {
+    container.innerHTML = '<div class="empty-state">Нет родителей</div>';
+    return;
+  }
+
+  container.innerHTML = parents
+    .map(
+      (parent) => `
+    <div class="social-item parent-item">
+      <div class="social-avatar">👨‍👩‍👧</div>
+      <div class="social-info">
+        <div class="social-name">${escapeHtml(parent.name)}</div>
+        <div class="social-email">${escapeHtml(parent.email)}</div>
+      </div>
+    </div>
+  `
+    )
+    .join('');
+}
+
 // ==================== ЛИДЕРБОРД ====================
 
 function renderLeaderboard(leaderboard) {
   const container = document.getElementById('leaderboardList');
-  
+
   if (!leaderboard || leaderboard.length === 0) {
     container.innerHTML = '<div class="empty-state">Нет данных</div>';
     return;
   }
-  
-  container.innerHTML = leaderboard.map((user, idx) => {
-    const rank = idx + 1;
-    let rankDisplay = rank;
-    let rankClass = '';
-    
-    if (rank === 1) {
-      rankDisplay = '🥇';
-      rankClass = 'rank-1';
-    } else if (rank === 2) {
-      rankDisplay = '🥈';
-      rankClass = 'rank-2';
-    } else if (rank === 3) {
-      rankDisplay = '🥉';
-      rankClass = 'rank-3';
-    }
-    
-    return `
+
+  container.innerHTML = leaderboard
+    .map((user, idx) => {
+      const rank = idx + 1;
+      let rankDisplay = rank;
+      let rankClass = '';
+
+      if (rank === 1) {
+        rankDisplay = '🥇';
+        rankClass = 'rank-1';
+      } else if (rank === 2) {
+        rankDisplay = '🥈';
+        rankClass = 'rank-2';
+      } else if (rank === 3) {
+        rankDisplay = '🥉';
+        rankClass = 'rank-3';
+      }
+
+      return `
       <div class="leaderboard-item ${user.is_current_user ? 'current-user' : ''}">
         <div class="leaderboard-rank ${rankClass}">${rankDisplay}</div>
         <div class="leaderboard-info">
-          <div class="leaderboard-name">${escapeHtml(user.name)}${user.is_current_user ? ' <span class="current-badge">(Вы)</span>' : ''}</div>
+          <div class="leaderboard-name">${escapeHtml(user.name)}${
+        user.is_current_user ? ' <span class="current-badge">(Вы)</span>' : ''
+      }</div>
           <div class="leaderboard-stats">
             <span class="streak">🔥 ${user.current_streak}</span>
-            <span class="pages">📄 ${user.total_pages}</span>
+            <span class="pages">📖 ${user.total_pages}</span>
           </div>
         </div>
       </div>
     `;
-  }).join('');
+    })
+    .join('');
 }
 
 // ==================== ДОБАВЛЕНИЕ ДРУГА ====================
@@ -338,12 +496,12 @@ function closeAddFriendModal() {
 
 async function addFriend() {
   const email = document.getElementById('friendEmail').value;
-  
+
   if (!email) {
     alert('Введите email друга');
     return;
   }
-  
+
   try {
     const result = await apiRequest('/books/friends/add-by-email/', 'POST', { email });
     if (result.status) {
@@ -371,12 +529,12 @@ function closeAddChildModal() {
 
 async function addChild() {
   const email = document.getElementById('childEmail').value;
-  
+
   if (!email) {
     alert('Введите email ребенка');
     return;
   }
-  
+
   try {
     const result = await apiRequest('/books/parent/request-by-email/', 'POST', { email });
     if (result.status) {
@@ -409,32 +567,32 @@ async function uploadBook() {
   const name = document.getElementById('bookName').value;
   const dailyGoal = document.getElementById('dailyGoal').value;
   const file = document.getElementById('bookFile').files[0];
-  
+
   if (!name || !file) {
     alert('Заполните название книги и выберите файл');
     return;
   }
-  
+
   const token = getToken();
   const formData = new FormData();
   formData.append('name', name);
   formData.append('daily_goal', dailyGoal);
   formData.append('file', file);
-  
+
   const submitBtn = document.querySelector('#uploadForm button[type="submit"]');
   const originalText = submitBtn.textContent;
   submitBtn.textContent = 'Загрузка...';
   submitBtn.disabled = true;
-  
+
   try {
     const response = await fetch(`${API_URL}/books/books/`, {
       method: 'POST',
       headers: {
-        'Authorization': `Token ${token}`
+        Authorization: `Token ${token}`,
       },
-      body: formData
+      body: formData,
     });
-    
+
     if (response.ok) {
       alert('Книга успешно добавлена!');
       closeUploadModal();
@@ -478,33 +636,33 @@ async function uploadChildBook() {
   const name = document.getElementById('childBookName').value;
   const dailyGoal = document.getElementById('childDailyGoal').value;
   const file = document.getElementById('childBookFile').files[0];
-  
+
   if (!name || !file) {
     alert('Заполните название книги и выберите файл');
     return;
   }
-  
+
   const token = getToken();
   const formData = new FormData();
   formData.append('child_id', currentChildId);
   formData.append('name', name);
   formData.append('daily_goal', dailyGoal);
   formData.append('file', file);
-  
+
   const submitBtn = document.querySelector('#uploadChildBookForm button[type="submit"]');
   const originalText = submitBtn.textContent;
   submitBtn.textContent = 'Загрузка...';
   submitBtn.disabled = true;
-  
+
   try {
     const response = await fetch(`${API_URL}/books/books/child/`, {
       method: 'POST',
       headers: {
-        'Authorization': `Token ${token}`
+        Authorization: `Token ${token}`,
       },
-      body: formData
+      body: formData,
     });
-    
+
     if (response.ok) {
       alert('Книга успешно добавлена ребенку!');
       closeUploadChildBookModal();
@@ -537,7 +695,7 @@ function setupFileInputs() {
       }
     });
   }
-  
+
   const childFileInput = document.getElementById('childBookFile');
   if (childFileInput) {
     childFileInput.addEventListener('change', (e) => {
@@ -557,7 +715,7 @@ function setupFileInputs() {
 
 function setupModalClose() {
   const modals = ['uploadModal', 'addFriendModal', 'addChildModal', 'uploadChildBookModal'];
-  modals.forEach(modalId => {
+  modals.forEach((modalId) => {
     const modal = document.getElementById(modalId);
     if (modal) {
       modal.addEventListener('click', (e) => {
@@ -578,22 +736,22 @@ function setupEventListeners() {
   document.getElementById('showAddFriendBtn')?.addEventListener('click', showAddFriendModal);
   document.getElementById('showAddChildBtn')?.addEventListener('click', showAddChildModal);
   document.getElementById('showUploadBtn')?.addEventListener('click', showUploadModal);
-  
+
   document.getElementById('addFriendForm')?.addEventListener('submit', (e) => {
     e.preventDefault();
     addFriend();
   });
-  
+
   document.getElementById('addChildForm')?.addEventListener('submit', (e) => {
     e.preventDefault();
     addChild();
   });
-  
+
   document.getElementById('uploadForm')?.addEventListener('submit', (e) => {
     e.preventDefault();
     uploadBook();
   });
-  
+
   document.getElementById('uploadChildBookForm')?.addEventListener('submit', (e) => {
     e.preventDefault();
     uploadChildBook();
@@ -608,9 +766,18 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = '/login.html';
     return;
   }
-  
+
   loadHomePage();
   setupFileInputs();
   setupModalClose();
   setupEventListeners();
 });
+
+// ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
+
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
