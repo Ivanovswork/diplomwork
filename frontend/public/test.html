@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тест на понимание</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .test-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .question-card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .question-text {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .answer-option {
+      display: block;
+      margin-bottom: 12px;
+      padding: 10px;
+      background: #f8fafc;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .answer-option input {
+      margin-right: 12px;
+    }
+    .btn-submit-test {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 40px;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-retake {
+      background: white;
+      color: #f59e0b;
+      border: 1px solid #f59e0b;
+      width: 100%;
+      padding: 14px;
+      border-radius: 40px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+    .result-message {
+      text-align: center;
+      padding: 16px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+    .result-passed {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .result-failed {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <h1>Тест на понимание</h1>
+    <div id="testInfo" style="color: #64748b; margin-bottom: 20px;"></div>
+    <div id="questionsContainer"></div>
+    <div id="resultMessage" class="result-message" style="display: none;"></div>
+    <button id="submitBtn" class="btn-submit-test">Отправить ответы</button>
+    <button id="retakeBtn" class="btn-retake" style="display: none;">Перечитать страницы</button>
+  </div>
+  <script src="/js/main.js"></script>
+  <script src="/js/test.js"></script>
+</body>
+</html>

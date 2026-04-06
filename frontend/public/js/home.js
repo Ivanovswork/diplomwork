@@ -7,7 +7,6 @@ async function loadHomePage() {
     showLoadingIndicators();
 
     const [
-      user,
       stats,
       streak,
       books,
@@ -17,9 +16,8 @@ async function loadHomePage() {
       friendRequests,
       children,
       parentRequests,
-      parents,
+      parents
     ] = await Promise.all([
-      apiRequest('/users/me/', 'GET'),
       apiRequest('/books/stats/', 'GET'),
       apiRequest('/reading/streak/', 'GET'),
       apiRequest('/books/my/', 'GET'),
@@ -29,16 +27,14 @@ async function loadHomePage() {
       apiRequest('/books/friends/requests/', 'GET'),
       apiRequest('/books/parent/children/', 'GET'),
       apiRequest('/books/connections/parent-requests/', 'GET'),
-      apiRequest('/books/parent/parents/', 'GET'),
+      apiRequest('/books/parent/parents/', 'GET')
     ]);
 
     console.log('Friends:', friends);
     console.log('Children:', children);
     console.log('Parents:', parents);
-    console.log('Friend requests:', friendRequests);
-    console.log('Parent requests:', parentRequests);
 
-    updateUserInfo(user);
+    updateHeaderUserName();
     updateStreak(streak);
     updateReadingStats(readingStats);
     renderBooks(books.my_books || []);
@@ -48,6 +44,7 @@ async function loadHomePage() {
     renderChildren(children.children || []);
     renderParentRequests(parentRequests.parent_requests || []);
     renderParents(parents.parents || []);
+
   } catch (error) {
     console.error('Error loading home page:', error);
     showErrorMessage();

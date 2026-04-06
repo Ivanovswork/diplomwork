@@ -1,44 +1,50 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Регистрация - Reading Tracker</title>
-  <link rel="stylesheet" href="/css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация - Reading Tracker</title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-  <div class="auth-container">
-    <div class="auth-card">
-      <h1>📚 Reading Tracker</h1>
-      <h2>Регистрация</h2>
-      <form id="registerForm">
-        <div class="form-group">
-          <input type="text" id="name" placeholder="Имя" required>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1>📚 Reading Tracker</h1>
+            <h2>Регистрация</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <input type="text" id="name" placeholder="Имя" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="email" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="password" placeholder="Пароль" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="passwordConfirm" placeholder="Подтвердите пароль" required>
+                </div>
+                <button type="submit" class="btn-primary">Зарегистрироваться</button>
+            </form>
+            <p class="auth-link">Уже есть аккаунт? <a href="/login.html">Войти</a></p>
         </div>
-        <div class="form-group">
-          <input type="email" id="email" placeholder="Email" required>
-        </div>
-        <div class="form-group">
-          <input type="password" id="password" placeholder="Пароль" required>
-        </div>
-        <div class="form-group">
-          <input type="password" id="passwordConfirm" placeholder="Подтвердите пароль" required>
-        </div>
-        <button type="submit" class="btn-primary">Зарегистрироваться</button>
-      </form>
-      <p class="auth-link">Уже есть аккаунт? <a href="/login.html">Войти</a></p>
     </div>
-  </div>
-  <script src="/js/main.js"></script>
-  <script>
-    document.getElementById('registerForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const name = document.getElementById('name').value;
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const confirm = document.getElementById('passwordConfirm').value;
-      register(name, email, password, confirm);
-    });
-  </script>
+    <script src="/js/main.js"></script>
+    <script>
+        // Проверяем, что функции загружены
+        console.log('Register page loaded, typeof register:', typeof register);
+        console.log('Register page loaded, typeof window.register:', typeof window.register);
+        
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const passwordConfirm = document.getElementById('passwordConfirm').value;
+            console.log('Form submitted, email:', email);
+            // Используем window.register для надежности
+            window.register(name, email, password, passwordConfirm);
+        });
+    </script>
 </body>
 </html>

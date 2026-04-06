@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Чтение</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+    }
+    .reading-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background: #1a1a2e;
+    }
+    .reading-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: #0f0f23;
+      color: white;
+      border-bottom: 1px solid #2a2a4a;
+    }
+    .reading-header .btn-back {
+      background: none;
+      border: none;
+      color: #3b82f6;
+      font-size: 24px;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .reading-header .book-title {
+      font-size: 16px;
+      font-weight: 500;
+      flex: 1;
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding: 0 8px;
+    }
+    .reading-header .timer {
+      font-family: monospace;
+      font-size: 18px;
+      font-weight: 600;
+      background: #2a2a4a;
+      padding: 4px 12px;
+      border-radius: 20px;
+      color: #3b82f6;
+    }
+    .pdf-viewer {
+      flex: 1;
+      background: #1a1a2e;
+      position: relative;
+    }
+    .pdf-viewer embed {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .reading-footer {
+      padding: 12px 16px;
+      background: #0f0f23;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #2a2a4a;
+    }
+    .page-info {
+      color: #94a3b8;
+      font-size: 14px;
+    }
+    .btn-next {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      border: none;
+      padding: 10px 24px;
+      border-radius: 40px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .btn-next:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      color: white;
+      font-size: 16px;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(59,130,246,0.3);
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="reading-container">
+    <<div class="reading-header">
+    <button class="btn-back" onclick="goBackToBookStats()">←</button>
+    <div class="book-title" id="bookTitle">Загрузка...</div>
+    <div class="timer" id="timer">00:00</div>
+</div>
+    <div class="pdf-viewer" id="pdfViewer">
+      <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div>Загрузка страницы...</div>
+      </div>
+    </div>
+    <div class="reading-footer">
+      <div class="page-info" id="pageInfo">Страница 0 / 0</div>
+      <button class="btn-next" id="nextBtn">Далее</button>
+    </div>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/reading.js"></script>
+</body>
+</html>
