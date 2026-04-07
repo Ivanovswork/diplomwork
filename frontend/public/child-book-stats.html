@@ -5,6 +5,87 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Статистика книги ребенка</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* Дополнительные стили для страницы */
+        .stats-row-3cols {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        
+        .test-card {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border-radius: 20px;
+            padding: 16px;
+        }
+        
+        .test-passed {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        .test-failed {
+            color: #ef4444;
+            font-weight: 600;
+        }
+        
+        .pages-table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .pages-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        
+        .pages-table th,
+        .pages-table td {
+            padding: 10px 8px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .pages-table th {
+            background: #f1f5f9;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        
+        .pages-table tr:hover {
+            background: #f8fafc;
+        }
+        
+        .test-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .test-item {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .test-item:last-child {
+            border-bottom: none;
+        }
+        
+        .test-pages {
+            font-weight: 600;
+            color: #3b82f6;
+        }
+        
+        .test-score {
+            font-size: 18px;
+            font-weight: 700;
+        }
+    </style>
 </head>
 <body>
     <header class="header">
@@ -48,7 +129,7 @@
             <div class="goal-status" id="goalStatus"></div>
         </div>
 
-        <!-- Статистика -->
+        <!-- Статистика (4 колонки) -->
         <div class="stats-row-4cols">
             <div class="stat-small">
                 <div class="stat-small-icon">⏱️</div>
@@ -72,8 +153,8 @@
             </div>
         </div>
 
-        <!-- Сессии и тесты -->
-        <div class="stats-row-2cols">
+        <!-- Сессии и тесты (3 колонки) -->
+        <div class="stats-row-3cols">
             <div class="stats-card">
                 <h3>📊 Сессии чтения</h3>
                 <div class="info-row">
@@ -104,6 +185,32 @@
                     <span>Средний балл</span>
                     <strong id="avgTestScore">0%</strong>
                 </div>
+            </div>
+
+            <div class="stats-card" id="testsListCard" style="display: none;">
+                <h3>📋 Результаты тестов</h3>
+                <div id="testsList" class="test-list"></div>
+            </div>
+        </div>
+
+        <!-- Детальная статистика по страницам -->
+        <div class="stats-card">
+            <h3>📄 Детальная статистика по страницам</h3>
+            <div class="pages-table-container" id="pagesTableContainer">
+                <table class="pages-table" id="pagesTable">
+                    <thead>
+                        <tr>
+                            <th>Страница</th>
+                            <th>Время (сек)</th>
+                            <th>Слова</th>
+                            <th>Скорость (слов/мин)</th>
+                            <th>Дата</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pagesTableBody">
+                        <tr><td colspan="5" class="empty-state">Загрузка...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 

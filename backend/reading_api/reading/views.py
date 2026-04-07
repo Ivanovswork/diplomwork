@@ -1383,3 +1383,102 @@ def get_leaderboard(request):
     result.sort(key=lambda x: x['current_streak'], reverse=True)
 
     return Response({'leaderboard': result})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_child_book_page_stats(request, child_id, book_id):
+    """Получить детальную статистику по страницам для книги ребенка"""
+    try:
+        book = Book.objects.get(id=book_id, user_id=child_id)
+    except Book.DoesNotExist:
+        return Response({"error": "Книга не найдена"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Проверка: текущий пользователь - родитель ребенка
+    is_parent = UserConnection.objects.filter(
+        user1=request.user, user2_id=child_id,
+        connection_type='parent_child',
+        is_parent_flag=True, is_child_flag=True
+    ).exists()
+
+    if not is_parent:
+        return Response({"error": "Нет доступа"}, status=status.HTTP_403_FORBIDDEN)
+
+    # Получаем все логи страниц для этой книги
+    page_logs = PageReadingLog.objects.filter(
+        session__book=book,
+        session__status='completed'
+    ).order_by('page_number')
+
+    # Статистика по страницам
+    pages_stats = []
+    for log in page_logs:
+        pages_stats.append({
+            'page_number': log.page_number,
+            'time_spent_seconds': log.time_spent.total_seconds(),
+            'words_count': log.words_count,
+            'reading_speed': round(log.words_count / (log.time_spent.total_seconds() / 60),
+                                   1) if log.time_spent.total_seconds() > 0 else 0,
+            'completed_at': log.completed_at.strftime('%d.%m.%Y %H:%M')
+        })
+
+    # Статистика тестов для этой книги
+    test_results = UserTestResult.objects.filter(user_id=child_id, book=book).order_by('-completed_at')
+
+    tests_stats = []
+    for tr in test_results:
+        tests_stats.append({
+            'test_id': tr.test.id,
+            'start_page': tr.test.start_page,
+            'end_page': tr.test.end_page,
+            'correct_answers': tr.correct_answers,
+            'total_questions': tr.total_questions,
+            'score_percent': tr.score_percent,
+            'passed': tr.correct_answers >= 2,
+            'completed_at': tr.completed_at.strftime('%d.%m.%Y %H:%M')
+        })
+
+    return Response({
+        'pages_stats': pages_stats,
+        'tests_stats': tests_stats
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_page_words_count(request, book_id, page_number):
+    """Получить количество слов на странице PDF"""
+    try:
+        book = Book.objects.get(id=book_id)
+    except Book.DoesNotExist:
+        return Response({"error": "Книга не найдена"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Проверка доступа
+    is_owner = book.user == request.user
+    is_parent = UserConnection.objects.filter(
+        user1=request.user, user2=book.user,
+        connection_type='parent_child',
+        is_parent_flag=True, is_child_flag=True
+    ).exists()
+
+    if not is_owner and not is_parent:
+        return Response({"error": "Нет доступа"}, status=status.HTTP_403_FORBIDDEN)
+
+    try:
+        doc = fitz.open(stream=book.content, filetype="pdf")
+        page = doc[page_number - 1]
+        text = page.get_text()
+        doc.close()
+
+        # Подсчёт слов (разбиваем по пробелам и знакам препинания)
+        import re
+        words = re.findall(r'\b\w+\b', text)
+        words_count = len(words)
+
+        return Response({
+            'page_number': page_number,
+            'words_count': words_count,
+            'text_preview': text[:200]  # для отладки
+        })
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

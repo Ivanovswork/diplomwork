@@ -752,6 +752,34 @@ app.post('/api/reading/session/:sessionId/finish/', async (req, res) => {
   }
 });
 
+// Детальная статистика по страницам книги ребенка
+app.get('/api/reading/child/:childId/book/:bookId/page-stats/', async (req, res) => {
+    const token = req.headers.authorization;
+    const { childId, bookId } = req.params;
+    try {
+        const response = await axios.get(`${DJANGO_API_URL}/reading/child/${childId}/book/${bookId}/page-stats/`, {
+            headers: { Authorization: token }
+        });
+        res.json(response.data);
+    } catch (error) {
+        res.status(error.response?.status || 500).json(error.response?.data || { error: 'Ошибка сервера' });
+    }
+});
+
+// Получение количества слов на странице
+app.get('/api/reading/book/:bookId/page/:pageNumber/words/', async (req, res) => {
+    const token = req.headers.authorization;
+    const { bookId, pageNumber } = req.params;
+    try {
+        const response = await axios.get(`${DJANGO_API_URL}/reading/book/${bookId}/page/${pageNumber}/words/`, {
+            headers: { Authorization: token }
+        });
+        res.json(response.data);
+    } catch (error) {
+        res.status(error.response?.status || 500).json(error.response?.data || { error: 'Ошибка сервера' });
+    }
+});
+
 // ==================== ЗАПУСК СЕРВЕРА ====================
 
 app.listen(PORT, () => {

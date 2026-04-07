@@ -135,3 +135,28 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 GIGACHAT_API_KEY = config('API_KEY')
+
+GIGACHAT_CONFIG = {
+    'MAX_RETRIES': 3,
+    'RETRY_DELAY': 2,
+    'TIMEOUT': 120,
+    'CACHE_ENABLED': True,
+    'FALLBACK_ENABLED': True,
+}
+
+# Для отладки
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'reading.utils.gigachat_client': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}

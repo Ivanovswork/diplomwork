@@ -6,6 +6,7 @@ urlpatterns = [
     path('book/<int:book_id>/stats/', views.get_book_stats, name='book_stats'),
     path('book/<int:book_id>/stats-with-daily/', views.get_book_stats_with_daily_goal, name='book_stats_with_daily'),
     path('book/<int:book_id>/test-stats/', views.get_book_test_stats, name='book_test_stats'),
+    path('book/<int:book_id>/page/<int:page_number>/words/', views.get_page_words_count, name='page_words_count'),
 
     # Сессии
     path('session/<int:book_id>/', views.get_or_create_session, name='get_or_create_session'),
@@ -30,6 +31,7 @@ urlpatterns = [
 
     path('child/<int:child_id>/full-stats/', views.get_child_full_stats, name='child_full_stats'),
     path('child/<int:child_id>/book/<int:book_id>/stats/', views.get_child_book_stats, name='child_book_stats'),
+    path('child/<int:child_id>/book/<int:book_id>/page-stats/', views.get_child_book_page_stats, name='child_book_page_stats'),
 
     path('leaderboard/', views.get_leaderboard, name='leaderboard'),
 ]

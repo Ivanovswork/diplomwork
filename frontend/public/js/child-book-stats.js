@@ -1,7 +1,7 @@
 let childId = null;
 let bookId = null;
 let currentBookName = null;
-let isParentBook = false;
+let isParent = false;  // Флаг, является ли текущий пользователь родителем
 
 async function loadChildBookStats() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -23,6 +23,17 @@ async function loadChildBookStats() {
     try {
         const user = await apiRequest('/users/me/', 'GET');
         document.getElementById('headerUserName').textContent = user.name || '';
+        
+        // Проверяем, является ли текущий пользователь родителем этого ребенка
+        // Для этого пробуем загрузить статистику ребенка (только родитель может)
+        try {
+            await apiRequest(`/reading/child/${childId}/full-stats/`, 'GET');
+            isParent = true;
+            console.log('Current user is parent of this child');
+        } catch (e) {
+            isParent = false;
+            console.log('Current user is NOT parent');
+        }
     } catch (e) {}
 
     try {
@@ -85,17 +96,86 @@ async function loadChildBookStats() {
             document.getElementById('avgTestScore').textContent = `${stats.avg_test_score_percent || 0}%`;
         }
 
-        // Показываем кнопку удаления (родитель может удалить)
+        // Загружаем детальную статистику по страницам и тестам
+        await loadPageStats();
+        
+        // ========== ПОКАЗЫВАЕМ КНОПКУ УДАЛЕНИЯ ТОЛЬКО ДЛЯ РОДИТЕЛЯ ==========
         const deleteBtn = document.getElementById('deleteBookBtn');
-        if (deleteBtn) {
+        if (deleteBtn && isParent) {
             deleteBtn.style.display = 'block';
             deleteBtn.onclick = () => showDeleteModal();
+            console.log('Delete button shown for parent');
+        } else if (deleteBtn) {
+            deleteBtn.style.display = 'none';
         }
 
     } catch (error) {
         console.error('Error loading child book stats:', error);
         showErrorMessage();
     }
+}
+
+async function loadPageStats() {
+    try {
+        const data = await apiRequest(`/reading/child/${childId}/book/${bookId}/page-stats/`, 'GET');
+        console.log('Page stats:', data);
+        
+        // Отображаем тесты
+        if (data.tests_stats && data.tests_stats.length > 0) {
+            document.getElementById('testsListCard').style.display = 'block';
+            renderTestsList(data.tests_stats);
+        }
+        
+        // Отображаем страницы
+        renderPagesTable(data.pages_stats || []);
+        
+    } catch (error) {
+        console.error('Error loading page stats:', error);
+        const tbody = document.getElementById('pagesTableBody');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Ошибка загрузки статистики страниц</td></tr>';
+    }
+}
+
+function renderTestsList(tests) {
+    const container = document.getElementById('testsList');
+    if (!container) return;
+    
+    if (tests.length === 0) {
+        container.innerHTML = '<div class="empty-state">Нет пройденных тестов</div>';
+        return;
+    }
+    
+    container.innerHTML = tests.map(test => `
+        <div class="test-item">
+            <div>
+                <div class="test-pages">📖 Страницы ${test.start_page}-${test.end_page}</div>
+                <div class="test-date">${test.completed_at}</div>
+            </div>
+            <div class="test-score ${test.passed ? 'test-passed' : 'test-failed'}">
+                ${test.score_percent}% (${test.correct_answers}/${test.total_questions})
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderPagesTable(pages) {
+    const tbody = document.getElementById('pagesTableBody');
+    if (!tbody) return;
+    
+    if (!pages || pages.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Нет данных о прочитанных страницах</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = pages.map(page => `
+        <tr>
+            <td><strong>${page.page_number}</strong></td>
+            <td>${page.time_spent_seconds} сек</td>
+            <td>${page.words_count}</td>
+            <td>${page.reading_speed} слов/мин</td>
+            <td>${page.completed_at}</td>
+        </tr>
+    `).join('');
 }
 
 function formatTime(seconds) {
@@ -124,19 +204,31 @@ function showErrorMessage() {
     document.getElementById('totalSessions').textContent = '—';
     document.getElementById('hasActiveSession').textContent = '—';
     document.getElementById('lastPageRead').textContent = '—';
+    
+    const tbody = document.getElementById('pagesTableBody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Ошибка загрузки</td></tr>';
 }
 
+// ==================== УДАЛЕНИЕ КНИГИ ====================
+
 function showDeleteModal() {
-    document.getElementById('deleteModal').classList.add('active');
+    console.log('showDeleteModal called');
+    const modal = document.getElementById('deleteModal');
+    if (modal) modal.classList.add('active');
 }
 
 function closeDeleteModal() {
-    document.getElementById('deleteModal').classList.remove('active');
+    const modal = document.getElementById('deleteModal');
+    if (modal) modal.classList.remove('active');
 }
 
 async function confirmDelete() {
-    if (!bookId) return;
+    if (!bookId) {
+        console.error('No bookId for deletion');
+        return;
+    }
 
+    console.log('Deleting book:', bookId);
     const token = getToken();
 
     try {
@@ -159,9 +251,13 @@ async function confirmDelete() {
         }
     } catch (error) {
         console.error('Error deleting book:', error);
-        alert('Ошибка при удалении книги');
+        alert('Ошибка при удалении книги: ' + error.message);
+    } finally {
+        closeDeleteModal();
     }
 }
+
+// ==================== ИНИЦИАЛИЗАЦИЯ ====================
 
 document.addEventListener('DOMContentLoaded', () => {
     const token = getToken();

@@ -13,9 +13,8 @@ let isInReviewMode = false;
 let pendingTestId = null;
 let blockStartPage = 1;
 let blockEndPage = 2;
-let isReadingFinished = false;
+let lastSavedPage = 0;
 
-// Проверяем URL параметры при загрузке
 const urlParams = new URLSearchParams(window.location.search);
 const reviewMode = urlParams.get('review') === 'true';
 const reviewStartPage = parseInt(urlParams.get('startPage'));
@@ -84,8 +83,6 @@ async function loadPDFPage() {
         embed.setAttribute('navpanes', '0');
         embed.setAttribute('scrollbar', '0');
         embed.setAttribute('statusbar', '0');
-        embed.setAttribute('view', 'FitH');
-        embed.setAttribute('zoom', '100%');
 
         embed.onload = () => {
             console.log('PDF embed loaded');
@@ -134,10 +131,7 @@ async function getOrCreateSession() {
 
         document.getElementById('pageInfo').textContent = `Страница ${currentPage} / ${totalPages}`;
         
-        if (!isInReviewMode) {
-            await checkTestForCurrentBlock();
-        }
-        
+        await checkTestForCurrentBlock();
         await loadPDFPage();
     } catch (error) {
         console.error('Session error:', error);
@@ -162,12 +156,14 @@ async function checkTestForCurrentBlock() {
 
 function showTestDialog() {
     if (!pendingTestId) return;
+    
+    const nextBtn = document.getElementById('nextBtn');
+    if (nextBtn) nextBtn.disabled = true;
+    
     const confirmAction = confirm('Пройдите тест, чтобы продолжить чтение?');
     if (confirmAction) {
         window.location.href = `/test.html?testId=${pendingTestId}&bookId=${bookId}&bookName=${encodeURIComponent(bookName)}&sessionId=${sessionId}&startPage=${blockStartPage}&endPage=${blockEndPage}`;
     } else {
-        const nextBtn = document.getElementById('nextBtn');
-        if (nextBtn) nextBtn.disabled = true;
         isWaitingForTest = true;
     }
 }
@@ -197,11 +193,113 @@ function stopTimer() {
 
 // ==================== СОХРАНЕНИЕ ====================
 
+// async function saveCurrentPage() {
+//     console.log('=== saveCurrentPage START ===');
+    
+//     if (isWaitingForTest) {
+//         alert('Сначала пройдите тест!');
+//         return;
+//     }
+    
+//     if (lastSavedPage === currentPage) {
+//         console.log('Page already saved, skipping');
+//         if (currentPage < totalPages) {
+//             currentPage++;
+//             document.getElementById('pageInfo').textContent = `Страница ${currentPage} / ${totalPages}`;
+//             await loadPDFPage();
+//         } else {
+//             finishReading();
+//         }
+//         return;
+//     }
+    
+//     if (!isPageLoaded) {
+//         alert('Подождите, страница загружается');
+//         return;
+//     }
+
+//     if (currentPage >= totalPages) {
+//         finishReading();
+//         return;
+//     }
+
+//     stopTimer();
+//     const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+
+//     if (timeSpent < 5) {
+//         alert('Прочитайте страницу хотя бы 5 секунд');
+//         startTimer();
+//         return;
+//     }
+
+//     const wordsCount = 250 + Math.floor(Math.random() * 200);
+//     const request = {
+//         session_id: sessionId,
+//         page_number: currentPage,
+//         time_spent: timeSpent,
+//         words_count: wordsCount
+//     };
+
+//     const nextBtn = document.getElementById('nextBtn');
+//     nextBtn.disabled = true;
+//     nextBtn.textContent = 'Сохранение...';
+
+//     try {
+//         const result = await apiRequest('/reading/page/save/', 'POST', request);
+//         console.log('Save result:', result);
+        
+//         if (result.success === true) {
+//             lastSavedPage = currentPage;
+//             currentPage++;
+//             document.getElementById('pageInfo').textContent = `Страница ${currentPage} / ${totalPages}`;
+
+//             if (result.test_created && result.test_id) {
+//                 isWaitingForTest = true;
+//                 pendingTestId = result.test_id;
+//                 showTestDialog();
+//                 nextBtn.disabled = false;
+//                 nextBtn.textContent = 'Далее';
+//                 return;
+//             }
+
+//             if (currentPage > blockEndPage) {
+//                 blockStartPage = ((currentPage - 1) / 2) * 2 + 1;
+//                 blockEndPage = Math.min(blockStartPage + 1, totalPages);
+//             }
+
+//             await loadPDFPage();
+//         } else {
+//             alert(result.error || 'Ошибка сохранения страницы');
+//             startTimer();
+//         }
+//     } catch (error) {
+//         console.error('Save error:', error);
+//         alert('Ошибка сохранения');
+//         startTimer();
+//     } finally {
+//         nextBtn.disabled = false;
+//         nextBtn.textContent = 'Далее';
+//     }
+// }
+
+
 async function saveCurrentPage() {
     console.log('=== saveCurrentPage START ===');
     
-    if (isInReviewMode) {
-        console.log('Review mode - skipping save');
+    if (isWaitingForTest) {
+        alert('Сначала пройдите тест!');
+        return;
+    }
+    
+    if (lastSavedPage === currentPage) {
+        console.log('Page already saved, skipping');
+        if (currentPage < totalPages) {
+            currentPage++;
+            document.getElementById('pageInfo').textContent = `Страница ${currentPage} / ${totalPages}`;
+            await loadPDFPage();
+        } else {
+            finishReading();
+        }
         return;
     }
     
@@ -218,55 +316,69 @@ async function saveCurrentPage() {
     stopTimer();
     const timeSpent = Math.floor((Date.now() - startTime) / 1000);
 
-    if (!isInReviewMode && timeSpent < 5) {
+    if (timeSpent < 5) {
         alert('Прочитайте страницу хотя бы 5 секунд');
         startTimer();
         return;
     }
 
-    const wordsCount = 250 + Math.floor(Math.random() * 200);
+    // ========== ПОЛУЧАЕМ РЕАЛЬНОЕ КОЛИЧЕСТВО СЛОВ ==========
+    let wordsCount = 250; // значение по умолчанию
+    
+    try {
+        const token = getToken();
+        const wordsUrl = `${API_URL}/reading/book/${bookId}/page/${currentPage}/words/`;
+        console.log('Getting words count from:', wordsUrl);
+        
+        const wordsResponse = await fetch(wordsUrl, {
+            headers: { 'Authorization': `Token ${token}` }
+        });
+        
+        if (wordsResponse.ok) {
+            const wordsData = await wordsResponse.json();
+            wordsCount = wordsData.words_count;
+            console.log(`Real words count on page ${currentPage}: ${wordsCount}`);
+        } else {
+            console.warn('Failed to get words count, using fallback');
+        }
+    } catch (error) {
+        console.error('Error getting words count:', error);
+        // Используем fallback - примерное количество слов
+        wordsCount = 250 + Math.floor(Math.random() * 200);
+    }
+
     const request = {
         session_id: sessionId,
         page_number: currentPage,
         time_spent: timeSpent,
         words_count: wordsCount
     };
-    
-    console.log('Save request body:', request);
 
     const nextBtn = document.getElementById('nextBtn');
-    if (nextBtn) {
-        nextBtn.disabled = true;
-        nextBtn.textContent = 'Сохранение...';
-    }
+    nextBtn.disabled = true;
+    nextBtn.textContent = 'Сохранение...';
 
     try {
         const result = await apiRequest('/reading/page/save/', 'POST', request);
         console.log('Save result:', result);
         
         if (result.success === true) {
+            lastSavedPage = currentPage;
             currentPage++;
-            const pageInfoEl = document.getElementById('pageInfo');
-            if (pageInfoEl) {
-                pageInfoEl.textContent = `Страница ${currentPage} / ${totalPages}`;
-            }
+            document.getElementById('pageInfo').textContent = `Страница ${currentPage} / ${totalPages}`;
 
             if (result.test_created && result.test_id) {
-                console.log('Test created! test_id:', result.test_id);
                 isWaitingForTest = true;
                 pendingTestId = result.test_id;
                 showTestDialog();
-                if (nextBtn) {
-                    nextBtn.disabled = false;
-                    nextBtn.textContent = 'Далее';
-                }
+                nextBtn.disabled = false;
+                nextBtn.textContent = 'Далее';
                 return;
             }
 
             if (currentPage > blockEndPage) {
                 blockStartPage = ((currentPage - 1) / 2) * 2 + 1;
                 blockEndPage = Math.min(blockStartPage + 1, totalPages);
-                console.log('New block:', blockStartPage, '-', blockEndPage);
             }
 
             await loadPDFPage();
@@ -276,28 +388,28 @@ async function saveCurrentPage() {
         }
     } catch (error) {
         console.error('Save error:', error);
-        alert('Ошибка сохранения: ' + (error.message || 'Неизвестная ошибка'));
+        alert('Ошибка сохранения');
         startTimer();
     } finally {
-        if (nextBtn) {
-            nextBtn.disabled = false;
-            nextBtn.textContent = 'Далее';
-        }
+        nextBtn.disabled = false;
+        nextBtn.textContent = 'Далее';
     }
 }
 
 // ==================== КНОПКА ДАЛЕЕ ====================
 
 async function onNextPageClick() {
-    console.log('onNextPageClick - isInReviewMode:', isInReviewMode, 'isWaitingForTest:', isWaitingForTest);
-
+    console.log('onNextPageClick - isWaitingForTest:', isWaitingForTest);
+    
+    if (isWaitingForTest) {
+        alert('Сначала пройдите тест!');
+        return;
+    }
+    
     if (isInReviewMode) {
         if (currentPage < blockEndPage) {
             currentPage++;
-            const pageInfoEl = document.getElementById('pageInfo');
-            if (pageInfoEl) {
-                pageInfoEl.textContent = `Страница ${currentPage} / ${totalPages}`;
-            }
+            document.getElementById('pageInfo').textContent = `Страница ${currentPage} / ${totalPages}`;
             await loadPDFPage();
         } else {
             await createNewTestAfterReview();
@@ -305,33 +417,22 @@ async function onNextPageClick() {
         return;
     }
 
-    if (isWaitingForTest) {
-        alert('Сначала пройдите тест!');
-        return;
-    }
-
     await saveCurrentPage();
 }
 
 async function createNewTestAfterReview() {
-    console.log('--- createNewTestAfterReview ---');
-    
-    const nextBtn = document.getElementById('nextBtn');
-    if (nextBtn) {
-        nextBtn.disabled = true;
-        nextBtn.textContent = 'Создание теста...';
+    if (!pendingTestId) {
+        alert('Ошибка: нет ID теста');
+        return;
     }
 
+    const nextBtn = document.getElementById('nextBtn');
+    nextBtn.disabled = true;
+    nextBtn.textContent = 'Создание теста...';
+
     try {
-        let result;
-        if (pendingTestId) {
-            result = await apiRequest(`/reading/test/${pendingTestId}/retake/`, 'POST', {});
-        } else {
-            result = { test_id: null };
-        }
-        
+        const result = await apiRequest(`/reading/test/${pendingTestId}/retake/`, 'POST', {});
         console.log('Retake result:', result);
-        
         if (result.test_id) {
             pendingTestId = result.test_id;
             isWaitingForTest = true;
@@ -350,14 +451,12 @@ async function createNewTestAfterReview() {
         isInReviewMode = false;
         window.location.reload();
     } finally {
-        if (nextBtn) {
-            nextBtn.disabled = false;
-            nextBtn.textContent = 'Далее';
-        }
+        nextBtn.disabled = false;
+        nextBtn.textContent = 'Далее';
     }
 }
 
-// ==================== ЗАВЕРШЕНИЕ СЕССИИ ====================
+// ==================== ЗАВЕРШЕНИЕ ====================
 
 async function finishSession() {
     if (isReadingFinished) return;
@@ -366,10 +465,8 @@ async function finishSession() {
     try {
         await apiRequest(`/reading/session/${sessionId}/finish/`, 'POST', {});
         console.log('Session finished successfully');
-        return true;
     } catch (error) {
         console.error('Error finishing session:', error);
-        return false;
     }
 }
 
@@ -397,10 +494,10 @@ function closeReading() {
     goBackToBookStats();
 }
 
-// Обработчик закрытия вкладки/браузера
+let isReadingFinished = false;
+
 window.addEventListener('beforeunload', () => {
     if (sessionId && !isReadingFinished) {
-        // Используем sendBeacon для асинхронного запроса, который выполнится даже при закрытии
         const url = `${API_URL}/reading/session/${sessionId}/finish/`;
         const token = getToken();
         navigator.sendBeacon(url, JSON.stringify({}));
