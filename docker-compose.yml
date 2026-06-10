@@ -28,7 +28,7 @@ services:
   backend:
     build:
       context: ./backend/reading_api
-      dockerfile: ../../docker/backend/Dockerfile
+      dockerfile: ../Dockerfile
     container_name: reading_backend
     restart: unless-stopped
     depends_on:
@@ -45,8 +45,6 @@ services:
       EMAIL_HOST_USER: ${EMAIL_HOST_USER}
       EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
       API_KEY: ${API_KEY:-}
-    volumes:
-      - ./backend/reading_api:/app
     networks:
       - reading_network
     deploy:
@@ -62,7 +60,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: ../docker/frontend/Dockerfile
+      dockerfile: Dockerfile
     container_name: reading_frontend
     restart: unless-stopped
     depends_on:

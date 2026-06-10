@@ -63,15 +63,15 @@ apt install -y git
 
 # Клонирование репозитория
 cd /root
-git clone <твой-репозиторий> dymplom
-cd dymplom
+git clone https://github.com/Ivanovswork/diplomwork.git
+cd diplomwork
 ```
 
 ### Вариант B: Через SCP (если нет Git)
 
 ```powershell
 # С локального компьютера (Windows PowerShell)
-scp -r C:\Users\desti\PycharmProjects\dymplom root@80.78.254.95:/root/dymplom
+scp -r C:\Users\desti\PycharmProjects\dymplom root@80.78.254.95:/root/diplomwork
 ```
 
 ---
@@ -79,7 +79,7 @@ scp -r C:\Users\desti\PycharmProjects\dymplom root@80.78.254.95:/root/dymplom
 ## 🔧 Шаг 5: Настройка переменных окружения
 
 ```bash
-cd /root/dymplom
+cd /root/diplomwork
 
 # Копирование шаблона .env
 cp .env.docker .env
@@ -163,10 +163,10 @@ docker compose exec db psql -U postgres -d diplom
 ## 🔧 Шаг 10: Обновление проекта
 
 ```bash
-cd /root/dymplom
+cd /root/diplomwork
 
 # Если через Git
-git pull origin main
+git pull origin master
 
 # Пересборка и перезапуск
 docker compose down
