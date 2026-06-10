@@ -958,7 +958,8 @@ def check_test_required(request, session_id):
     is_child_reading = book.user == request.user
     is_book_uploaded_by_parent = book.uploaded_by is not None and book.uploaded_by != book.user
 
-    if not is_book_uploaded_by_parent or is_child_reading:
+    # Тесты требуются только если книга загружена родителем и читает ребёнок
+    if not is_book_uploaded_by_parent or not is_child_reading:
         return Response({'requires_test': False})
 
     # Определяем текущий блок на основе последней сохраненной страницы
