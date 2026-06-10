@@ -2,7 +2,7 @@
 Django==4.2.11
 djangorestframework==3.14.0
 django-cors-headers==4.3.1
-python-dotenv==1.0.0
+python-decouple==3.8
 
 # GigaChat
 gigachat==0.1.25
@@ -10,6 +10,7 @@ gigachat==0.1.25
 # PDF processing
 PyMuPDF==1.24.2
 pypdf==4.0.1
+PyPDF2==3.0.1
 
 # EPUB processing
 ebooklib==0.18
@@ -19,12 +20,15 @@ beautifulsoup4==4.12.3
 requests==2.31.0
 urllib3==2.1.0
 
-# Database & migrations (если используется PostgreSQL, но скорее всего SQLite)
-psycopg2-binary==2.9.9  # опционально, если не нужен — удалите
+# Database & migrations (PostgreSQL)
+psycopg2-binary==2.9.9
 
 # Authentication & security
 PyJWT==2.8.0
 bcrypt==4.1.2
+
+# ML & NLP (для GigaChat и обработки текста)
+transformers==4.38.0
 
 # Utilities
 tqdm==4.66.1
