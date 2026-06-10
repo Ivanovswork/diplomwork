@@ -55,7 +55,8 @@ def login(request):
     serializer = UserLoginSerializer(data=request.data)
     if serializer.is_valid():
         user = authenticate(
-            email=serializer.validated_data['email'],
+            request,
+            username=serializer.validated_data['email'],
             password=serializer.validated_data['password']
         )
         if user:
