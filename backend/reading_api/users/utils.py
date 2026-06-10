@@ -17,3 +17,16 @@ def send_confirmation_email(user_email, key):
         [user_email],
         fail_silently=False,
     )
+
+
+def send_password_reset_email(user_email, key):
+    """Отправляет код для сброса пароля на email"""
+    send_mail(
+        'Сброс пароля - Reading Tracker',
+        f'Ваш код для сброса пароля: {key}\n\n'
+        f'Введите этот код в приложении, чтобы установить новый пароль.\n'
+        f'Если вы не запрашивали сброс пароля, просто проигнорируйте это письмо.',
+        settings.DEFAULT_FROM_EMAIL,
+        [user_email],
+        fail_silently=False,
+    )

@@ -580,9 +580,11 @@ def get_requests_count(request):
 @parser_classes([MultiPartParser, FormParser])
 def upload_book(request):
     """Загрузка книги себе"""
-    print("=== UPLOAD BOOK CALLED ===")
-    print("Request data:", request.data)
-    print("Request FILES:", request.FILES)
+    import sys
+    print("=== UPLOAD BOOK CALLED ===", file=sys.stderr)
+    print("Request FILES:", request.FILES, file=sys.stderr)
+    book_name = request.data.get('name', 'unknown')
+    print(f"Book name: {book_name}", file=sys.stderr)
 
     serializer = BookUploadSerializer(data=request.data, context={'request': request})
     if serializer.is_valid():
@@ -602,9 +604,11 @@ def upload_book(request):
 @parser_classes([MultiPartParser, FormParser])
 def upload_book_to_child(request):
     """Загрузка книги ребенку"""
-    print("=== UPLOAD BOOK TO CHILD CALLED ===")
-    print("Request data:", request.data)
-    print("Request FILES:", request.FILES)
+    import sys
+    print("=== UPLOAD BOOK TO CHILD CALLED ===", file=sys.stderr)
+    print("Request FILES:", request.FILES, file=sys.stderr)
+    book_name = request.data.get('name', 'unknown')
+    print(f"Book name: {book_name}", file=sys.stderr)
 
     serializer = BookUploadToChildSerializer(data=request.data, context={'request': request})
     if serializer.is_valid():
