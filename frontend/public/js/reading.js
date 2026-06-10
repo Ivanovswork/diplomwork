@@ -209,9 +209,22 @@ async function checkTestForCurrentBlock() {
     try {
         const check = await apiRequest(`/reading/test/check/${sessionId}/`, 'GET');
         console.log('Test check:', check);
+        
         if (check.requires_test) {
             isWaitingForTest = true;
             pendingTestId = check.test_id;
+            blockStartPage = check.start_page || blockStartPage;
+            blockEndPage = check.end_page || blockEndPage;
+            
+            // Если тест провален (retake=true) - включаем режим перечитывания
+            if (check.retake === true) {
+                isInReviewMode = true;
+                currentPage = blockStartPage;
+                document.getElementById('pageInfo').textContent = `Страница ${currentPage} / ${totalPages}`;
+                console.log('Review mode enabled - retake required for pages:', blockStartPage, '-', blockEndPage);
+                alert('Тест не пройден! Перечитайте страницы ' + blockStartPage + '-' + blockEndPage + ' и попробуйте снова.');
+            }
+            
             showTestDialog();
         }
     } catch (error) {
