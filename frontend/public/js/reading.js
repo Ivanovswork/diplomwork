@@ -73,30 +73,28 @@ async function loadPDFPage() {
         
         loadingOverlay = newLoadingOverlay;
 
-        const embed = document.createElement('embed');
-        embed.src = blobUrl;
-        embed.type = 'application/pdf';
-        embed.style.width = '100%';
-        embed.style.height = '100%';
-        
-        embed.setAttribute('toolbar', '0');
-        embed.setAttribute('navpanes', '0');
-        embed.setAttribute('scrollbar', '0');
-        embed.setAttribute('statusbar', '0');
+        // Используем iframe вместо embed для лучшей поддержки на мобильных
+        const iframe = document.createElement('iframe');
+        iframe.src = blobUrl;
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.border = 'none';
+        iframe.setAttribute('frameborder', '0');
+        iframe.setAttribute('scrolling', 'no');
 
-        embed.onload = () => {
-            console.log('PDF embed loaded');
+        iframe.onload = () => {
+            console.log('PDF iframe loaded');
             if (loadingOverlay) loadingOverlay.style.display = 'none';
             isPageLoaded = true;
             if (!isInReviewMode && !isWaitingForTest) startTimer();
         };
 
-        embed.onerror = (err) => {
-            console.error('Embed error:', err);
+        iframe.onerror = (err) => {
+            console.error('Iframe error:', err);
             if (loadingOverlay) loadingOverlay.innerHTML = '<div>Ошибка отображения PDF</div>';
         };
 
-        viewer.appendChild(embed);
+        viewer.appendChild(iframe);
     } catch (error) {
         console.error('loadPDFPage error:', error);
         if (loadingOverlay) {
