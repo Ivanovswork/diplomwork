@@ -47,12 +47,11 @@
             android:layout_height="40dp"
             android:text="Отвязаться"
             android:textSize="14sp"
+            android:textStyle="bold"
             android:textAllCaps="false"
+            android:textColor="@android:color/white"
             app:cornerRadius="20dp"
-            app:strokeColor="#DC2626"
-            app:strokeWidth="1dp"
-            app:backgroundTint="@android:color/transparent"
-            android:textColor="#DC2626" />
+            app:backgroundTint="#DC2626" />
 
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

@@ -9,8 +9,8 @@
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/bg_white"
-        app:elevation="0dp">
+        android:background="@drawable/header_gradient"
+        app:elevation="4dp">
 
         <androidx.appcompat.widget.Toolbar
             android:layout_width="match_parent"
@@ -18,12 +18,9 @@
             android:paddingStart="8dp"
             android:paddingEnd="8dp">
 
-            <ImageButton
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnBack"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:src="@android:drawable/ic_menu_revert"
-                android:background="@android:color/transparent"
+                style="@style/BackButton"
                 android:contentDescription="Назад" />
 
             <TextView
@@ -33,7 +30,7 @@
                 android:text="Профиль"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="@color/text_dark"
+                android:textColor="@android:color/white"
                 android:gravity="center" />
 
             <View
@@ -58,7 +55,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
                 app:cardCornerRadius="24dp"
-                app:cardElevation="2dp">
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#4A90E2">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -71,9 +69,10 @@
                         android:layout_width="80dp"
                         android:layout_height="80dp"
                         android:src="@drawable/ic_profile"
-                        android:background="@color/primary_blue_light"
+                        android:background="@drawable/ic_stats_bg"
                         android:padding="16dp"
                         android:layout_marginBottom="16dp"
+                        android:tint="@android:color/white"
                         app:shapeAppearanceOverlay="@style/roundedImageView" />
 
                     <TextView
@@ -83,7 +82,7 @@
                         android:text="Имя пользователя"
                         android:textSize="24sp"
                         android:textStyle="bold"
-                        android:textColor="@color/text_dark" />
+                        android:textColor="@android:color/white" />
 
                     <TextView
                         android:id="@+id/tvUserEmail"
@@ -91,20 +90,30 @@
                         android:layout_height="wrap_content"
                         android:text="user@example.com"
                         android:textSize="14sp"
-                        android:textColor="@color/text_light"
+                        android:textColor="#E3F2FD"
                         android:layout_marginTop="4dp" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <TextView
+            <!-- Социальные связи header -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Социальные связи"
-                android:textSize="14sp"
-                android:textColor="@color/text_light"
-                android:layout_marginStart="8dp"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#4A90E2">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Социальные связи"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white"
+                    android:padding="12dp"
+                    android:gravity="center" />
+            </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardFriends"
@@ -113,6 +122,7 @@
                 android:layout_marginBottom="12dp"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="1dp"
+                app:cardBackgroundColor="#4A90E2"
                 android:clickable="true"
                 android:focusable="true">
 
@@ -123,19 +133,28 @@
                     android:padding="16dp"
                     android:gravity="center_vertical">
 
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_friends"
+                        android:tint="@android:color/white"
+                        android:layout_marginEnd="8dp"
+                        android:contentDescription="Друзья" />
+
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="👥 Друзья"
+                        android:text="Друзья"
                         android:textSize="16sp"
-                        android:textColor="@color/text_dark" />
+                        android:textColor="@android:color/white" />
 
                     <ImageView
                         android:layout_width="20dp"
                         android:layout_height="20dp"
                         android:src="@android:drawable/ic_menu_more"
-                        android:alpha="0.5" />
+                        android:tint="@android:color/white"
+                        android:alpha="0.7" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -147,6 +166,7 @@
                 android:layout_marginBottom="24dp"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="1dp"
+                app:cardBackgroundColor="#4A90E2"
                 android:clickable="true"
                 android:focusable="true">
 
@@ -157,32 +177,51 @@
                     android:padding="16dp"
                     android:gravity="center_vertical">
 
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_family"
+                        android:tint="@android:color/white"
+                        android:layout_marginEnd="8dp"
+                        android:contentDescription="Родительский контроль" />
+
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="👨‍👩‍👧 Родительский контроль"
+                        android:text="Родительский контроль"
                         android:textSize="16sp"
-                        android:textColor="@color/text_dark" />
+                        android:textColor="@android:color/white" />
 
                     <ImageView
                         android:layout_width="20dp"
                         android:layout_height="20dp"
                         android:src="@android:drawable/ic_menu_more"
-                        android:alpha="0.5" />
+                        android:tint="@android:color/white"
+                        android:alpha="0.7" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <TextView
+            <!-- Уведомления header -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Уведомления"
-                android:textSize="14sp"
-                android:textColor="@color/text_light"
-                android:layout_marginStart="8dp"
-                android:layout_marginBottom="8dp"
-                android:layout_marginTop="8dp" />
+                android:layout_marginBottom="12dp"
+                android:layout_marginTop="8dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#4A90E2">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Уведомления"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white"
+                    android:padding="12dp"
+                    android:gravity="center" />
+            </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardRequests"
@@ -191,6 +230,7 @@
                 android:layout_marginBottom="24dp"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="1dp"
+                app:cardBackgroundColor="#4A90E2"
                 android:clickable="true"
                 android:focusable="true">
 
@@ -201,13 +241,21 @@
                     android:padding="16dp"
                     android:gravity="center_vertical">
 
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_friends"
+                        android:tint="@android:color/white"
+                        android:layout_marginEnd="8dp"
+                        android:contentDescription="Запросы" />
+
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="📬 Запросы"
+                        android:text="Запросы"
                         android:textSize="16sp"
-                        android:textColor="@color/text_dark" />
+                        android:textColor="@android:color/white" />
 
                     <TextView
                         android:id="@+id/tvRequestsBadge"
@@ -225,20 +273,31 @@
                         android:layout_width="20dp"
                         android:layout_height="20dp"
                         android:src="@android:drawable/ic_menu_more"
-                        android:alpha="0.5" />
+                        android:tint="@android:color/white"
+                        android:alpha="0.7" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <TextView
+            <!-- Безопасность header -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Безопасность"
-                android:textSize="14sp"
-                android:textColor="@color/text_light"
-                android:layout_marginStart="8dp"
-                android:layout_marginBottom="8dp"
-                android:layout_marginTop="8dp" />
+                android:layout_marginBottom="12dp"
+                android:layout_marginTop="8dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#4A90E2">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Безопасность"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white"
+                    android:padding="12dp"
+                    android:gravity="center" />
+            </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardChangePassword"
@@ -247,6 +306,7 @@
                 android:layout_marginBottom="12dp"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="1dp"
+                app:cardBackgroundColor="#4A90E2"
                 android:clickable="true"
                 android:focusable="true">
 
@@ -257,19 +317,28 @@
                     android:padding="16dp"
                     android:gravity="center_vertical">
 
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_security"
+                        android:tint="@android:color/white"
+                        android:layout_marginEnd="8dp"
+                        android:contentDescription="Безопасность" />
+
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="🔒 Сменить пароль"
+                        android:text="Сменить пароль"
                         android:textSize="16sp"
-                        android:textColor="@color/text_dark" />
+                        android:textColor="@android:color/white" />
 
                     <ImageView
                         android:layout_width="20dp"
                         android:layout_height="20dp"
                         android:src="@android:drawable/ic_menu_more"
-                        android:alpha="0.5" />
+                        android:tint="@android:color/white"
+                        android:alpha="0.7" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -281,6 +350,7 @@
                 android:layout_marginTop="16dp"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="1dp"
+                app:cardBackgroundColor="#FEE2E2"
                 android:clickable="true"
                 android:focusable="true">
 
@@ -295,15 +365,17 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="🚪 Выйти"
+                        android:text="Выйти"
                         android:textSize="16sp"
+                        android:textStyle="bold"
                         android:textColor="#DC2626" />
 
                     <ImageView
                         android:layout_width="20dp"
                         android:layout_height="20dp"
                         android:src="@android:drawable/ic_menu_more"
-                        android:alpha="0.5" />
+                        android:tint="#DC2626"
+                        android:alpha="0.7" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

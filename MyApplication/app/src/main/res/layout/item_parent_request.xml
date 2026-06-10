@@ -45,10 +45,11 @@
                 android:layout_weight="1"
                 android:text="Принять"
                 android:textSize="14sp"
+                android:textStyle="bold"
                 android:textAllCaps="false"
-                app:cornerRadius="20dp"
-                app:backgroundTint="@color/accent_purple"
                 android:textColor="@android:color/white"
+                app:cornerRadius="20dp"
+                app:backgroundTint="#10B981"
                 android:layout_marginEnd="8dp" />
 
             <com.google.android.material.button.MaterialButton
@@ -58,12 +59,11 @@
                 android:layout_weight="1"
                 android:text="Отклонить"
                 android:textSize="14sp"
+                android:textStyle="bold"
                 android:textAllCaps="false"
+                android:textColor="@android:color/white"
                 app:cornerRadius="20dp"
-                app:strokeColor="@color/text_light"
-                app:strokeWidth="1dp"
-                app:backgroundTint="@android:color/transparent"
-                android:textColor="@color/text_light" />
+                app:backgroundTint="#EF4444" />
 
         </LinearLayout>
 

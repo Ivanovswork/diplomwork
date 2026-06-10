@@ -5,133 +5,191 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>Чтение</title>
   <style>
+    :root {
+      --primary: #4a90e2;
+      --primary-dark: #2563eb;
+      --surface: #ffffff;
+      --surface-soft: #eff6ff;
+      --surface-border: #dbeafe;
+      --text: #111827;
+      --text-muted: #6b7280;
+      --shadow: 0 18px 40px rgba(37, 99, 235, 0.12);
+    }
+
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
+
+    html,
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #1a1a2e;
+      height: 100%;
     }
+
+    body {
+      font-family: "Segoe UI", Inter, sans-serif;
+      background: linear-gradient(180deg, #eff6ff 0%, #f8fafc 100%);
+      color: var(--text);
+    }
+
     .reading-container {
       display: flex;
       flex-direction: column;
       height: 100vh;
-      background: #1a1a2e;
+      padding: 16px;
+      gap: 16px;
+      overflow: hidden;
     }
-    .reading-header {
+
+    .reading-header,
+    .reading-footer {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 12px 16px;
-      background: #0f0f23;
-      color: white;
-      border-bottom: 1px solid #2a2a4a;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 18px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--surface-border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
     }
-    .reading-header .btn-back {
-      background: none;
+
+    .btn-back,
+    .btn-next {
       border: none;
-      color: #3b82f6;
-      font-size: 24px;
+      border-radius: 999px;
       cursor: pointer;
-      width: 40px;
-      height: 40px;
-      display: flex;
+      font-weight: 700;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
+      gap: 8px;
     }
-    .reading-header .book-title {
-      font-size: 16px;
-      font-weight: 500;
+
+    .btn-back {
+      min-width: 46px;
+      height: 46px;
+      background: var(--surface-soft);
+      color: var(--primary-dark);
+    }
+
+    .book-title {
       flex: 1;
+      font-size: 16px;
+      font-weight: 700;
       text-align: center;
+      white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      white-space: nowrap;
-      padding: 0 8px;
     }
-    .reading-header .timer {
+
+    .timer {
+      min-width: 88px;
+      padding: 10px 12px;
+      border-radius: 16px;
       font-family: monospace;
       font-size: 18px;
-      font-weight: 600;
-      background: #2a2a4a;
-      padding: 4px 12px;
-      border-radius: 20px;
-      color: #3b82f6;
+      font-weight: 700;
+      text-align: center;
+      color: var(--primary-dark);
+      background: var(--surface-soft);
     }
+
     .pdf-viewer {
       flex: 1;
-      background: #1a1a2e;
+      min-height: 0;
       position: relative;
+      overflow: hidden;
+      border-radius: 28px;
+      background: #dbeafe;
+      box-shadow: var(--shadow);
     }
+
     .pdf-viewer embed {
+      display: block;
       width: 100%;
       height: 100%;
       border: none;
+      background: #fff;
     }
-    .reading-footer {
-      padding: 12px 16px;
-      background: #0f0f23;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-top: 1px solid #2a2a4a;
-    }
+
     .page-info {
-      color: #94a3b8;
+      color: var(--text-muted);
       font-size: 14px;
-    }
-    .btn-next {
-      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-      border: none;
-      padding: 10px 24px;
-      border-radius: 40px;
-      color: white;
       font-weight: 600;
-      cursor: pointer;
-      font-size: 14px;
     }
+
+    .btn-next {
+      padding: 12px 22px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary) 0%, #5b7cc4 100%);
+      box-shadow: 0 16px 30px rgba(74, 144, 226, 0.22);
+    }
+
     .btn-next:disabled {
-      opacity: 0.5;
+      opacity: 0.55;
       cursor: not-allowed;
     }
+
     .loading-overlay {
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.85);
+      inset: 0;
+      background: rgba(255, 255, 255, 0.9);
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
-      z-index: 100;
-      color: white;
-      font-size: 16px;
-      flex-direction: column;
       gap: 12px;
+      z-index: 20;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
     }
+
     .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba(59,130,246,0.3);
-      border-top-color: #3b82f6;
+      width: 42px;
+      height: 42px;
+      border: 3px solid rgba(74, 144, 226, 0.22);
+      border-top-color: var(--primary);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
     @keyframes spin {
       to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+      .reading-container {
+        padding: 12px;
+      }
+
+      .reading-header,
+      .reading-footer {
+        padding: 14px;
+      }
+
+      .timer {
+        min-width: 76px;
+        font-size: 16px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="reading-container">
-    <<div class="reading-header">
-    <button class="btn-back" onclick="goBackToBookStats()">←</button>
-    <div class="book-title" id="bookTitle">Загрузка...</div>
-    <div class="timer" id="timer">00:00</div>
-</div>
+    <div class="reading-header">
+      <button class="btn-back" id="backBtn" onclick="goBackToBookStats()" aria-label="Назад"></button>
+      <div class="book-title" id="bookTitle">Загрузка...</div>
+      <div class="timer" id="timer">00:00</div>
+    </div>
     <div class="pdf-viewer" id="pdfViewer">
       <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
@@ -145,6 +203,14 @@
   </div>
 
   <script src="/js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var backBtn = document.getElementById('backBtn');
+      if (backBtn) {
+        backBtn.innerHTML = window.renderIcon('arrowLeft');
+      }
+    });
+  </script>
   <script src="/js/reading.js"></script>
 </body>
 </html>

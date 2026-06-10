@@ -1,85 +1,181 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/bg_light"
-    android:padding="16dp">
+    android:background="@color/bg_light">
 
-    <LinearLayout
+    <!-- Header -->
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="16dp">
+        android:background="@drawable/header_gradient"
+        app:elevation="4dp">
 
-        <ImageButton
-            android:id="@+id/btnBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@android:drawable/ic_menu_revert"
-            android:background="@android:color/transparent"
-            android:contentDescription="Назад" />
+        <androidx.appcompat.widget.Toolbar
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp">
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Мои дети"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_dark"
-            android:gravity="center" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBack"
+                style="@style/BackButton"
+                android:contentDescription="Назад" />
 
-        <View
-            android:layout_width="40dp"
-            android:layout_height="40dp" />
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Мои дети"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/white"
+                android:gravity="center" />
 
-    </LinearLayout>
+            <View
+                android:layout_width="40dp"
+                android:layout_height="40dp" />
 
-    <LinearLayout
+        </androidx.appcompat.widget.Toolbar>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="24dp">
+        android:layout_height="match_parent">
 
-        <EditText
-            android:id="@+id/etChildEmail"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="Email ребенка"
-            android:inputType="textEmailAddress"
-            android:padding="12dp"
-            android:background="@drawable/edit_text_bg" />
+            android:orientation="vertical"
+            android:padding="16dp">
 
-        <Button
-            android:id="@+id/btnAddChild"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Добавить"
-            android:backgroundTint="@color/accent_purple"
-            android:layout_marginStart="8dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp" />
+            <!-- Add child card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@android:color/white">
 
-    </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
 
-    <TextView
-        android:id="@+id/tvEmpty"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="У вас нет привязанных детей"
-        android:textSize="16sp"
-        android:textColor="@color/text_light"
-        android:gravity="center"
-        android:padding="32dp"
-        android:visibility="gone" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvChildren"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone" />
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@drawable/ic_family"
+                            android:background="@drawable/btn_secondary"
+                            android:padding="6dp"
+                            android:layout_marginEnd="12dp"
+                            android:contentDescription="Семья" />
 
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Привязать ребёнка"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#2C2C2C" />
+                    </LinearLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        app:boxBackgroundMode="outline"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxStrokeColor="#4A90E2"
+                        app:boxStrokeWidth="2dp"
+                        app:hintTextColor="#4A90E2"
+                        app:startIconDrawable="@drawable/ic_email"
+                        app:startIconTint="#4A90E2">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etChildEmail"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Email ребенка"
+                            android:inputType="textEmailAddress"
+                            android:textColor="#2C2C2C"
+                            android:textSize="15sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnAddChild"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:text="Отправить запрос"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textAllCaps="false"
+                        android:textColor="@android:color/white"
+                        app:cornerRadius="12dp"
+                        app:backgroundTint="#7B68AE"
+                        app:elevation="4dp" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Заголовок списка -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Привязанные дети"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#2C2C2C"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Empty state -->
+            <LinearLayout
+                android:id="@+id/emptyState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="48dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/ic_family"
+                    android:alpha="0.2"
+                    android:layout_marginBottom="16dp"
+                    android:contentDescription="Нет детей" />
+
+                <TextView
+                    android:id="@+id/tvEmpty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="У вас нет привязанных детей"
+                    android:textSize="16sp"
+                    android:textColor="#757575"
+                    android:gravity="center" />
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvChildren"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone" />
+
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>

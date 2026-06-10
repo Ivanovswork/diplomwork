@@ -2,11 +2,12 @@ package com.example.myapplication
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.ImageButton
+import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
+import com.google.android.material.button.MaterialButton
 
 class ProfileActivity : AppCompatActivity() {
 
@@ -17,7 +18,7 @@ class ProfileActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile)
 
-        val btnBack = findViewById<ImageButton>(R.id.btnBack)
+        val btnBack = findViewById<MaterialButton>(R.id.btnBack)
         val tvUserName = findViewById<TextView>(R.id.tvUserName)
         val tvUserEmail = findViewById<TextView>(R.id.tvUserEmail)
 

@@ -178,17 +178,17 @@ class HomeActivity : AppCompatActivity() {
             when (rank) {
                 1 -> {
                     holder.binding.tvBadge.visibility = View.VISIBLE
-                    holder.binding.tvBadge.text = "🥇"
+                    holder.binding.tvBadge.setImageResource(R.drawable.ic_medal_gold)
                     holder.binding.tvRank.visibility = View.GONE
                 }
                 2 -> {
                     holder.binding.tvBadge.visibility = View.VISIBLE
-                    holder.binding.tvBadge.text = "🥈"
+                    holder.binding.tvBadge.setImageResource(R.drawable.ic_medal_silver)
                     holder.binding.tvRank.visibility = View.GONE
                 }
                 3 -> {
                     holder.binding.tvBadge.visibility = View.VISIBLE
-                    holder.binding.tvBadge.text = "🥉"
+                    holder.binding.tvBadge.setImageResource(R.drawable.ic_medal_bronze)
                     holder.binding.tvRank.visibility = View.GONE
                 }
                 else -> {

@@ -58,12 +58,11 @@
                 android:layout_weight="1"
                 android:text="Удалить"
                 android:textSize="12sp"
+                android:textStyle="bold"
                 android:textAllCaps="false"
+                android:textColor="@android:color/white"
                 app:cornerRadius="18dp"
-                app:strokeColor="#DC2626"
-                app:strokeWidth="1dp"
-                app:backgroundTint="@android:color/transparent"
-                android:textColor="#DC2626" />
+                app:backgroundTint="#DC2626" />
 
         </LinearLayout>
 

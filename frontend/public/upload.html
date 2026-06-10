@@ -7,35 +7,37 @@
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <button class="btn-back" onclick="window.location.href='/'">← Назад</button>
-      <h1>📚 Добавить книгу</h1>
-      <div></div>
+  <header class="header">
+    <div class="page-title">
+      <button class="btn-back" onclick="window.location.href='/'">Назад</button>
+      <div class="logo page-title-text">Добавить книгу</div>
     </div>
-    
-    <div class="form-card">
+  </header>
+
+  <div class="book-stats-compact">
+    <div class="stats-card">
+      <h3 class="title-with-icon"><span class="icon-chip" data-icon="bookOpen"></span><span>Загрузка книги</span></h3>
       <form id="uploadForm">
         <div class="form-group">
           <label>Название книги</label>
           <input type="text" id="bookName" placeholder="Введите название" required>
         </div>
-        
+
         <div class="form-group">
           <label>Дневная цель (страниц)</label>
           <input type="number" id="dailyGoal" value="10" min="1" required>
         </div>
-        
+
         <div class="form-group">
           <label>Файл PDF</label>
           <input type="file" id="bookFile" accept=".pdf" required>
         </div>
-        
+
         <button type="submit" class="btn-primary">Загрузить книгу</button>
       </form>
     </div>
   </div>
-  
+
   <script src="/js/main.js"></script>
   <script src="/js/upload.js"></script>
 </body>

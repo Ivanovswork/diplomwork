@@ -21,6 +21,7 @@ class BookDetailActivity : AppCompatActivity() {
     private lateinit var token: String
     private var bookId: Int = 0
     private var bookName: String = ""
+    private var bookFormat: String = "pdf"
     private var readOnly: Boolean = false
 
     companion object {
@@ -34,6 +35,7 @@ class BookDetailActivity : AppCompatActivity() {
 
         bookId = intent.getIntExtra("book_id", 0)
         bookName = intent.getStringExtra("book_name") ?: "Книга"
+        bookFormat = intent.getStringExtra("book_format") ?: "pdf"
         readOnly = intent.getBooleanExtra("read_only", false)
 
         val prefs = getSharedPreferences("auth", MODE_PRIVATE)
@@ -132,10 +134,10 @@ class BookDetailActivity : AppCompatActivity() {
         binding.dailyGoalProgress.progress = stats.daily_goal_percent
 
         if (stats.daily_goal_achieved) {
-            binding.tvDailyGoalStatus.text = "✅ Дневная цель выполнена! 🎉"
+            binding.tvDailyGoalStatus.text = "Дневная цель выполнена!"
             binding.tvDailyGoalStatus.setTextColor(resources.getColor(android.R.color.holo_green_dark, null))
         } else {
-            binding.tvDailyGoalStatus.text = "📖 Осталось $remaining стр."
+            binding.tvDailyGoalStatus.text = "Осталось $remaining стр."
             binding.tvDailyGoalStatus.setTextColor(resources.getColor(android.R.color.holo_orange_dark, null))
         }
 
@@ -162,6 +164,7 @@ class BookDetailActivity : AppCompatActivity() {
         val intent = Intent(this, ReadingActivity::class.java)
         intent.putExtra("book_id", bookId)
         intent.putExtra("book_name", bookName)
+        intent.putExtra("book_format", bookFormat)
         startActivity(intent)
     }
 }

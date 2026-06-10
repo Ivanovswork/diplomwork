@@ -294,6 +294,7 @@ class ChildProfileActivity : AppCompatActivity() {
                 intent.putExtra("child_name", childName)
                 intent.putExtra("book_id", book.id)
                 intent.putExtra("book_name", book.name)
+                intent.putExtra("book_format", book.format)
                 startActivity(intent)
             }
         }

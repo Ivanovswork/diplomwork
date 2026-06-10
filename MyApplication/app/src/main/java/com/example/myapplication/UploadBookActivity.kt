@@ -27,14 +27,24 @@ class UploadBookActivity : AppCompatActivity() {
     private lateinit var token: String
     private var selectedFileUri: Uri? = null
     private var selectedFileName: String? = null
+    private var selectedFileMimeType: String = "application/pdf"
     private var progressDialog: AlertDialog? = null
 
-    private val pickPdfLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+    private val pickFileLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
             selectedFileUri = it
             selectedFileName = getFileName(it)
             binding.tvFileName.text = selectedFileName ?: "Файл выбран"
             binding.tvFileName.visibility = android.view.View.VISIBLE
+            
+            // Определяем тип файла
+            val mimeType = contentResolver.getType(uri)
+            selectedFileMimeType = when {
+                uri.toString().endsWith(".epub", true) -> "application/epub+zip"
+                uri.toString().endsWith(".pdf", true) -> "application/pdf"
+                mimeType?.contains("epub") == true -> "application/epub+zip"
+                else -> "application/pdf"
+            }
         }
     }
 
@@ -57,7 +67,8 @@ class UploadBookActivity : AppCompatActivity() {
         }
 
         binding.btnSelectFile.setOnClickListener {
-            pickPdfLauncher.launch("application/pdf")
+            // Запускаем выбор любого файла (PDF или EPUB)
+            pickFileLauncher.launch("*/*")
         }
 
         binding.btnUpload.setOnClickListener {
@@ -119,14 +130,14 @@ class UploadBookActivity : AppCompatActivity() {
         try {
             val parcelFileDescriptor = contentResolver.openFileDescriptor(fileUri, "r")
             val inputStream = FileInputStream(parcelFileDescriptor?.fileDescriptor)
-            val tempFile = File(cacheDir, selectedFileName ?: "book.pdf")
+            val tempFile = File(cacheDir, selectedFileName ?: "book")
             FileOutputStream(tempFile).use { outputStream ->
                 inputStream.copyTo(outputStream)
             }
 
             val nameBody = name.toRequestBody("text/plain".toMediaTypeOrNull())
             val dailyGoalBody = dailyGoalInt.toString().toRequestBody("text/plain".toMediaTypeOrNull())
-            val fileBody = tempFile.asRequestBody("application/pdf".toMediaTypeOrNull())
+            val fileBody = tempFile.asRequestBody(selectedFileMimeType.toMediaTypeOrNull())
             val filePart = MultipartBody.Part.createFormData("file", tempFile.name, fileBody)
 
             api.uploadBook("Token $token", nameBody, dailyGoalBody, filePart)

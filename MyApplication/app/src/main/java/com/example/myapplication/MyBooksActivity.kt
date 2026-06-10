@@ -220,6 +220,7 @@ class MyBooksActivity : AppCompatActivity() {
                 val intent = Intent(this@MyBooksActivity, BookDetailActivity::class.java)
                 intent.putExtra("book_id", book.id)
                 intent.putExtra("book_name", book.name)
+                intent.putExtra("book_format", book.format)
                 startActivity(intent)
             }
         }

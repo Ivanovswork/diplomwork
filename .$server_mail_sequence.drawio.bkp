@@ -1,0 +1,88 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36" version="29.6.6">
+  <diagram id="server-mail-sequence" name="Page-1">
+    <mxGraphModel dx="1200" dy="1400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Диаграмма последовательности взаимодействия сервера с почтовым сервисом Mail.ru" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="150" y="20" width="890" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="serverHead" value="Сервер приложения" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="100" y="90" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="dbHead" value="База данных" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="470" y="90" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="mailHead" value="SMTP Mail.ru" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="840" y="90" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="serverLife" value="" style="endArrow=none;html=1;strokeWidth=2;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="210" y="150" as="sourcePoint" />
+            <mxPoint x="210" y="1010" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dbLife" value="" style="endArrow=none;html=1;strokeWidth=2;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="580" y="150" as="sourcePoint" />
+            <mxPoint x="580" y="1010" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="mailLife" value="" style="endArrow=none;html=1;strokeWidth=2;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="950" y="150" as="sourcePoint" />
+            <mxPoint x="950" y="1010" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="serverA1" value="" style="ellipse;html=1;aspect=fixed;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="205" y="325" width="10" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="dbA1" value="" style="ellipse;html=1;aspect=fixed;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="575" y="325" width="10" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="dbA2" value="" style="ellipse;html=1;aspect=fixed;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="575" y="395" width="10" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="serverA2" value="" style="ellipse;html=1;aspect=fixed;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="205" y="395" width="10" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="serverA3" value="" style="ellipse;html=1;aspect=fixed;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="205" y="565" width="10" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="mailA1" value="" style="ellipse;html=1;aspect=fixed;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="945" y="565" width="10" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="mailA2" value="" style="ellipse;html=1;aspect=fixed;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="945" y="655" width="10" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="serverA4" value="" style="ellipse;html=1;aspect=fixed;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="205" y="655" width="10" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="note1" value="1. Генерация ключа подтверждения&#xa;на стороне сервера" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;strokeWidth=2;fillColor=#fff2cc;" vertex="1" parent="1">
+          <mxGeometry x="90" y="200" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="m1" value="2. INSERT ключ подтверждения" style="endArrow=block;endFill=1;html=1;strokeWidth=2;" edge="1" parent="1" source="serverA1" target="dbA1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2" value="3. Подтверждение сохранения" style="endArrow=open;endFill=0;html=1;strokeWidth=2;dashed=1;" edge="1" parent="1" source="dbA2" target="serverA2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="note2" value="4. Формирование письма&#xa;и ссылки подтверждения" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;strokeWidth=2;fillColor=#fff2cc;" vertex="1" parent="1">
+          <mxGeometry x="90" y="440" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="m3" value="5. SMTP SEND mail" style="endArrow=block;endFill=1;html=1;strokeWidth=2;" edge="1" parent="1" source="serverA3" target="mailA1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m3note" value="smtp.mail.ru:465, SSL" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="500" y="585" width="180" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="m4" value="6. Подтверждение приема письма" style="endArrow=open;endFill=0;html=1;strokeWidth=2;dashed=1;" edge="1" parent="1" source="mailA2" target="serverA4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="note3" value="7. Завершение операции отправки&#xa;на стороне сервера" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;strokeWidth=2;fillColor=#d5e8d4;" vertex="1" parent="1">
+          <mxGeometry x="90" y="720" width="230" height="70" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

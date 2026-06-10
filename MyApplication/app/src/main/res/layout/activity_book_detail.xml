@@ -13,12 +13,9 @@
         android:padding="16dp"
         android:gravity="center_vertical">
 
-        <ImageButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@android:drawable/ic_menu_revert"
-            android:background="@android:color/transparent"
+            style="@style/BackButton"
             android:contentDescription="Назад" />
 
         <TextView
@@ -54,8 +51,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
+                app:cardCornerRadius="20dp"
+                app:cardElevation="4dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -107,8 +104,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="4dp"
                 app:cardBackgroundColor="#FFF3E0">
 
                 <LinearLayout
@@ -117,14 +114,29 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🎯 Дневная цель"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_dark"
-                        android:layout_marginBottom="12dp" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_book_open"
+                            android:layout_marginEnd="8dp"
+                            android:contentDescription="Дневная цель" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Дневная цель"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_dark" />
+
+                    </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -169,26 +181,57 @@
                         android:textColor="@color/text_light"
                         android:layout_marginBottom="8dp" />
 
-                    <TextView
-                        android:id="@+id/tvDailyGoalStatus"
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="📖 Дневная цель не выполнена"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:id="@+id/ivDailyGoalStatus"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_book_open"
+                            android:layout_marginEnd="6dp"
+                            android:contentDescription="Статус" />
+
+                        <TextView
+                            android:id="@+id/tvDailyGoalStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Дневная цель не выполнена"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <!-- Статистика -->
-            <TextView
-                android:layout_width="match_parent"
+            <LinearLayout
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="📊 Статистика чтения"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_dark"
-                android:layout_marginBottom="12dp" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_chart"
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="Статистика" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Статистика чтения"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_dark" />
+
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -202,36 +245,42 @@
                     android:layout_weight="1"
                     android:layout_marginEnd="8dp"
                     app:cardCornerRadius="12dp"
-                    app:cardElevation="1dp">
+                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="#4A90E2">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="12dp">
+                        android:padding="16dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="⏱️"
-                            android:textSize="24sp" />
+                        <ImageView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:src="@android:drawable/ic_menu_recent_history"
+                            android:background="@drawable/ic_stats_bg"
+                            android:padding="12dp"
+                            android:layout_marginBottom="8dp"
+                            android:tint="#FFFFFF"
+                            android:contentDescription="Время" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Общее время"
                             android:textSize="12sp"
-                            android:textColor="@color/text_light" />
+                            android:textColor="#E3F2FD"
+                            android:layout_marginBottom="4dp" />
 
                         <TextView
                             android:id="@+id/tvTotalTime"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0"
-                            android:textSize="16sp"
+                            android:textSize="24sp"
                             android:textStyle="bold"
-                            android:textColor="@color/primary_blue" />
+                            android:textColor="@android:color/white" />
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -242,36 +291,41 @@
                     android:layout_weight="1"
                     android:layout_marginStart="8dp"
                     app:cardCornerRadius="12dp"
-                    app:cardElevation="1dp">
+                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="#4A90E2">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="12dp">
+                        android:padding="16dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="📄"
-                            android:textSize="24sp" />
+                        <ImageView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:src="@drawable/ic_pages_white"
+                            android:background="@drawable/ic_stats_bg"
+                            android:padding="12dp"
+                            android:layout_marginBottom="8dp"
+                            android:contentDescription="Страницы" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Время/стр"
                             android:textSize="12sp"
-                            android:textColor="@color/text_light" />
+                            android:textColor="#E3F2FD"
+                            android:layout_marginBottom="4dp" />
 
                         <TextView
                             android:id="@+id/tvAvgTimePerPage"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0 сек"
-                            android:textSize="16sp"
+                            android:textSize="24sp"
                             android:textStyle="bold"
-                            android:textColor="@color/primary_blue" />
+                            android:textColor="@android:color/white" />
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -290,36 +344,41 @@
                     android:layout_weight="1"
                     android:layout_marginEnd="8dp"
                     app:cardCornerRadius="12dp"
-                    app:cardElevation="1dp">
+                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="#4A90E2">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="12dp">
+                        android:padding="16dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="📖"
-                            android:textSize="24sp" />
+                        <ImageView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:src="@drawable/ic_books_white"
+                            android:background="@drawable/ic_stats_bg"
+                            android:padding="12dp"
+                            android:layout_marginBottom="8dp"
+                            android:contentDescription="Книга" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Всего слов"
                             android:textSize="12sp"
-                            android:textColor="@color/text_light" />
+                            android:textColor="#E3F2FD"
+                            android:layout_marginBottom="4dp" />
 
                         <TextView
                             android:id="@+id/tvTotalWords"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0"
-                            android:textSize="16sp"
+                            android:textSize="24sp"
                             android:textStyle="bold"
-                            android:textColor="@color/primary_blue" />
+                            android:textColor="@android:color/white" />
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -330,36 +389,41 @@
                     android:layout_weight="1"
                     android:layout_marginStart="8dp"
                     app:cardCornerRadius="12dp"
-                    app:cardElevation="1dp">
+                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="#4A90E2">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="12dp">
+                        android:padding="16dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="⚡"
-                            android:textSize="24sp" />
+                        <ImageView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:src="@drawable/ic_chart_white"
+                            android:background="@drawable/ic_stats_bg"
+                            android:padding="12dp"
+                            android:layout_marginBottom="8dp"
+                            android:contentDescription="Скорость" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Скорость"
                             android:textSize="12sp"
-                            android:textColor="@color/text_light" />
+                            android:textColor="#E3F2FD"
+                            android:layout_marginBottom="4dp" />
 
                         <TextView
                             android:id="@+id/tvReadingSpeed"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0 слов/мин"
-                            android:textSize="16sp"
+                            android:textSize="20sp"
                             android:textStyle="bold"
-                            android:textColor="@color/primary_blue" />
+                            android:textColor="@android:color/white" />
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -370,31 +434,42 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="12dp"
-                app:cardElevation="1dp">
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#4A90E2">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center"
-                    android:padding="12dp">
+                    android:gravity="center_vertical"
+                    android:padding="16dp">
+
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_chart_white"
+                        android:background="@drawable/ic_stats_bg"
+                        android:padding="12dp"
+                        android:layout_marginEnd="12dp"
+                        android:contentDescription="Сессии" />
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="📊 Сессий чтения"
+                        android:text="Сессий чтения"
                         android:textSize="14sp"
-                        android:textColor="@color/text_dark" />
+                        android:textColor="#E3F2FD"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tvTotalSessions"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="0"
-                        android:textSize="18sp"
+                        android:textSize="24sp"
                         android:textStyle="bold"
-                        android:textColor="@color/primary_blue" />
+                        android:textColor="@android:color/white" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

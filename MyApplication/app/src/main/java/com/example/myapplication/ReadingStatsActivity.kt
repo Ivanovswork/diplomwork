@@ -67,13 +67,7 @@ class ReadingStatsActivity : AppCompatActivity() {
     }
 
     private fun formatTime(seconds: Double): String {
-        val secs = seconds.toInt()
-        val minutes = secs / 60
-        val remainingSecs = secs % 60
-        return if (minutes > 0) {
-            "${minutes}м ${remainingSecs}с"
-        } else {
-            "${secs}с"
-        }
+        val mins = (seconds / 60).toInt()
+        return if (mins > 0) "${mins}м" else "<1м"
     }
 }

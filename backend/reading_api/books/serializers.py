@@ -4,6 +4,11 @@ from users.models import User
 from users.serializers import UserSerializer
 from .models import UserConnection, Book
 import fitz  # PyMuPDF
+import ebooklib
+from ebooklib import epub
+from bs4 import BeautifulSoup
+import re
+import io
 
 
 class ConnectionRequestSerializer(serializers.Serializer):
@@ -37,6 +42,44 @@ class ConnectionSerializer(serializers.ModelSerializer):
         return 'pending'
 
 
+def extract_epub_content(content_bytes):
+    """Извлекает текст из EPUB и группирует по 10 абзацев на страницу"""
+    try:
+        # io.BytesIO нужен потому что epub.read_epub ожидает file-like объект
+        book = epub.read_epub(io.BytesIO(content_bytes))
+        all_paragraphs = []
+
+        for item in book.get_items():
+            if item.get_type() == ebooklib.ITEM_DOCUMENT:
+                html_content = item.get_content().decode('utf-8')
+                soup = BeautifulSoup(html_content, 'html.parser')
+
+                # Извлекаем абзацы
+                paragraphs = soup.find_all(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+                for p in paragraphs:
+                    text = p.get_text().strip()
+                    if text:
+                        all_paragraphs.append(text)
+        
+        print(f"✅ EPUB extracted {len(all_paragraphs)} paragraphs")
+        
+        # Группируем по 10 абзацев на страницу
+        pages = []
+        for i in range(0, len(all_paragraphs), 10):
+            page_paragraphs = all_paragraphs[i:i+10]
+            pages.append('\n\n'.join(page_paragraphs))
+        
+        print(f"📄 Created {len(pages)} pages (10 paragraphs per page)")
+        
+        # Возвращаем список страниц
+        return pages
+    except Exception as e:
+        print(f"EPUB extraction error: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
+
+
 class BookUploadSerializer(serializers.ModelSerializer):
     file = serializers.FileField(write_only=True, required=True)
     daily_goal = serializers.IntegerField(default=5, min_value=1, required=False)
@@ -50,13 +93,25 @@ class BookUploadSerializer(serializers.ModelSerializer):
             raise ValidationError("Файл не выбран")
 
         filename = file.name.lower()
-        if not filename.endswith('.pdf'):
-            raise ValidationError("Только PDF файлы")
+        if not (filename.endswith('.pdf') or filename.endswith('.epub')):
+            raise ValidationError("Только PDF или EPUB файлы")
 
         file.seek(0)
-        header = file.read(4)
-        if header != b'%PDF':
-            raise ValidationError("Некорректный PDF файл")
+        content = file.read()
+
+        if filename.endswith('.pdf'):
+            header = content[:4]
+            if header != b'%PDF':
+                raise ValidationError("Некорректный PDF файл")
+        elif filename.endswith('.epub'):
+            # Проверка валидности EPUB
+            try:
+                epub.read_epub(io.BytesIO(content))
+            except Exception as e:
+                print(f"EPUB validation warning: {e}")
+                # Мягкая валидация - разрешаем загрузку даже если есть предупреждения
+                pass
+
         file.seek(0)
 
         if file.size > 100 * 1024 * 1024:
@@ -79,15 +134,29 @@ class BookUploadSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         validated_data['user'] = user
         validated_data['uploaded_by'] = user
-        validated_data['content'] = file.read()
+        content = file.read()
+        validated_data['content'] = content
 
-        try:
-            import fitz
-            doc = fitz.open(stream=validated_data['content'], filetype="pdf")
-            validated_data['pages_count'] = len(doc)
-            doc.close()
-        except Exception as e:
-            validated_data['pages_count'] = 0
+        filename = file.name.lower()
+
+        if filename.endswith('.epub'):
+            # Для EPUB извлекаем текст (возвращает список страниц по 10 абзацев)
+            pages = extract_epub_content(content)
+            validated_data['pages_count'] = len(pages)
+            validated_data['format'] = 'epub'
+            # Сохраняем текст с разделителем страниц
+            if hasattr(self.Meta.model, 'extracted_text'):
+                validated_data['extracted_text'] = '\n|||||PAGE_BREAK|||||\n'.join(pages)
+                print(f"💾 Saved {len(pages)} pages, total text length: {len(validated_data['extracted_text'])}")
+        else:
+            # PDF
+            validated_data['format'] = 'pdf'
+            try:
+                doc = fitz.open(stream=content, filetype="pdf")
+                validated_data['pages_count'] = len(doc)
+                doc.close()
+            except Exception as e:
+                validated_data['pages_count'] = 0
 
         validated_data['status'] = 'in_progress'
         book = Book.objects.create(**validated_data)
@@ -117,13 +186,24 @@ class BookUploadToChildSerializer(serializers.Serializer):
             raise ValidationError("Файл не выбран")
 
         filename = file.name.lower()
-        if not filename.endswith('.pdf'):
-            raise ValidationError("Только PDF файлы")
+        if not (filename.endswith('.pdf') or filename.endswith('.epub')):
+            raise ValidationError("Только PDF или EPUB файлы")
 
         file.seek(0)
-        header = file.read(4)
-        if header != b'%PDF':
-            raise ValidationError("Некорректный PDF файл")
+        content = file.read()
+
+        if filename.endswith('.pdf'):
+            header = content[:4]
+            if header != b'%PDF':
+                raise ValidationError("Некорректный PDF файл")
+        elif filename.endswith('.epub'):
+            try:
+                epub.read_epub(io.BytesIO(content))
+            except Exception as e:
+                print(f"EPUB validation warning: {e}")
+                # Мягкая валидация - разрешаем загрузку
+                pass
+
         file.seek(0)
 
         if file.size > 100 * 1024 * 1024:
@@ -146,14 +226,22 @@ class BookUploadToChildSerializer(serializers.Serializer):
         child = User.objects.get(id=validated_data['child_id'])
         file = validated_data.pop('file')
         content = file.read()
-
-        try:
-            import fitz
-            doc = fitz.open(stream=content, filetype="pdf")
-            pages_count = len(doc)
-            doc.close()
-        except Exception as e:
-            pages_count = 0
+        
+        filename = file.name.lower()
+        
+        if filename.endswith('.epub'):
+            extracted_text = extract_epub_content(content)
+            paragraphs = [p for p in extracted_text.split('\n\n') if p.strip()]
+            pages_count = max(1, len(paragraphs))
+            book_format = 'epub'
+        else:
+            try:
+                doc = fitz.open(stream=content, filetype="pdf")
+                pages_count = len(doc)
+                doc.close()
+            except Exception as e:
+                pages_count = 0
+            book_format = 'pdf'
 
         book = Book.objects.create(
             user=child,
@@ -162,7 +250,8 @@ class BookUploadToChildSerializer(serializers.Serializer):
             pages_count=pages_count,
             status='in_progress',
             daily_goal=validated_data.get('daily_goal', 5),
-            uploaded_by=self.context['request'].user
+            uploaded_by=self.context['request'].user,
+            format=book_format
         )
         return book
 
@@ -173,14 +262,19 @@ class BookListSerializer(serializers.ModelSerializer):
     uploaded_by_name = serializers.SerializerMethodField()
     uploaded_by_id = serializers.SerializerMethodField()
     is_active = serializers.SerializerMethodField()
+    format = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
         fields = [
             'id', 'name', 'pages_count', 'status', 'daily_goal',
             'upload_date', 'is_owner', 'can_delete', 'uploaded_by_name',
-            'uploaded_by_id', 'is_active'
+            'uploaded_by_id', 'is_active', 'format'
         ]
+
+    def get_format(self, obj):
+        # Безопасное получение формата книги
+        return getattr(obj, 'format', 'pdf') or 'pdf'
 
     def get_is_owner(self, obj):
         request = self.context.get('request')

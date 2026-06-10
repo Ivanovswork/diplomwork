@@ -659,7 +659,7 @@ def list_child_books(request, child_id):
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_book(request, book_id):
-    """Удалить книгу"""
+    """Удалить книгу (для завершённых меняем статус на completed_deleted)"""
     try:
         book = Book.objects.get(id=book_id)
 
@@ -678,12 +678,17 @@ def delete_book(request, book_id):
         if not is_owner and not is_parent:
             return Response({"error": "Нет прав для удаления"}, status=status.HTTP_403_FORBIDDEN)
 
-        # Если книга уже завершена, просто удаляем контент
+        # Если книга завершена - меняем статус на completed_deleted и очищаем контент
         if book.status == 'completed':
-            book.content = None
-            book.save(update_fields=['content'])
-            return Response({"message": "Контент книги удален"})
+            book.status = 'completed_deleted'
+            book.content = None  # Очищаем контент
+            book.save(update_fields=['status', 'content'])
+            return Response({
+                "message": "Книга удалена из списка, но учтена в статистике",
+                "status": "completed_deleted"
+            })
 
+        # Для незавершённых книг - просто удаляем контент и меняем статус
         book.content = None
         book.status = 'deleted'
         book.save(update_fields=['content', 'status'])
@@ -830,10 +835,13 @@ def get_user_stats(request):
     # Активные книги (в процессе чтения)
     books_in_progress = Book.objects.filter(user=user, status='in_progress').count()
 
-    # Завершенные книги
-    books_completed = Book.objects.filter(user=user, status='completed').count()
+    # Завершенные книги (включая удалённые завершённые)
+    books_completed = Book.objects.filter(
+        user=user, 
+        status__in=['completed', 'completed_deleted']
+    ).count()
 
-    # Общее количество книг
+    # Общее количество книг (только активные + завершённые)
     books_count = books_in_progress + books_completed
 
     # Общее количество прочитанных страниц (из логов чтения)

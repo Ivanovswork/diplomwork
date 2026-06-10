@@ -569,6 +569,50 @@ def get_or_create_session(request, book_id):
     block_start_page = (block_number - 1) * 2 + 1
     block_end_page = min(block_number * 2, book.pages_count)
 
+    # Определяем структуру книги (обложка, содержание)
+    content_start_page = 1
+    pages_before_content = 0
+    
+    try:
+        import fitz
+        doc = fitz.open(stream=book.content, filetype="pdf")
+        pages_to_analyze = min(5, book.pages_count)
+        
+        cover_pages = []
+        toc_pages = []
+        
+        for page_num in range(pages_to_analyze):
+            page = doc[page_num]
+            text = page.get_text("text")
+            text_lower = text.lower()
+            
+            if page_num == 0:
+                word_count = len(text.split())
+                if word_count < 50:
+                    cover_pages.append(page_num + 1)
+            
+            toc_keywords = ['содержание', 'оглавление', 'содерж.', 'оглав.', 'contents', 'table of contents']
+            is_toc = any(keyword in text_lower for keyword in toc_keywords)
+            
+            import re
+            page_numbers = re.findall(r'\b\d+\b', text)
+            has_many_numbers = len(page_numbers) > 5
+            
+            if is_toc or (has_many_numbers and len(text.split()) < 500):
+                toc_pages.append(page_num + 1)
+        
+        if toc_pages:
+            content_start_page = toc_pages[-1] + 1
+        elif cover_pages:
+            content_start_page = cover_pages[-1] + 1
+        
+        content_start_page = min(content_start_page, book.pages_count)
+        pages_before_content = content_start_page - 1
+        
+        doc.close()
+    except Exception as e:
+        print(f"DEBUG: Ошибка анализа структуры книги: {e}")
+
     # Проверяем, есть ли тест для этого блока
     test = Test.objects.filter(
         session__book=book,
@@ -596,7 +640,9 @@ def get_or_create_session(request, book_id):
         'block_end_page': block_end_page,
         'has_test': has_test,
         'test_status': test_status,
-        'test_id': test_id
+        'test_id': test_id,
+        'content_start_page': content_start_page,
+        'pages_before_content': pages_before_content
     })
 
 
@@ -820,7 +866,11 @@ def get_reading_stats(request):
     total_words = page_logs.aggregate(total=models.Sum('words_count'))['total'] or 0
     reading_speed = (total_words / (total_seconds / 60)) if total_seconds > 0 else 0
     books_in_progress = Book.objects.filter(user=request.user, status='in_progress').count()
-    books_completed = Book.objects.filter(user=request.user, status='completed').count()
+    # completed_deleted считаем как завершённые (для статистики)
+    books_completed = Book.objects.filter(
+        user=request.user, 
+        status__in=['completed', 'completed_deleted']
+    ).count()
     total_sessions = sessions.count()
     avg_session_duration = total_seconds / total_sessions if total_sessions > 0 else 0
 
@@ -1481,4 +1531,254 @@ def get_page_words_count(request, book_id, page_number):
             'text_preview': text[:200]  # для отладки
         })
     except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def text_proxy(request, book_id):
+    """Получить текст страницы в формате для электронной книги"""
+    try:
+        book = Book.objects.get(id=book_id)
+    except Book.DoesNotExist:
+        return Response({"error": "Книга не найдена"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Проверка доступа
+    is_owner = book.user == request.user
+    is_parent = UserConnection.objects.filter(
+        user1=request.user, user2=book.user,
+        connection_type='parent_child',
+        is_parent_flag=True, is_child_flag=True
+    ).exists()
+
+    if not is_owner and not is_parent:
+        return Response({"error": "Нет доступа"}, status=status.HTTP_403_FORBIDDEN)
+
+    try:
+        page_number = int(request.GET.get('page', 1))
+        doc = fitz.open(stream=book.content, filetype="pdf")
+        
+        if page_number < 1 or page_number > len(doc):
+            doc.close()
+            return Response({"error": "Страница не существует"}, status=status.HTTP_404_NOT_FOUND)
+
+        page = doc[page_number - 1]
+        
+        # Получаем текст с сохранением оригинальной структуры
+        # PyMuPDF уже пытается определить где абзацы через \n\n
+        raw_text = page.get_text("text")
+        
+        # Разделяем на "блоки" по двойным переносам (абзацы)
+        blocks = [b.strip() for b in raw_text.split('\n\n') if b.strip()]
+        
+        # Внутри каждого блока объединяем строки через пробел
+        paragraphs = []
+        for block in blocks:
+            lines = [line.strip() for line in block.split('\n') if line.strip()]
+            if lines:
+                paragraph = ' '.join(lines)
+                # Убираем лишние пробелы и дефисы переносов
+                paragraph = paragraph.replace('- ', '').replace('  ', ' ')
+                if len(paragraph) > 5:  # Фильтруем короткие строки
+                    paragraphs.append(paragraph)
+        
+        # Склеиваем абзацы двойным переносом
+        text = '\n\n'.join(paragraphs)
+        
+        print(f"📝 PDF: extracted {len(paragraphs)} paragraphs, total length: {len(text)}")
+        
+        # Получаем дополнительную информацию о странице
+        page_dict = {
+            'page_number': page_number,
+            'total_pages': len(doc),
+            'text': text,
+            'has_images': bool(page.get_images()),
+            'text_length': len(text),
+        }
+        
+        doc.close()
+
+        return Response(page_dict)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_book_content_info(request, book_id):
+    """
+    Получить информацию о структуре книги (обложка, содержание, основной текст).
+    Анализирует первые страницы книги и определяет:
+    - pages_before_content: количество страниц до основного текста (обложка, титульная, содержание)
+    - first_content_page: страница, с которой начинается основной текст
+    """
+    try:
+        book = Book.objects.get(id=book_id)
+    except Book.DoesNotExist:
+        return Response({"error": "Книга не найдена"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Проверка доступа
+    is_owner = book.user == request.user
+    is_parent = UserConnection.objects.filter(
+        user1=request.user, user2=book.user,
+        connection_type='parent_child',
+        is_parent_flag=True, is_child_flag=True
+    ).exists()
+
+    if not is_owner and not is_parent:
+        return Response({"error": "Нет доступа"}, status=status.HTTP_403_FORBIDDEN)
+
+    try:
+        doc = fitz.open(stream=book.content, filetype="pdf")
+        total_pages = len(doc)
+        
+        # Анализируем первые 5 страниц (или меньше, если книга меньше)
+        pages_to_analyze = min(5, total_pages)
+        
+        cover_pages = []  # Страницы с обложкой (обычно 1 страница)
+        toc_pages = []  # Страницы с содержанием
+        content_start_page = 1  # Страница начала основного текста
+        
+        for page_num in range(pages_to_analyze):
+            page = doc[page_num]
+            text = page.get_text("text")
+            text_lower = text.lower()
+            
+            # Определяем обложку (первая страница с названием книги, автора, большим количеством пустого пространства)
+            if page_num == 0:
+                # Первая страница - почти всегда обложка
+                word_count = len(text.split())
+                if word_count < 50:  # На обложке обычно мало текста
+                    cover_pages.append(page_num + 1)
+            
+            # Определяем содержание по ключевым словам
+            toc_keywords = ['содержание', 'оглавление', 'содерж.', 'оглав.', 'contents', 'table of contents', 'глава', 'раздел']
+            is_toc = any(keyword in text_lower for keyword in toc_keywords)
+            
+            # Также проверяем наличие множества номеров страниц (характерно для содержания)
+            import re
+            page_numbers = re.findall(r'\b\d+\b', text)
+            has_many_numbers = len(page_numbers) > 5
+            
+            if is_toc or (has_many_numbers and len(text.split()) < 500):
+                toc_pages.append(page_num + 1)
+        
+        # Определяем страницу начала основного контента
+        # Если есть содержание, то контент начинается после него
+        if toc_pages:
+            content_start_page = toc_pages[-1] + 1
+        elif cover_pages:
+            content_start_page = cover_pages[-1] + 1
+        
+        # Убеждаемся, что не выходим за пределы
+        content_start_page = min(content_start_page, total_pages)
+        
+        doc.close()
+
+        return Response({
+            'total_pages': total_pages,
+            'cover_pages': cover_pages,
+            'toc_pages': toc_pages,
+            'content_start_page': content_start_page,
+            'pages_before_content': content_start_page - 1,
+            'book_name': book.name
+        })
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_epub_text(request, book_id):
+    """Получить текст EPUB книги с сохранением структуры"""
+    try:
+        book = Book.objects.get(id=book_id)
+    except Book.DoesNotExist:
+        return Response({"error": "Книга не найдена"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Проверка доступа
+    is_owner = book.user == request.user
+    is_parent = UserConnection.objects.filter(
+        user1=request.user, user2=book.user,
+        connection_type='parent_child',
+        is_parent_flag=True, is_child_flag=True
+    ).exists()
+
+    if not is_owner and not is_parent:
+        return Response({"error": "Нет доступа"}, status=status.HTTP_403_FORBIDDEN)
+
+    if getattr(book, 'format', 'pdf') != 'epub':
+        return Response({"error": "Книга не в EPUB формате"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Если текст уже извлечён, возвращаем его
+        if book.extracted_text:
+            # Разбиваем на страницы по разделителю
+            pages = book.extracted_text.split('\n|||||PAGE_BREAK|||||\n')
+            page_number = int(request.GET.get('page', 1))
+            total_pages = len(pages)
+            
+            print(f"📖 EPUB: returning page {page_number}/{total_pages}")
+            
+            # Возвращаем N-ю страницу (10 абзацев)
+            if 1 <= page_number <= total_pages:
+                text = pages[page_number - 1]
+            else:
+                return Response({"error": "Страница не существует"}, status=status.HTTP_404_NOT_FOUND)
+            
+            return Response({
+                'page_number': page_number,
+                'total_pages': total_pages,
+                'text': text,
+                'has_images': False,
+                'text_length': len(text),
+            })
+        
+        # Если текст не извлечён, извлекаем из EPUB
+        import ebooklib
+        from ebooklib import epub
+        from bs4 import BeautifulSoup
+        
+        content_bytes = bytes(book.content)
+        epub_book = epub.read_epub(io.BytesIO(content_bytes))
+        
+        all_paragraphs = []
+        for item in epub_book.get_items():
+            if item.get_type() == ebooklib.ITEM_DOCUMENT:
+                html_content = item.get_content().decode('utf-8')
+                soup = BeautifulSoup(html_content, 'html.parser')
+                
+                paragraphs = soup.find_all(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+                for p in paragraphs:
+                    text = p.get_text().strip()
+                    if text:
+                        all_paragraphs.append(text)
+        
+        # Группируем по 10 абзацев на страницу
+        pages = []
+        for i in range(0, len(all_paragraphs), 10):
+            page_paragraphs = all_paragraphs[i:i+10]
+            pages.append('\n\n'.join(page_paragraphs))
+        
+        # Сохраняем извлечённый текст
+        book.extracted_text = '\n|||||PAGE_BREAK|||||\n'.join(pages)
+        book.pages_count = len(pages)
+        book.save()
+        
+        print(f"📖 EPUB: extracted {len(all_paragraphs)} paragraphs → {len(pages)} pages")
+        
+        # Возвращаем первую страницу
+        text = pages[0] if pages else ""
+        
+        return Response({
+            'page_number': 1,
+            'total_pages': len(pages),
+            'text': text,
+            'has_images': False,
+            'text_length': len(text),
+        })
+    except Exception as e:
+        print(f"EPUB extraction error: {e}")
+        import traceback
+        traceback.print_exc()
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -8,66 +8,58 @@
 </head>
 <body>
   <header class="header">
-    <div class="logo">📚 Reading Tracker</div>
+    <div class="brand-title">
+      <span class="logo-mark" aria-hidden="true"></span>
+      <div class="logo">Reading Tracker</div>
+    </div>
     <div class="user-info">
       <button class="btn-logout" onclick="logout()">Выйти</button>
     </div>
   </header>
-  
+
   <div class="dashboard-full">
-    <!-- ==================== ЛЕВАЯ КОЛОНКА - СОЦИАЛЬНАЯ ==================== -->
     <div class="social-column">
-      
-      <!-- Друзья -->
       <div class="social-card">
         <div class="social-header">
-          <h3>👥 Друзья</h3>
-          <button class="social-add-btn" id="showAddFriendBtn">+ Добавить</button>
+          <h3 class="title-with-icon"><span class="icon-chip" data-icon="friends"></span><span>Друзья</span></h3>
+          <button class="social-add-btn" id="showAddFriendBtn">Добавить</button>
         </div>
         <div id="friendsList" class="social-list"></div>
       </div>
-      
-      <!-- Запросы в друзья -->
+
       <div id="friendRequestsCard" class="social-card" style="display: none;">
         <div class="social-header">
-          <h3>📨 Запросы в друзья</h3>
+          <h3 class="title-with-icon"><span class="icon-chip" data-icon="mail"></span><span>Запросы в друзья</span></h3>
         </div>
         <div id="friendRequestsList" class="social-list"></div>
       </div>
-      
-      <!-- Дети -->
+
       <div class="social-card">
         <div class="social-header">
-          <h3>👶 Дети</h3>
-          <button class="social-add-btn" id="showAddChildBtn">+ Добавить</button>
+          <h3 class="title-with-icon"><span class="icon-chip" data-icon="person"></span><span>Дети</span></h3>
+          <button class="social-add-btn" id="showAddChildBtn">Добавить</button>
         </div>
         <div id="childrenList" class="social-list"></div>
       </div>
-      
-      <!-- Запросы от родителей -->
+
       <div id="parentRequestsCard" class="social-card" style="display: none;">
         <div class="social-header">
-          <h3>📨 Запросы от родителей</h3>
+          <h3 class="title-with-icon"><span class="icon-chip" data-icon="security"></span><span>Запросы от родителей</span></h3>
         </div>
         <div id="parentRequestsList" class="social-list"></div>
       </div>
-      
-      <!-- Родители -->
+
       <div class="social-card">
         <div class="social-header">
-          <h3>👨‍👩‍👧 Родители</h3>
+          <h3 class="title-with-icon"><span class="icon-chip" data-icon="family"></span><span>Родители</span></h3>
         </div>
         <div id="parentsList" class="social-list"></div>
       </div>
-      
     </div>
-    
-    <!-- ==================== ЦЕНТРАЛЬНАЯ КОЛОНКА - ОСНОВНОЙ КОНТЕНТ ==================== -->
+
     <div class="main-column">
-      
-      <!-- Стрик -->
       <div class="streak-card">
-        <div class="streak-icon">🔥</div>
+        <div class="streak-icon" data-icon="streak"></div>
         <div class="streak-info">
           <div class="streak-label">Текущий стрик</div>
           <div class="streak-value" id="streakCount">0</div>
@@ -78,85 +70,80 @@
           <div class="streak-value" id="longestStreak">0</div>
         </div>
       </div>
-      
-      <!-- Активные книги -->
+
       <div class="books-section">
         <div class="books-header">
-          <h2>📖 Активные книги</h2>
-          <button class="btn-add" id="showUploadBtn">+ Добавить книгу</button>
+          <h2 class="title-with-icon"><span class="icon-chip" data-icon="bookOpen"></span><span>Активные книги</span></h2>
+          <button class="btn-add" id="showUploadBtn">Добавить книгу</button>
         </div>
         <div id="booksList" class="books-list"></div>
       </div>
-      
-      <!-- Детальная статистика -->
+
       <div class="stats-section">
-        <h2 class="section-title">📊 Детальная статистика</h2>
+        <h2 class="section-title title-with-icon"><span class="icon-chip" data-icon="chart"></span><span>Детальная статистика</span></h2>
         <div class="stats-grid-4">
           <div class="stat-card">
-            <div class="stat-icon">📄</div>
+            <div class="stat-icon" data-icon="pages"></div>
             <div class="stat-value" id="totalPagesAll">0</div>
             <div class="stat-label">Всего страниц</div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon">⏱️</div>
+            <div class="stat-icon" data-icon="time"></div>
             <div class="stat-value" id="totalTimeAll">0</div>
             <div class="stat-label">Общее время</div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon">📝</div>
+            <div class="stat-icon" data-icon="words"></div>
             <div class="stat-value" id="totalWordsAll">0</div>
             <div class="stat-label">Всего слов</div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon">⚡</div>
+            <div class="stat-icon" data-icon="speed"></div>
             <div class="stat-value" id="readingSpeedAll">0</div>
             <div class="stat-label">Скорость чтения</div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon">📚</div>
+            <div class="stat-icon" data-icon="books"></div>
             <div class="stat-value" id="booksInProgress">0</div>
             <div class="stat-label">В процессе</div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon">✅</div>
+            <div class="stat-icon" data-icon="checkCircle"></div>
             <div class="stat-value" id="booksCompleted">0</div>
             <div class="stat-label">Завершено</div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon">🎯</div>
+            <div class="stat-icon" data-icon="target"></div>
             <div class="stat-value" id="totalSessionsAll">0</div>
             <div class="stat-label">Всего сессий</div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon">⏱️</div>
+            <div class="stat-icon" data-icon="time"></div>
             <div class="stat-value" id="avgSessionTime">0</div>
-            <div class="stat-label">Среднее время сессии</div>
+            <div class="stat-label">Средняя сессия</div>
           </div>
         </div>
       </div>
-      
     </div>
-    
-    <!-- ==================== ПРАВАЯ КОЛОНКА - ЛИДЕРБОРД ==================== -->
+
     <div class="leaderboard-column">
       <div class="leaderboard-card">
         <div class="leaderboard-header">
-          <h3>🏆 Лидерборд</h3>
-          <span class="leaderboard-subtitle">Рейтинг читателей</span>
+          <div>
+            <h3 class="title-with-icon"><span class="icon-chip" data-icon="trophy"></span><span>Лидерборд</span></h3>
+            <span class="leaderboard-subtitle">Рейтинг читателей</span>
+          </div>
         </div>
         <div id="leaderboardList" class="leaderboard-list"></div>
       </div>
     </div>
   </div>
-  
-  <!-- ==================== МОДАЛЬНЫЕ ОКНА ==================== -->
-  
-  <!-- Модальное окно: Добавить друга -->
+
   <div id="addFriendModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>👥 Добавить друга</h3>
-        <button class="modal-close" onclick="closeAddFriendModal()">×</button>
+        <h3 class="title-with-icon"><span class="icon-chip" data-icon="friends"></span><span>Добавить друга</span></h3>
+        <button class="modal-close" onclick="closeAddFriendModal()" aria-label="Закрыть"></button>
       </div>
       <form id="addFriendForm">
         <div class="form-group">
@@ -170,17 +157,16 @@
       </form>
     </div>
   </div>
-  
-  <!-- Модальное окно: Добавить ребенка -->
+
   <div id="addChildModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>👶 Добавить ребенка</h3>
-        <button class="modal-close" onclick="closeAddChildModal()">×</button>
+        <h3 class="title-with-icon"><span class="icon-chip" data-icon="person"></span><span>Добавить ребёнка</span></h3>
+        <button class="modal-close" onclick="closeAddChildModal()" aria-label="Закрыть"></button>
       </div>
       <form id="addChildForm">
         <div class="form-group">
-          <label>Email ребенка</label>
+          <label>Email ребёнка</label>
           <input type="email" id="childEmail" placeholder="child@example.com" required>
         </div>
         <div class="modal-buttons">
@@ -190,13 +176,12 @@
       </form>
     </div>
   </div>
-  
-  <!-- Модальное окно: Загрузить книгу -->
+
   <div id="uploadModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>📖 Добавить книгу</h3>
-        <button class="modal-close" onclick="closeUploadModal()">×</button>
+        <h3 class="title-with-icon"><span class="icon-chip" data-icon="bookOpen"></span><span>Добавить книгу</span></h3>
+        <button class="modal-close" onclick="closeUploadModal()" aria-label="Закрыть"></button>
       </div>
       <form id="uploadForm">
         <div class="form-group">
@@ -213,24 +198,23 @@
           <div class="file-info" id="fileInfo"></div>
         </div>
         <div class="modal-buttons">
-          <button type="submit" class="btn-submit">📤 Загрузить</button>
+          <button type="submit" class="btn-submit">Загрузить</button>
           <button type="button" class="btn-cancel" onclick="closeUploadModal()">Отмена</button>
         </div>
       </form>
     </div>
   </div>
-  
-  <!-- Модальное окно: Загрузить книгу ребенку -->
+
   <div id="uploadChildBookModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>📖 Добавить книгу ребенку</h3>
-        <button class="modal-close" onclick="closeUploadChildBookModal()">×</button>
+        <h3 class="title-with-icon"><span class="icon-chip" data-icon="bookOpen"></span><span>Добавить книгу ребёнку</span></h3>
+        <button class="modal-close" onclick="closeUploadChildBookModal()" aria-label="Закрыть"></button>
       </div>
       <form id="uploadChildBookForm">
         <input type="hidden" id="targetChildId">
         <div class="form-group">
-          <label>Ребенок</label>
+          <label>Ребёнок</label>
           <input type="text" id="targetChildName" readonly>
         </div>
         <div class="form-group">
@@ -247,13 +231,13 @@
           <div class="file-info" id="childFileInfo"></div>
         </div>
         <div class="modal-buttons">
-          <button type="submit" class="btn-submit">📤 Загрузить</button>
+          <button type="submit" class="btn-submit">Загрузить</button>
           <button type="button" class="btn-cancel" onclick="closeUploadChildBookModal()">Отмена</button>
         </div>
       </form>
     </div>
   </div>
-  
+
   <script src="/js/main.js"></script>
   <script src="/js/home.js"></script>
 </body>

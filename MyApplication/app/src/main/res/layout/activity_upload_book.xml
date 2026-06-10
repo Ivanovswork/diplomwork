@@ -14,12 +14,9 @@
         android:gravity="center_vertical"
         android:layout_marginBottom="24dp">
 
-        <ImageButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@android:drawable/ic_menu_revert"
-            android:background="@android:color/transparent"
+            style="@style/BackButton"
             android:contentDescription="Назад" />
 
         <TextView
@@ -33,8 +30,8 @@
             android:gravity="center" />
 
         <View
-            android:layout_width="40dp"
-            android:layout_height="40dp" />
+            android:layout_width="48dp"
+            android:layout_height="48dp" />
 
     </LinearLayout>
 
@@ -71,34 +68,49 @@
             android:textColor="@color/text_dark" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSelectFile"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:text="Выбрать PDF файл"
-        android:backgroundTint="@color/primary_blue_light"
-        android:textColor="@color/primary_blue"
-        android:layout_marginBottom="16dp" />
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textAllCaps="false"
+        android:textColor="#4A90E2"
+        android:layout_marginBottom="16dp"
+        app:cornerRadius="16dp"
+        app:strokeColor="#4A90E2"
+        app:strokeWidth="2dp"
+        app:backgroundTint="@android:color/white"
+        app:icon="@android:drawable/ic_menu_upload"
+        app:iconTint="#4A90E2" />
 
     <TextView
         android:id="@+id/tvFileName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text=""
-        android:textSize="12sp"
-        android:textColor="@color/text_light"
+        android:textSize="14sp"
+        android:textColor="@color/primary_blue"
         android:gravity="center"
         android:visibility="gone"
-        android:layout_marginBottom="24dp" />
+        android:layout_marginBottom="24dp"
+        android:padding="12dp"
+        android:background="@drawable/timer_background" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnUpload"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:text="Загрузить"
+        android:text="Загрузить книгу"
         android:textSize="16sp"
+        android:textStyle="bold"
         android:textAllCaps="false"
-        app:cornerRadius="28dp"
-        app:backgroundTint="@color/primary_blue" />
+        android:textColor="@android:color/white"
+        app:cornerRadius="16dp"
+        app:backgroundTint="#4A90E2"
+        app:elevation="4dp"
+        app:icon="@drawable/ic_books"
+        app:iconTint="@android:color/white" />
 
 </LinearLayout>

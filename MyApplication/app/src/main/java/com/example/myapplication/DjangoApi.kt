@@ -168,7 +168,8 @@ data class Book(
     val is_owner: Boolean,
     val can_delete: Boolean,
     val uploaded_by_name: String?,
-    val uploaded_by_id: Int?
+    val uploaded_by_id: Int?,
+    val format: String = "pdf" // pdf или epub
 )
 
 data class BooksResponse(
@@ -238,7 +239,9 @@ data class SessionResponse(
     val block_end_page: Int? = null,
     val has_test: Boolean? = false,
     val test_status: String? = null, // "pending", "passed", "failed"
-    val test_id: Int? = null
+    val test_id: Int? = null,
+    val content_start_page: Int? = null, // Страница начала основного контента
+    val pages_before_content: Int? = null // Количество страниц до основного контента
 )
 
 data class SessionProgressResponse(
@@ -432,6 +435,25 @@ data class LeaderboardUser(
 
 data class LeaderboardResponse(
     val leaderboard: List<LeaderboardUser>
+)
+
+// Текст страницы
+data class PageTextResponse(
+    val page_number: Int,
+    val total_pages: Int,
+    val text: String,
+    val has_images: Boolean,
+    val text_length: Int
+)
+
+// Информация о структуре книги
+data class BookContentInfoResponse(
+    val total_pages: Int,
+    val cover_pages: List<Int>,
+    val toc_pages: List<Int>,
+    val content_start_page: Int,
+    val pages_before_content: Int,
+    val book_name: String
 )
 // ==================== ИНТЕРФЕЙС API ====================
 
@@ -687,6 +709,26 @@ interface DjangoApi {
         @Path("bookId") bookId: Int,
         @Query("page") page: Int
     ): Call<ResponseBody>
+
+    @GET("api/reading/text-proxy/{bookId}/")
+    fun getPageText(
+        @Header("Authorization") token: String,
+        @Path("bookId") bookId: Int,
+        @Query("page") page: Int
+    ): Call<PageTextResponse>
+
+    @GET("api/reading/book/{bookId}/content-info/")
+    fun getBookContentInfo(
+        @Header("Authorization") token: String,
+        @Path("bookId") bookId: Int
+    ): Call<BookContentInfoResponse>
+
+    @GET("api/reading/epub-text/{bookId}/")
+    fun getEpubText(
+        @Header("Authorization") token: String,
+        @Path("bookId") bookId: Int,
+        @Query("page") page: Int
+    ): Call<PageTextResponse>
 
     // Стрик и общая статистика
     @GET("api/reading/streak/")

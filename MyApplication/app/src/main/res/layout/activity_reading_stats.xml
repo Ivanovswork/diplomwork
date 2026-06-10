@@ -4,37 +4,43 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/bg_light"
-    android:padding="16dp">
+    android:background="@color/bg_light">
 
-    <LinearLayout
+    <!-- Header -->
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="16dp">
+        android:background="@android:color/transparent"
+        app:elevation="0dp">
 
-        <ImageButton
-            android:id="@+id/btnBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@android:drawable/ic_menu_revert"
-            android:background="@android:color/transparent"
-            android:contentDescription="Назад" />
-
-        <TextView
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Общая статистика"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_dark"
-            android:gravity="center" />
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:gravity="center_vertical">
 
-        <View android:layout_width="40dp" android:layout_height="40dp" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBack"
+                style="@style/BackButton"
+                android:contentDescription="Назад" />
 
-    </LinearLayout>
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Общая статистика"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_dark"
+                android:gravity="center" />
+
+            <View
+                android:layout_width="48dp"
+                android:layout_height="48dp" />
+
+        </LinearLayout>
+    </com.google.android.material.appbar.AppBarLayout>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -43,269 +49,418 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="16dp">
 
+            <!-- Страниц -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="1dp">
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#4A90E2">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="16dp">
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
 
-                    <TextView
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_pages_white"
+                        android:background="@drawable/ic_stats_bg"
+                        android:padding="12dp"
+                        android:layout_marginEnd="16dp" />
+
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="📄 Прочитано страниц"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_dark" />
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tvTotalPages"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/primary_blue" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Прочитано страниц"
+                            android:textSize="14sp"
+                            android:textColor="#E3F2FD"
+                            android:layout_marginBottom="4dp" />
 
+                        <TextView
+                            android:id="@+id/tvTotalPages"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textSize="28sp"
+                            android:textStyle="bold"
+                            android:textColor="@android:color/white" />
+
+                    </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Время -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="1dp">
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#4A90E2">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="16dp">
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
 
-                    <TextView
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@android:drawable/ic_menu_recent_history"
+                        android:background="@drawable/ic_stats_bg"
+                        android:padding="12dp"
+                        android:layout_marginEnd="16dp"
+                        android:tint="#FFFFFF" />
+
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="⏱️ Общее время"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_dark" />
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tvTotalTime"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/primary_blue" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Общее время"
+                            android:textSize="14sp"
+                            android:textColor="#E3F2FD"
+                            android:layout_marginBottom="4dp" />
 
+                        <TextView
+                            android:id="@+id/tvTotalTime"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0ч 0м"
+                            android:textSize="28sp"
+                            android:textStyle="bold"
+                            android:textColor="@android:color/white" />
+
+                    </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Слова -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="1dp">
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#4A90E2">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="16dp">
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
 
-                    <TextView
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@android:drawable/ic_menu_edit"
+                        android:background="@drawable/ic_stats_bg"
+                        android:padding="12dp"
+                        android:layout_marginEnd="16dp"
+                        android:tint="#FFFFFF" />
+
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="📖 Всего слов"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_dark" />
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tvTotalWords"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/primary_blue" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Всего слов"
+                            android:textSize="14sp"
+                            android:textColor="#E3F2FD"
+                            android:layout_marginBottom="4dp" />
 
+                        <TextView
+                            android:id="@+id/tvTotalWords"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textSize="28sp"
+                            android:textStyle="bold"
+                            android:textColor="@android:color/white" />
+
+                    </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Скорость чтения -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="1dp">
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#4A90E2">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="16dp">
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
 
-                    <TextView
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_speed_white"
+                        android:background="@drawable/ic_stats_bg"
+                        android:padding="12dp"
+                        android:layout_marginEnd="16dp" />
+
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="⚡ Скорость чтения"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_dark" />
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tvReadingSpeed"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0 слов/мин"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/primary_blue" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Скорость чтения"
+                            android:textSize="14sp"
+                            android:textColor="#E3F2FD"
+                            android:layout_marginBottom="4dp" />
 
+                        <TextView
+                            android:id="@+id/tvReadingSpeed"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0 слов/мин"
+                            android:textSize="24sp"
+                            android:textStyle="bold"
+                            android:textColor="@android:color/white" />
+
+                    </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Средняя длительность сессии -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="1dp">
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#4A90E2">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="16dp">
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
 
-                    <TextView
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@android:drawable/ic_menu_recent_history"
+                        android:background="@drawable/ic_stats_bg"
+                        android:padding="12dp"
+                        android:layout_marginEnd="16dp"
+                        android:tint="#FFFFFF" />
+
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="📚 Книг в процессе"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_dark" />
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tvBooksInProgress"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/primary_blue" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Средняя сессия"
+                            android:textSize="14sp"
+                            android:textColor="#E3F2FD"
+                            android:layout_marginBottom="4dp" />
 
+                        <TextView
+                            android:id="@+id/tvAvgSessionDuration"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0м"
+                            android:textSize="24sp"
+                            android:textStyle="bold"
+                            android:textColor="@android:color/white" />
+
+                    </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Книг в процессе -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="1dp">
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#4A90E2">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="16dp">
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
 
-                    <TextView
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_book_open_white"
+                        android:background="@drawable/ic_stats_bg"
+                        android:padding="12dp"
+                        android:layout_marginEnd="16dp" />
+
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="✅ Завершено книг"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_dark" />
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tvBooksCompleted"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/primary_blue" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Книг в процессе"
+                            android:textSize="14sp"
+                            android:textColor="#E3F2FD"
+                            android:layout_marginBottom="4dp" />
 
+                        <TextView
+                            android:id="@+id/tvBooksInProgress"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textSize="28sp"
+                            android:textStyle="bold"
+                            android:textColor="@android:color/white" />
+
+                    </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Завершено книг -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="1dp">
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#4A90E2">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="16dp">
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
 
-                    <TextView
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_check_circle"
+                        android:background="@drawable/ic_stats_bg"
+                        android:padding="12dp"
+                        android:layout_marginEnd="16dp"
+                        android:tint="#FFFFFF" />
+
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="📊 Всего сессий"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_dark" />
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tvTotalSessions"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/primary_blue" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Завершено книг"
+                            android:textSize="14sp"
+                            android:textColor="#E3F2FD"
+                            android:layout_marginBottom="4dp" />
 
+                        <TextView
+                            android:id="@+id/tvBooksCompleted"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textSize="28sp"
+                            android:textStyle="bold"
+                            android:textColor="@android:color/white" />
+
+                    </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Сессий -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="1dp">
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#4A90E2">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="16dp">
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
 
-                    <TextView
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_chart_white"
+                        android:background="@drawable/ic_stats_bg"
+                        android:padding="12dp"
+                        android:layout_marginEnd="16dp" />
+
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="⏱️ Средняя сессия"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_dark" />
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tvAvgSessionDuration"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0 сек"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/primary_blue" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Всего сессий"
+                            android:textSize="14sp"
+                            android:textColor="#E3F2FD"
+                            android:layout_marginBottom="4dp" />
 
+                        <TextView
+                            android:id="@+id/tvTotalSessions"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textSize="28sp"
+                            android:textStyle="bold"
+                            android:textColor="@android:color/white" />
+
+                    </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

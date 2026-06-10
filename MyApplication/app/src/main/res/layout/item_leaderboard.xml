@@ -57,11 +57,12 @@
             android:gravity="center"
             android:layout_marginEnd="16dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🔥"
-                android:textSize="16sp" />
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_streak"
+                android:layout_marginBottom="4dp"
+                android:contentDescription="Стрик" />
 
             <TextView
                 android:id="@+id/tvStreak"
@@ -80,11 +81,12 @@
             android:orientation="vertical"
             android:gravity="center">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="📖"
-                android:textSize="16sp" />
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_book_open"
+                android:layout_marginBottom="4dp"
+                android:contentDescription="Страницы" />
 
             <TextView
                 android:id="@+id/tvPages"
@@ -107,13 +109,11 @@
         android:background="@color/text_light"
         android:alpha="0.3" />
 
-    <TextView
+    <ImageView
         android:id="@+id/tvBadge"
         android:layout_width="32dp"
         android:layout_height="32dp"
-        android:text="👑"
-        android:textSize="20sp"
-        android:gravity="center"
+        android:contentDescription="Медаль"
         android:visibility="gone" />
 
 </LinearLayout>

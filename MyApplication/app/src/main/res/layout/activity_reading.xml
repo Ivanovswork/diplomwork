@@ -4,89 +4,149 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#1A1A1A">
+    android:background="@android:color/white">
 
-    <LinearLayout
+    <!-- Верхняя панель -->
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="12dp"
-        android:background="#1A1A1A"
-        android:gravity="center_vertical">
+        android:background="@android:color/white"
+        app:elevation="4dp">
 
-        <ImageButton
-            android:id="@+id/btnBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@android:drawable/ic_menu_revert"
-            android:background="@android:color/transparent"
-            android:contentDescription="Назад"
-            android:tint="@android:color/white" />
-
-        <TextView
-            android:id="@+id/tvBookTitle"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Название книги"
-            android:textSize="16sp"
-            android:textColor="@android:color/white"
-            android:gravity="center"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:background="@drawable/header_gradient">
 
-        <TextView
-            android:id="@+id/tvTimer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="00:00"
-            android:textSize="14sp"
-            android:textColor="@color/primary_blue"
-            android:fontFamily="monospace" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBack"
+                style="@style/BackButton"
+                android:contentDescription="Назад" />
 
-    </LinearLayout>
+            <TextView
+                android:id="@+id/tvBookTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Название книги"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/white"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:layout_marginHorizontal="8dp" />
 
+            <TextView
+                android:id="@+id/tvTimer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="00:00"
+                android:textSize="14sp"
+                android:textColor="@android:color/white"
+                android:fontFamily="monospace"
+                android:background="@drawable/timer_bg_white"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="6dp" />
+
+        </LinearLayout>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Основной контент - текст книги -->
     <WebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:visibility="gone" />
 
-    <LinearLayout
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="16dp"
+        android:background="@android:color/white"
+        android:visibility="visible">
+
+        <TextView
+            android:id="@+id/tvBookContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="17sp"
+            android:textColor="#2C2C2C"
+            android:lineSpacingExtra="6dp"
+            android:fontFamily="serif"
+            android:textIsSelectable="true" />
+
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Нижняя панель навигации -->
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="12dp"
-        android:background="#1A1A1A"
-        android:gravity="center_vertical">
+        android:layout_margin="12dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="8dp"
+        app:cardBackgroundColor="@android:color/white"
+        app:strokeWidth="1dp"
+        app:strokeColor="#E0E0E0">
 
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:gravity="center_vertical">
 
-            <TextView
-                android:id="@+id/tvPageInfo"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="1 / 100"
-                android:textSize="14sp"
-                android:textColor="@android:color/white" />
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvPageInfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1 / 100"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#2C2C2C" />
+
+                <TextView
+                    android:id="@+id/tvPageMode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Текстовый режим"
+                    android:textSize="12sp"
+                    android:textColor="#757575"
+                    android:layout_marginTop="2dp" />
+
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnNextPage"
+                android:layout_width="wrap_content"
+                android:layout_height="52dp"
+                android:text="Далее"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                app:cornerRadius="26dp"
+                app:backgroundTint="@color/primary_blue"
+                android:paddingHorizontal="28dp"
+                app:elevation="4dp" />
 
         </LinearLayout>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnNextPage"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:text="Далее"
-            android:textSize="16sp"
-            android:textAllCaps="false"
-            app:cornerRadius="24dp"
-            app:backgroundTint="@color/primary_blue"
-            android:paddingHorizontal="24dp" />
-
-    </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
 </LinearLayout>

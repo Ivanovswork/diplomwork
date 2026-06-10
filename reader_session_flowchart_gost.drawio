@@ -1,0 +1,282 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36" version="29.6.6">
+  <diagram id="reader-session-gost-clean" name="Page-1">
+    <mxGraphModel dx="1082" dy="1280" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=18;fontStyle=1;" value="Алгоритм работы читательской сессии" vertex="1">
+          <mxGeometry height="30" width="680" x="260" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="start" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;strokeWidth=2;" value="Начало" vertex="1">
+          <mxGeometry height="60" width="180" x="510" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="open_book" parent="1" style="whiteSpace=wrap;html=1;strokeWidth=2;" value="Открыть книгу" vertex="1">
+          <mxGeometry height="60" width="220" x="490" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="get_session" parent="1" style="whiteSpace=wrap;html=1;strokeWidth=2;" value="Получить или создать сессию" vertex="1">
+          <mxGeometry height="60" width="280" x="460" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="book_available" parent="1" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=2;" value="Книга доступна?" vertex="1">
+          <mxGeometry height="100" width="200" x="500" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="active_session" parent="1" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=2;" value="Есть активная&#xa;сессия?" vertex="1">
+          <mxGeometry height="100" width="200" x="500" y="530" as="geometry" />
+        </mxCell>
+        <mxCell id="restore_page" parent="1" style="whiteSpace=wrap;html=1;strokeWidth=2;" value="Определить стартовую&#xa;и текущую страницу" vertex="1">
+          <mxGeometry height="60" width="260" x="470" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="book_done" parent="1" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=2;" value="Книга уже&#xa;прочитана?" vertex="1">
+          <mxGeometry height="100" width="180" x="510" y="790" as="geometry" />
+        </mxCell>
+        <mxCell id="test_before" parent="1" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=2;" value="Есть обязательный тест&#xa;по текущему блоку?" vertex="1">
+          <mxGeometry height="100" width="220" x="490" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="load_page" parent="1" style="whiteSpace=wrap;html=1;strokeWidth=2;" value="Загрузить текущую&#xa;страницу" vertex="1">
+          <mxGeometry height="60" width="220" x="490" y="1090" as="geometry" />
+        </mxCell>
+        <mxCell id="read_page" parent="1" style="whiteSpace=wrap;html=1;strokeWidth=2;" value="Чтение страницы&#xa;с таймером" vertex="1">
+          <mxGeometry height="60" width="220" x="490" y="1190" as="geometry" />
+        </mxCell>
+        <mxCell id="next_pressed" parent="1" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=2;" value="Нажата кнопка&#xa;«Далее»?" vertex="1">
+          <mxGeometry height="100" width="200" x="500" y="1300" as="geometry" />
+        </mxCell>
+        <mxCell id="time_ok" parent="1" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=2;" value="Страница загружена и&#xa;время чтения ≥ 5 с?" vertex="1">
+          <mxGeometry height="100" width="220" x="490" y="1450" as="geometry" />
+        </mxCell>
+        <mxCell id="save_page" parent="1" style="whiteSpace=wrap;html=1;strokeWidth=2;" value="Сохранить страницу,&#xa;время и число слов" vertex="1">
+          <mxGeometry height="60" width="240" x="480" y="1600" as="geometry" />
+        </mxCell>
+        <mxCell id="update_session" parent="1" style="whiteSpace=wrap;html=1;strokeWidth=2;" value="Обновить прогресс&#xa;сессии" vertex="1">
+          <mxGeometry height="60" width="220" x="490" y="1700" as="geometry" />
+        </mxCell>
+        <mxCell id="book_finished" parent="1" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=2;" value="Книга&#xa;дочитана?" vertex="1">
+          <mxGeometry height="100" width="180" x="510" y="1810" as="geometry" />
+        </mxCell>
+        <mxCell id="daily_goal" parent="1" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=2;" value="Достигнута&#xa;дневная цель?" vertex="1">
+          <mxGeometry height="100" width="180" x="510" y="1960" as="geometry" />
+        </mxCell>
+        <mxCell id="block_done" parent="1" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=2;" value="Завершён блок&#xa;из 2 страниц?" vertex="1">
+          <mxGeometry height="100" width="200" x="500" y="2110" as="geometry" />
+        </mxCell>
+        <mxCell id="need_test" parent="1" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=2;" value="Нужно создать&#xa;тест?" vertex="1">
+          <mxGeometry height="100" width="180" x="510" y="2260" as="geometry" />
+        </mxCell>
+        <mxCell id="create_test" parent="1" style="whiteSpace=wrap;html=1;strokeWidth=2;" value="Сгенерировать тест&#xa;по блоку" vertex="1">
+          <mxGeometry height="60" width="220" x="490" y="2410" as="geometry" />
+        </mxCell>
+        <mxCell id="test_created" parent="1" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=2;" value="Тест успешно&#xa;создан?" vertex="1">
+          <mxGeometry height="100" width="180" x="510" y="2520" as="geometry" />
+        </mxCell>
+        <mxCell id="test_passed" parent="1" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=2;" value="Тест&#xa;пройден?" vertex="1">
+          <mxGeometry height="100" width="180" x="510" y="2670" as="geometry" />
+        </mxCell>
+        <mxCell id="end" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;strokeWidth=2;" value="Конец" vertex="1">
+          <mxGeometry height="60" width="180" x="510" y="2820" as="geometry" />
+        </mxCell>
+        <mxCell id="left_inactive" parent="1" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=2;" value="Неактивность более&#xa;4 часов?" vertex="1">
+          <mxGeometry height="100" width="220" x="140" y="530" as="geometry" />
+        </mxCell>
+        <mxCell id="left_abandon" parent="1" style="whiteSpace=wrap;html=1;strokeWidth=2;" value="Пометить сессию&#xa;как брошенную" vertex="1">
+          <mxGeometry height="60" width="260" x="120" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="left_streak" parent="1" style="whiteSpace=wrap;html=1;strokeWidth=2;" value="Обновить стрик&#xa;чтения" vertex="1">
+          <mxGeometry height="60" width="220" x="140" y="1980" as="geometry" />
+        </mxCell>
+        <mxCell id="left_continue_no_test" parent="1" style="whiteSpace=wrap;html=1;strokeWidth=2;" value="Продолжить чтение&#xa;или вывести ошибку" vertex="1">
+          <mxGeometry height="60" width="260" x="120" y="2520" as="geometry" />
+        </mxCell>
+        <mxCell id="left_reread" parent="1" style="whiteSpace=wrap;html=1;strokeWidth=2;" value="Перечитать блок и&#xa;создать новый тест" vertex="1">
+          <mxGeometry height="60" width="260" x="120" y="2670" as="geometry" />
+        </mxCell>
+        <mxCell id="right_error" parent="1" style="whiteSpace=wrap;html=1;strokeWidth=2;" value="Сообщение&#xa;об ошибке" vertex="1">
+          <mxGeometry height="60" width="180" x="860" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="right_done" parent="1" style="whiteSpace=wrap;html=1;strokeWidth=2;" value="Завершить работу:&#xa;книга прочитана" vertex="1">
+          <mxGeometry height="60" width="200" x="850" y="810" as="geometry" />
+        </mxCell>
+        <mxCell id="right_go_test" parent="1" style="whiteSpace=wrap;html=1;strokeWidth=2;" value="Перейти к тесту" vertex="1">
+          <mxGeometry height="60" width="180" x="860" y="960" as="geometry" />
+        </mxCell>
+        <mxCell id="right_finish" parent="1" style="whiteSpace=wrap;html=1;strokeWidth=2;" value="Завершить сессию и&#xa;отметить книгу как completed" vertex="1">
+          <mxGeometry height="60" width="260" x="830" y="1810" as="geometry" />
+        </mxCell>
+        <mxCell id="right_pass_test" parent="1" style="whiteSpace=wrap;html=1;strokeWidth=2;" value="Пройти тест" vertex="1">
+          <mxGeometry height="60" width="180" x="860" y="2520" as="geometry" />
+        </mxCell>
+        <mxCell id="right_continue" parent="1" style="whiteSpace=wrap;html=1;strokeWidth=2;" value="Перейти к следующей&#xa;странице" vertex="1">
+          <mxGeometry height="60" width="200" x="850" y="2670" as="geometry" />
+        </mxCell>
+        <mxCell id="v1" edge="1" parent="1" source="start" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="open_book">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v2" edge="1" parent="1" source="open_book" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="get_session">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v3" edge="1" parent="1" source="get_session" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="book_available">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v4" edge="1" parent="1" source="book_available" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="active_session" value="Да">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v5" edge="1" parent="1" source="active_session" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="restore_page" value="Да">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v6" edge="1" parent="1" source="restore_page" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="book_done">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v7" edge="1" parent="1" source="book_done" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="test_before" value="Нет">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v8" edge="1" parent="1" source="test_before" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="load_page" value="Нет">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v9" edge="1" parent="1" source="load_page" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="read_page">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v10" edge="1" parent="1" source="read_page" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="next_pressed">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v11" edge="1" parent="1" source="next_pressed" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="time_ok" value="Да">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v12" edge="1" parent="1" source="time_ok" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="save_page" value="Да">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v13" edge="1" parent="1" source="save_page" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="update_session">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v14" edge="1" parent="1" source="update_session" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="book_finished">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v15" edge="1" parent="1" source="book_finished" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="daily_goal" value="Нет">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v16" edge="1" parent="1" source="daily_goal" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="block_done" value="Нет">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v17" edge="1" parent="1" source="block_done" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="need_test" value="Да">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v18" edge="1" parent="1" source="need_test" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="create_test" value="Да">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v19" edge="1" parent="1" source="create_test" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="test_created">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v20" edge="1" parent="1" source="test_created" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="test_passed" value="Да">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r1" edge="1" parent="1" source="book_available" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="right_error" value="Нет">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r2" edge="1" parent="1" source="book_done" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="right_done" value="Да">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r3" edge="1" parent="1" source="test_before" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="right_go_test" value="Да">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r4" edge="1" parent="1" source="book_finished" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="right_finish" value="Да">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r5" edge="1" parent="1" source="test_created" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="right_pass_test" value="Да">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r6" edge="1" parent="1" source="test_passed" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="right_continue" value="Да">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l1" edge="1" parent="1" source="active_session" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="left_inactive" value="Нет">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l2" edge="1" parent="1" source="left_inactive" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="left_abandon" value="Да">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l3" edge="1" parent="1" source="left_inactive" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="restore_page" value="Нет">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l4" edge="1" parent="1" source="left_abandon" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="restore_page">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l5" edge="1" parent="1" source="daily_goal" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="left_streak" value="Да">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l6" edge="1" parent="1" source="left_streak" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="block_done">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l8" edge="1" parent="1" source="test_created" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="left_continue_no_test" value="Нет">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l10" edge="1" parent="1" source="test_passed" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="left_reread" value="Нет">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="loop1" edge="1" parent="1" source="next_pressed" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="read_page" value="Нет">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="780" y="1350" />
+              <mxPoint x="780" y="1220" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="loop2" edge="1" parent="1" source="time_ok" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="read_page" value="Нет">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="800" y="1500" />
+              <mxPoint x="800" y="1220" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="loop3" edge="1" parent="1" source="block_done" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="load_page" value="Нет">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="790" y="2160" />
+              <mxPoint x="790" y="1120" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="end1" edge="1" parent="1" source="right_error" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="end">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1120" y="430" />
+              <mxPoint x="1120" y="2850" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="end2" edge="1" parent="1" source="right_done" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="end">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1100" y="840" />
+              <mxPoint x="1100" y="2850" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="end3" edge="1" parent="1" source="right_finish" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="end">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1140" y="1840" />
+              <mxPoint x="1140" y="2850" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="end4" edge="1" parent="1" source="right_continue" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="load_page">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1110" y="2700" />
+              <mxPoint x="1110" y="1120" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="end5" edge="1" parent="1" source="right_go_test" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeWidth=2;" target="test_passed" value="ы">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1080" y="990" />
+              <mxPoint x="1080" y="2780" />
+              <mxPoint x="600" y="2780" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="FOYGarJMdMZZZtDYS0ln-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="60" width="120" x="560" y="890" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

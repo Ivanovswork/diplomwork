@@ -9,7 +9,10 @@
 <body>
     <div class="auth-container">
         <div class="auth-card">
-            <h1>📚 Reading Tracker</h1>
+            <div class="brand-title" style="margin-bottom: 8px;">
+                <span class="logo-mark" aria-hidden="true"></span>
+                <h1>Reading Tracker</h1>
+            </div>
             <h2>Вход</h2>
             <form id="loginForm">
                 <div class="form-group">
@@ -25,16 +28,10 @@
     </div>
     <script src="/js/main.js"></script>
     <script>
-        // Проверяем, что функции загружены
-        console.log('Login page loaded, typeof login:', typeof login);
-        console.log('Login page loaded, typeof window.login:', typeof window.login);
-        
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            console.log('Form submitted, email:', email);
-            // Используем window.login для надежности
             window.login(email, password);
         });
     </script>

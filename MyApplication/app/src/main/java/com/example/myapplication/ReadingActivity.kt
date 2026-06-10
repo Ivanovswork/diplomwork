@@ -13,6 +13,7 @@ import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.NestedScrollView
 import com.example.myapplication.databinding.ActivityReadingBinding
 import okhttp3.ResponseBody
 import retrofit2.Call
@@ -37,14 +38,19 @@ class ReadingActivity : AppCompatActivity() {
     private var timerHandler = Handler(Looper.getMainLooper())
     private var timerRunnable: Runnable? = null
     private var isReading = false
-    private var isPageLoaded = false
-    private var currentPdfFile: File? = null
     private var isBookFinished = false
     private var blockStartPage: Int = 1
     private var blockEndPage: Int = 2
     private var isWaitingForTest: Boolean = false
     private var isInReviewMode: Boolean = false
     private var pendingTestId: Int? = null
+    private var contentStartPage: Int = 1
+    private var pagesBeforeContent: Int = 0
+    private var bookFormat: String = "pdf"
+
+    // Для PDF
+    private var currentPdfFile: File? = null
+    private var isPageLoaded = false
 
     companion object {
         private const val TAG = "ReadingActivity"
@@ -58,6 +64,7 @@ class ReadingActivity : AppCompatActivity() {
 
         bookId = intent.getIntExtra("book_id", 0)
         bookName = intent.getStringExtra("book_name") ?: "Книга"
+        bookFormat = intent.getStringExtra("book_format") ?: "pdf"
 
         val prefs = getSharedPreferences("auth", MODE_PRIVATE)
         token = prefs.getString("token", "") ?: ""
@@ -72,8 +79,160 @@ class ReadingActivity : AppCompatActivity() {
         binding.btnBack.setOnClickListener { finishReading() }
         binding.btnNextPage.setOnClickListener { onNextPageClick() }
 
-        setupWebView()
+        if (bookFormat == "pdf") {
+            // Для PDF используем WebView
+            binding.scrollView.visibility = View.GONE
+            binding.webView.visibility = View.VISIBLE
+            setupWebView()
+        } else {
+            // Для EPUB используем TextView
+            binding.webView.visibility = View.GONE
+            binding.scrollView.visibility = View.VISIBLE
+        }
+
         getOrCreateSession()
+    }
+
+    private fun setupScrollListener() {
+        binding.scrollView.setOnScrollChangeListener(NestedScrollView.OnScrollChangeListener { _, _, scrollY, _, oldScrollY ->
+            // Можно добавить автоматическую отметку прочитанной страницы при скролле
+        })
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun setupWebView() {
+        binding.webView.settings.apply {
+            javaScriptEnabled = true
+            builtInZoomControls = true
+            displayZoomControls = false
+            loadWithOverviewMode = true
+            useWideViewPort = true
+            domStorageEnabled = true
+            allowFileAccess = true
+            allowContentAccess = true
+            allowUniversalAccessFromFileURLs = true
+            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            cacheMode = WebSettings.LOAD_NO_CACHE
+            setSupportZoom(true)
+        }
+
+        binding.webView.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                if (!isInReviewMode && !isWaitingForTest) {
+                    startTimer()
+                }
+            }
+
+            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                if (url == "reading://page_loaded") {
+                    isPageLoaded = true
+                    if (!isInReviewMode && !isWaitingForTest) {
+                        startTimer()
+                    }
+                    return true
+                }
+                return false
+            }
+        }
+    }
+
+    private fun loadPdfPage() {
+        isPageLoaded = false
+
+        api.getPage("Token $token", bookId, currentPage).enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                if (response.isSuccessful && response.body() != null) {
+                    try {
+                        val pdfBytes = response.body()!!.bytes()
+                        currentPdfFile = File(cacheDir, "page_${bookId}_${currentPage}.pdf")
+                        FileOutputStream(currentPdfFile!!).use { fos ->
+                            fos.write(pdfBytes)
+                        }
+                        val pdfUrl = "file://${currentPdfFile!!.absolutePath}"
+                        val viewerHtml = createPdfViewerHtml(pdfUrl)
+                        binding.webView.loadDataWithBaseURL(
+                            "file://${currentPdfFile!!.parent}",
+                            viewerHtml,
+                            "text/html",
+                            "UTF-8",
+                            null
+                        )
+                    } catch (e: Exception) {
+                        Toast.makeText(this@ReadingActivity, "Ошибка загрузки PDF", Toast.LENGTH_LONG).show()
+                    }
+                } else {
+                    Toast.makeText(this@ReadingActivity, "Ошибка загрузки страницы", Toast.LENGTH_LONG).show()
+                }
+            }
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                Toast.makeText(this@ReadingActivity, "Сеть: ${t.message}", Toast.LENGTH_LONG).show()
+            }
+        })
+    }
+
+    private fun createPdfViewerHtml(pdfUrl: String): String {
+        return """
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Чтение</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; background: #1a1a2e; overflow: hidden; }
+        #pdf-container { 
+            width: 100%; 
+            height: 100%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start; 
+            overflow-y: auto; 
+            padding: 10px;
+        }
+        canvas { 
+            max-width: 100%; 
+            height: auto !important;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4); 
+            border-radius: 8px; 
+            margin-bottom: 10px;
+        }
+        .page-info { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 8px 20px; border-radius: 40px; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div id="pdf-container"></div>
+    <div class="page-info">Страница $currentPage из $totalPages</div>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        var pdfUrl = '$pdfUrl';
+        var container = document.getElementById('pdf-container');
+        pdfjsLib.getDocument(pdfUrl).promise.then(function(pdf) {
+            pdf.getPage(1).then(function(page) {
+                var viewport = page.getViewport({scale: 1});
+                // Масштабируем под ширину экрана без отступов
+                var scale = window.innerWidth / viewport.width;
+                // Ограничиваем максимальный масштаб для читаемости
+                scale = Math.min(scale, 2.0);
+                var scaledViewport = page.getViewport({scale: scale});
+                var canvas = document.createElement('canvas');
+                canvas.width = scaledViewport.width;
+                canvas.height = scaledViewport.height;
+                container.appendChild(canvas);
+                var context = canvas.getContext('2d');
+                return page.render({canvasContext: context, viewport: scaledViewport}).promise;
+            }).then(function() {
+                window.location.href = 'reading://page_loaded';
+            }).catch(function(error) {
+                container.innerHTML = '<div style="color:white;text-align:center;margin-top:50px;">Ошибка: ' + error.message + '</div>';
+            });
+        });
+    </script>
+</body>
+</html>
+        """.trimIndent()
     }
 
     private fun onNextPageClick() {
@@ -106,7 +265,6 @@ class ReadingActivity : AppCompatActivity() {
                     val responseBody = response.body()!!
                     Log.d(TAG, "retakeTest response body: $responseBody")
 
-                    // Пробуем получить test_id как Int, Double или String
                     val newTestId = when (val id = responseBody["test_id"]) {
                         is Int -> id
                         is Double -> id.toInt()
@@ -153,129 +311,47 @@ class ReadingActivity : AppCompatActivity() {
         })
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
-    private fun setupWebView() {
-        binding.webView.settings.apply {
-            javaScriptEnabled = true
-            builtInZoomControls = true
-            displayZoomControls = false
-            loadWithOverviewMode = true
-            useWideViewPort = true
-            domStorageEnabled = true
-            allowFileAccess = true
-            allowContentAccess = true
-            allowUniversalAccessFromFileURLs = true
-            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-            cacheMode = WebSettings.LOAD_NO_CACHE
-            setSupportZoom(true)
-        }
-
-        binding.webView.webViewClient = object : WebViewClient() {
-            override fun onPageFinished(view: WebView?, url: String?) {
-                super.onPageFinished(view, url)
-                if (!isInReviewMode && !isWaitingForTest) {
-                    startTimer()
-                }
-            }
-
-            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-                if (url == "reading://page_loaded") {
-                    isPageLoaded = true
-                    if (!isInReviewMode && !isWaitingForTest) {
-                        startTimer()
-                    }
-                    return true
-                }
-                return false
-            }
-        }
-    }
-
     private fun loadPage() {
-        isPageLoaded = false
+        if (bookFormat == "pdf") {
+            loadPdfPage()
+        } else {
+            // Показываем индикатор загрузки
+            binding.tvBookContent.text = "Загрузка страницы $currentPage..."
+            binding.tvBookContent.alpha = 0.5f
 
-        api.getPage("Token $token", bookId, currentPage).enqueue(object : Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                if (response.isSuccessful && response.body() != null) {
-                    try {
-                        val pdfBytes = response.body()!!.bytes()
-                        currentPdfFile = File(cacheDir, "page_${bookId}_${currentPage}.pdf")
-                        FileOutputStream(currentPdfFile!!).use { fos ->
-                            fos.write(pdfBytes)
+            api.getEpubText("Token $token", bookId, currentPage).enqueue(object : Callback<PageTextResponse> {
+                override fun onResponse(call: Call<PageTextResponse>, response: Response<PageTextResponse>) {
+                    if (response.isSuccessful && response.body() != null) {
+                        val pageData = response.body()!!
+                        
+                        binding.tvBookContent.text = pageData.text
+                        binding.tvBookContent.alpha = 1.0f
+                        
+                        binding.scrollView.scrollTo(0, 0)
+                        
+                        binding.tvPageInfo.text = "$currentPage / ${pageData.total_pages}"
+                        totalPages = pageData.total_pages
+                        
+                        if (!isInReviewMode && !isWaitingForTest) {
+                            startTimer()
                         }
-                        val pdfUrl = "file://${currentPdfFile!!.absolutePath}"
-                        val viewerHtml = createPdfViewerHtml(pdfUrl)
-                        binding.webView.loadDataWithBaseURL(
-                            "file://${currentPdfFile!!.parent}",
-                            viewerHtml,
-                            "text/html",
-                            "UTF-8",
-                            null
-                        )
-                    } catch (e: Exception) {
-                        Toast.makeText(this@ReadingActivity, "Ошибка загрузки PDF", Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(this@ReadingActivity, "Ошибка загрузки страницы", Toast.LENGTH_LONG).show()
                     }
-                } else {
-                    Toast.makeText(this@ReadingActivity, "Ошибка загрузки страницы", Toast.LENGTH_LONG).show()
                 }
-            }
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Toast.makeText(this@ReadingActivity, "Сеть: ${t.message}", Toast.LENGTH_LONG).show()
-            }
-        })
+                
+                override fun onFailure(call: Call<PageTextResponse>, t: Throwable) {
+                    Toast.makeText(this@ReadingActivity, "Ошибка сети: ${t.message}", Toast.LENGTH_LONG).show()
+                    binding.tvBookContent.text = "Ошибка загрузки страницы"
+                }
+            })
+        }
     }
 
-    private fun createPdfViewerHtml(pdfUrl: String): String {
-        return """
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>Чтение</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { width: 100%; height: 100%; background: #1a1a2e; overflow: hidden; }
-        #pdf-container { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; overflow: auto; }
-        canvas { max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: 0 8px 32px rgba(0,0,0,0.4); border-radius: 8px; }
-        .loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; background: rgba(0,0,0,0.7); padding: 20px; border-radius: 12px; }
-        .page-info { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 8px 20px; border-radius: 40px; font-size: 14px; }
-    </style>
-</head>
-<body>
-    <div id="pdf-container"><div class="loading">📖 Загрузка...</div></div>
-    <div class="page-info">Страница $currentPage из $totalPages</div>
-    <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        var pdfUrl = '$pdfUrl';
-        var container = document.getElementById('pdf-container');
-        var loadingDiv = document.querySelector('.loading');
-        pdfjsLib.getDocument(pdfUrl).promise
-            .then(function(pdf) { return pdf.getPage(1); })
-            .then(function(page) {
-                var viewport = page.getViewport({scale: 1});
-                var scale = Math.min((window.innerWidth - 40) / viewport.width, (window.innerHeight - 80) / viewport.height, 2.0);
-                var scaledViewport = page.getViewport({scale: scale});
-                var canvas = document.createElement('canvas');
-                canvas.width = scaledViewport.width;
-                canvas.height = scaledViewport.height;
-                container.innerHTML = '';
-                container.appendChild(canvas);
-                var context = canvas.getContext('2d');
-                return page.render({canvasContext: context, viewport: scaledViewport}).promise;
-            })
-            .then(function() {
-                loadingDiv.style.display = 'none';
-                window.location.href = 'reading://page_loaded';
-            })
-            .catch(function(error) {
-                loadingDiv.innerHTML = '❌ Ошибка: ' + error.message;
-            });
-    </script>
-</body>
-</html>
-        """.trimIndent()
+    private fun formatBookText(rawText: String): String {
+        // Backend уже отправляет текст с правильной структурой абзацев
+        // Просто убираем лишние пустые строки в начале и конце
+        return rawText.trim()
     }
 
     private fun getOrCreateSession() {
@@ -289,6 +365,10 @@ class ReadingActivity : AppCompatActivity() {
                     blockStartPage = session.block_start_page ?: 1
                     blockEndPage = session.block_end_page ?: 2
                     isBookFinished = session.is_book_finished ?: false
+                    
+                    // Получаем информацию о структуре книги
+                    contentStartPage = session.content_start_page ?: 1
+                    pagesBeforeContent = session.pages_before_content ?: 0
 
                     if (isBookFinished) {
                         finish()
@@ -409,6 +489,16 @@ class ReadingActivity : AppCompatActivity() {
 
     private fun updateUI() {
         binding.tvPageInfo.text = "$currentPage / $totalPages"
+        
+        // Обновляем режим страницы
+        when {
+            currentPage <= pagesBeforeContent -> {
+                binding.tvPageMode.text = "Содержание / Обложка"
+            }
+            else -> {
+                binding.tvPageMode.text = "Основной текст"
+            }
+        }
 
         when {
             isInReviewMode -> {
@@ -451,7 +541,7 @@ class ReadingActivity : AppCompatActivity() {
     }
 
     private fun saveCurrentPage() {
-        if (!isPageLoaded) {
+        if (!isPageLoaded && bookFormat == "pdf") {
             Toast.makeText(this, "Подождите, страница загружается", Toast.LENGTH_SHORT).show()
             return
         }
@@ -481,7 +571,6 @@ class ReadingActivity : AppCompatActivity() {
                 binding.btnNextPage.isEnabled = true
                 if (response.isSuccessful && response.body() != null) {
                     val result = response.body()!!
-                    currentPdfFile?.delete()
                     currentPage++
 
                     if (result.is_book_finished) {

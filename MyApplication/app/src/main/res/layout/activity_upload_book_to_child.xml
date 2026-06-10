@@ -4,119 +4,166 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/bg_light"
-    android:padding="16dp">
+    android:background="@color/bg_light">
 
-    <LinearLayout
+    <!-- Header -->
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="24dp">
+        android:background="@drawable/header_gradient"
+        app:elevation="4dp">
 
-        <ImageButton
-            android:id="@+id/btnBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@android:drawable/ic_menu_revert"
-            android:background="@android:color/transparent"
-            android:contentDescription="Назад" />
+        <androidx.appcompat.widget.Toolbar
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp">
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Загрузка книги ребенку"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_dark"
-            android:gravity="center" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBack"
+                style="@style/BackButton"
+                android:contentDescription="Назад" />
 
-        <View
-            android:layout_width="40dp"
-            android:layout_height="40dp" />
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Загрузка книги"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/white"
+                android:gravity="center" />
 
-    </LinearLayout>
+            <View
+                android:layout_width="40dp"
+                android:layout_height="40dp" />
 
-    <TextView
+        </androidx.appcompat.widget.Toolbar>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Ребенок:"
-        android:textSize="14sp"
-        android:textColor="@color/text_light"
-        android:layout_marginBottom="4dp" />
+        android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/tvChildName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Имя ребенка"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="@color/text_dark"
-        android:layout_marginBottom="16dp" />
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-        app:boxStrokeColor="@color/primary_blue"
-        app:hintTextColor="@color/text_light">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etName"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Название книги"
-            android:textColor="@color/text_dark" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:orientation="vertical"
+            android:padding="16dp">
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-        app:boxStrokeColor="@color/primary_blue"
-        app:hintTextColor="@color/text_light">
+            <!-- Child info card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#4A90E2">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etDailyGoal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Дневная цель (страниц)"
-            android:inputType="number"
-            android:textColor="@color/text_dark" />
-    </com.google.android.material.textfield.TextInputLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-    <Button
-        android:id="@+id/btnSelectFile"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:text="Выбрать PDF файл"
-        android:backgroundTint="@color/primary_blue_light"
-        android:textColor="@color/primary_blue"
-        android:layout_marginBottom="16dp" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Ребенок:"
+                        android:textSize="14sp"
+                        android:textColor="#E3F2FD"
+                        android:layout_marginBottom="4dp" />
 
-    <TextView
-        android:id="@+id/tvFileName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:textSize="12sp"
-        android:textColor="@color/text_light"
-        android:gravity="center"
-        android:visibility="gone"
-        android:layout_marginBottom="24dp" />
+                    <TextView
+                        android:id="@+id/tvChildName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Имя ребенка"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@android:color/white" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnUpload"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:text="Загрузить"
-        android:textSize="16sp"
-        android:textAllCaps="false"
-        app:cornerRadius="28dp"
-        app:backgroundTint="@color/primary_blue" />
+            <!-- Book details card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:boxStrokeColor="#4A90E2"
+                        app:hintTextColor="#4A90E2">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Название книги"
+                            android:textColor="@color/text_dark" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:boxStrokeColor="#4A90E2"
+                        app:hintTextColor="#4A90E2">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etDailyGoal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Дневная цель (страниц)"
+                            android:inputType="number"
+                            android:textColor="@color/text_dark" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <Button
+                        android:id="@+id/btnSelectFile"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:text="Выбрать PDF файл"
+                        android:backgroundTint="#E3F2FD"
+                        android:textColor="#4A90E2"
+                        android:layout_marginBottom="16dp" />
+
+                    <TextView
+                        android:id="@+id/tvFileName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textSize="12sp"
+                        android:textColor="@color/text_light"
+                        android:gravity="center"
+                        android:visibility="gone" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnUpload"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Загрузить"
+                android:textSize="16sp"
+                android:textAllCaps="false"
+                app:cornerRadius="28dp"
+                app:backgroundTint="#4A90E2" />
+
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>

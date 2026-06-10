@@ -104,15 +104,28 @@ class TestActivity : AppCompatActivity() {
     }
 
     private fun createQuestionView(index: Int, question: TestQuestion): android.view.View {
+        val card = com.google.android.material.card.MaterialCardView(this).apply {
+            radius = 16f
+            cardElevation = 4f
+            setCardBackgroundColor(resources.getColor(R.color.bg_white, null))
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 0, 0, 16)
+            }
+        }
+
         val layout = android.widget.LinearLayout(this).apply {
             orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(0, 0, 0, 32)
+            setPadding(20, 20, 20, 20)
         }
+        card.addView(layout)
 
         val questionText = android.widget.TextView(this).apply {
             text = "${index + 1}. ${question.text}"
             textSize = 16f
-            setTextColor(resources.getColor(android.R.color.white, null))
+            setTextColor(resources.getColor(R.color.text_dark, null))
             setPadding(0, 0, 0, 16)
         }
         layout.addView(questionText)
@@ -126,8 +139,8 @@ class TestActivity : AppCompatActivity() {
             val radioButton = RadioButton(this).apply {
                 text = answer.text
                 id = android.view.View.generateViewId()
-                setTextColor(resources.getColor(android.R.color.white, null))
-                setPadding(0, 8, 0, 8)
+                setTextColor(resources.getColor(R.color.text_dark, null))
+                setPadding(8, 8, 8, 8)
                 tag = answer.id
             }
             radioGroup.addView(radioButton)
@@ -142,7 +155,7 @@ class TestActivity : AppCompatActivity() {
         }
 
         layout.addView(radioGroup)
-        return layout
+        return card
     }
 
     private fun submitTest() {
@@ -165,7 +178,7 @@ class TestActivity : AppCompatActivity() {
                     val result = response.body()!!
 
                     if (result.passed) {
-                        Toast.makeText(this@TestActivity, "✅ Тест пройден!", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@TestActivity, "Тест пройден!", Toast.LENGTH_LONG).show()
                         val intent = intent
                         intent.putExtra("test_passed", true)
                         setResult(RESULT_OK, intent)

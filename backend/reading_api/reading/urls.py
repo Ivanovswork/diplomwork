@@ -17,6 +17,9 @@ urlpatterns = [
     path('page/save/', views.save_page_read, name='save_page_read'),
     path('pdf-proxy/<int:book_id>/', views.pdf_proxy, name='pdf_proxy'),
     path('read-web/<int:book_id>/', views.read_book_web, name='read_book_web'),
+    path('text-proxy/<int:book_id>/', views.text_proxy, name='text_proxy'),
+    path('book/<int:book_id>/content-info/', views.get_book_content_info, name='book_content_info'),
+    path('epub-text/<int:book_id>/', views.get_epub_text, name='epub_text'),
 
     # Тесты
     path('test/<int:test_id>/', views.get_test, name='get_test'),

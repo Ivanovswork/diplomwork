@@ -23,17 +23,17 @@
             android:textSize="16sp"
             android:textColor="@color/text_dark" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnRemove"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="40dp"
             android:text="Удалить"
-            android:backgroundTint="#DC2626"
             android:textSize="12sp"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp" />
+            android:textStyle="bold"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            app:cornerRadius="12dp"
+            app:backgroundTint="#DC2626" />
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>

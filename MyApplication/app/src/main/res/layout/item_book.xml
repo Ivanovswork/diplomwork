@@ -65,11 +65,11 @@
                 android:text="Изменить цель"
                 android:textSize="12sp"
                 android:textAllCaps="false"
+                android:textColor="#4A90E2"
                 app:cornerRadius="18dp"
-                app:strokeColor="@color/primary_blue"
-                app:strokeWidth="1dp"
-                app:backgroundTint="@android:color/transparent"
-                android:textColor="@color/primary_blue"
+                app:strokeColor="#4A90E2"
+                app:strokeWidth="2dp"
+                app:backgroundTint="@android:color/white"
                 android:layout_marginEnd="8dp" />
 
             <com.google.android.material.button.MaterialButton
@@ -80,9 +80,9 @@
                 android:text="Удалить"
                 android:textSize="12sp"
                 android:textAllCaps="false"
+                android:textColor="@android:color/white"
                 app:cornerRadius="18dp"
-                app:backgroundTint="#DC2626"
-                android:textColor="@android:color/white" />
+                app:backgroundTint="#DC2626" />
 
         </LinearLayout>
 

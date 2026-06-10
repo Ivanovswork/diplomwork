@@ -40,6 +40,12 @@ class Book(models.Model):
         ('in_progress', 'В процессе'),
         ('completed', 'Закончена'),
         ('deleted', 'Удалена'),
+        ('completed_deleted', 'Прочитана и удалена'),
+    ]
+    
+    FORMAT_CHOICES = [
+        ('pdf', 'PDF'),
+        ('epub', 'EPUB'),
     ]
 
     name = models.CharField(max_length=255, verbose_name="Наименование")
@@ -48,10 +54,12 @@ class Book(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='in_progress', verbose_name="Статус")
     daily_goal = models.PositiveIntegerField(default=5, verbose_name="Дневная цель")
     content = models.BinaryField(verbose_name="Содержимое", null=True, blank=True)
+    format = models.CharField(max_length=10, choices=FORMAT_CHOICES, default='pdf', verbose_name="Формат")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Пользователь",
                              related_name='books')
     uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
                                     verbose_name="Кем загружена", related_name='uploaded_books')
+    extracted_text = models.TextField(verbose_name="Извлеченный текст", null=True, blank=True)
 
     class Meta:
         verbose_name = "Книга"
@@ -67,5 +75,5 @@ class Book(models.Model):
 
     @property
     def is_completed(self):
-        """Завершена ли книга"""
-        return self.status == 'completed'
+        """Завершена ли книга (включая удалённые завершённые)"""
+        return self.status in ['completed', 'completed_deleted']

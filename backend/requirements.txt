@@ -5,11 +5,15 @@ django-cors-headers==4.3.1
 python-dotenv==1.0.0
 
 # GigaChat
-gigachat==0.1.24
+gigachat==0.1.25
 
 # PDF processing
 PyMuPDF==1.24.2
 pypdf==4.0.1
+
+# EPUB processing
+ebooklib==0.18
+beautifulsoup4==4.12.3
 
 # HTTP & API
 requests==2.31.0
