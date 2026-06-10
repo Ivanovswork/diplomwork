@@ -61,6 +61,39 @@ app.get('/api/users/me/', async (req, res) => {
   }
 });
 
+app.post('/api/users/password-reset-request/', async (req, res) => {
+  console.log('PASSWORD RESET REQUEST:', req.body.email);
+  try {
+    const response = await axios.post(`${DJANGO_API_URL}/users/password-reset-request/`, req.body);
+    res.json(response.data);
+  } catch (error) {
+    console.error('Password reset request error:', error.response?.data);
+    res.status(error.response?.status || 500).json(error.response?.data || { error: 'Ошибка сервера' });
+  }
+});
+
+app.post('/api/users/password-reset-verify/', async (req, res) => {
+  console.log('PASSWORD RESET VERIFY:', req.body.email);
+  try {
+    const response = await axios.post(`${DJANGO_API_URL}/users/password-reset-verify/`, req.body);
+    res.json(response.data);
+  } catch (error) {
+    console.error('Password reset verify error:', error.response?.data);
+    res.status(error.response?.status || 500).json(error.response?.data || { error: 'Ошибка сервера' });
+  }
+});
+
+app.post('/api/users/password-reset-confirm/', async (req, res) => {
+  console.log('PASSWORD RESET CONFIRM:', req.body.email);
+  try {
+    const response = await axios.post(`${DJANGO_API_URL}/users/password-reset-confirm/`, req.body);
+    res.json(response.data);
+  } catch (error) {
+    console.error('Password reset confirm error:', error.response?.data);
+    res.status(error.response?.status || 500).json(error.response?.data || { error: 'Ошибка сервера' });
+  }
+});
+
 // ==================== СТАТИСТИКА ====================
 
 app.get('/api/books/stats/', async (req, res) => {

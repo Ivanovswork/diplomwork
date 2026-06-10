@@ -7,13 +7,10 @@
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-  <header class="header">
+  <header class="header" style="position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 18px 32px; background: rgba(255, 255, 255, 0.82); border-bottom: 1px solid rgba(219, 231, 245, 0.9); backdrop-filter: blur(18px);">
     <div class="brand-title">
       <span class="logo-mark" aria-hidden="true"></span>
       <div class="logo">Reading Tracker</div>
-    </div>
-    <div class="user-info">
-      <button class="btn-logout" onclick="logout()">Выйти</button>
     </div>
   </header>
 
@@ -137,6 +134,10 @@
         <div id="leaderboardList" class="leaderboard-list"></div>
       </div>
     </div>
+  </div>
+
+  <div style="max-width: 1200px; margin: 40px auto; padding: 20px; text-align: center;">
+    <button class="btn-logout" onclick="logout()" style="width: 100%; max-width: 300px; padding: 14px 24px; font-size: 16px; justify-content: center;">Выйти</button>
   </div>
 
   <div id="addFriendModal" class="modal">

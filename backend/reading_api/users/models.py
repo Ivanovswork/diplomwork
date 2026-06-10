@@ -97,7 +97,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         return f"{self.name} ({self.email})"
 
 
-# Добавь в конец файла models.py в users:
 class ConfirmEmailKey(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     key = models.CharField(max_length=100, unique=True)
@@ -105,3 +104,13 @@ class ConfirmEmailKey(models.Model):
 
     def __str__(self):
         return f"Key for {self.user.email}"
+
+
+class PasswordResetKey(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    key = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Reset key for {self.user.email}"
