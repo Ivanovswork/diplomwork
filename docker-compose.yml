@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: reading_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-diplom}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - reading_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # Django Backend
+  backend:
+    build:
+      context: ./backend/reading_api
+      dockerfile: ../../docker/backend/Dockerfile
+    container_name: reading_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DEBUG: ${DEBUG:-False}
+      SECRET_KEY: ${SECRET_KEY}
+      DB_NAME: ${DB_NAME:-diplom}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: db
+      DB_PORT: 5432
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
+      API_KEY: ${API_KEY:-}
+    volumes:
+      - ./backend/reading_api:/app
+    networks:
+      - reading_network
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput 2>/dev/null || true &&
+             gunicorn reading_api.wsgi:application --bind 0.0.0.0:8000 --workers 1 --threads 2"
+
+  # Node.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/frontend/Dockerfile
+    container_name: reading_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      PORT: 3000
+      DJANGO_API_URL: http://backend:8000/api
+    ports:
+      - "80:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - reading_network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    command: >
+      sh -c "npm install --production &&
+             node server.js"
+
+networks:
+  reading_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
