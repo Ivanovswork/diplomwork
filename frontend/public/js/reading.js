@@ -76,7 +76,7 @@ async function loadPDFPage() {
         const iframe = document.createElement('iframe');
         const isMobileScreen = window.innerWidth <= 768;
         iframe.src = isMobileScreen
-            ? `${blobUrl}#zoom=50`
+            ? `${blobUrl}#zoom=10`
             : `${blobUrl}#zoom=page-width`;
         iframe.className = 'pdf-frame';
         iframe.setAttribute('frameborder', '0');
