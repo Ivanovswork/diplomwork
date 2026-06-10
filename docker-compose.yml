@@ -44,6 +44,8 @@ services:
       EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
       API_KEY: ${API_KEY:-}
       BASE_URL: ${BASE_URL:-http://80.78.254.95}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend,0.0.0.0,80.78.254.95}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-http://80.78.254.95,http://localhost,http://127.0.0.1}
     networks:
       - reading_network
     deploy:

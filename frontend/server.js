@@ -32,7 +32,10 @@ app.post('/api/users/register/', async (req, res) => {
     const response = await axios.post(`${DJANGO_API_URL}/users/register/`, req.body);
     res.json(response.data);
   } catch (error) {
-    console.error('Register error:', error.response?.data);
+    console.error('Register error status:', error.response?.status);
+    console.error('Register error headers:', error.response?.headers);
+    console.error('Register error data:', error.response?.data);
+    console.error('Register error message:', error.message);
     res.status(error.response?.status || 500).json(error.response?.data || { error: 'Ошибка сервера' });
   }
 });
