@@ -105,7 +105,24 @@
 
     <div class="action-buttons">
       <button id="startReadingBtn" class="btn-start">Начать чтение</button>
+      <button id="editGoalBtn" class="btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">Изменить цель</button>
       <button id="deleteBookBtn" class="btn-delete">Удалить книгу</button>
+    </div>
+  </div>
+
+  <!-- Модальное окно изменения дневной цели -->
+  <div id="editGoalModal" class="modal">
+    <div class="modal-content">
+      <h3>Дневная цель</h3>
+      <p>Укажите сколько страниц хотите читать в день:</p>
+      <div style="margin: 20px 0;">
+        <input type="number" id="newDailyGoal" min="1" max="100" value="5" 
+          style="width: 100%; padding: 12px; font-size: 18px; text-align: center; border: 2px solid #dbeafe; border-radius: 12px;">
+      </div>
+      <div class="modal-buttons">
+        <button class="btn-confirm-delete" onclick="saveDailyGoal()">Сохранить</button>
+        <button class="btn-cancel" onclick="closeEditGoalModal()">Отмена</button>
+      </div>
     </div>
   </div>
 

@@ -73,6 +73,12 @@ async function loadBookStats() {
       deleteBtn.innerHTML = `${window.renderIcon('trash')}<span>Удалить книгу</span>`;
       deleteBtn.onclick = () => showDeleteModal();
     }
+
+    const editGoalBtn = document.getElementById('editGoalBtn');
+    if (editGoalBtn) {
+      editGoalBtn.innerHTML = `${window.renderIcon('target')}<span>Изменить цель</span>`;
+      editGoalBtn.onclick = () => showEditGoalModal(stats.daily_goal);
+    }
   } catch (error) {
     console.error('Error loading book stats:', error);
   }
@@ -92,6 +98,50 @@ function showDeleteModal() {
 
 function closeDeleteModal() {
   document.getElementById('deleteModal').classList.remove('active');
+}
+
+function showEditGoalModal(currentGoal) {
+  document.getElementById('newDailyGoal').value = currentGoal || 5;
+  document.getElementById('editGoalModal').classList.add('active');
+}
+
+function closeEditGoalModal() {
+  document.getElementById('editGoalModal').classList.remove('active');
+}
+
+async function saveDailyGoal() {
+  const newGoal = parseInt(document.getElementById('newDailyGoal').value);
+  
+  if (!newGoal || newGoal < 1) {
+    alert('Минимальная цель: 1 страница в день');
+    return;
+  }
+  
+  if (!currentBookId) return;
+  
+  const token = getToken();
+  
+  try {
+    const response = await fetch(`${API_URL}/books/books/${currentBookId}/daily-goal/`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Token ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ daily_goal: newGoal })
+    });
+    
+    if (response.ok) {
+      alert('Дневная цель обновлена!');
+      closeEditGoalModal();
+      loadBookStats(); // Перезагрузить статистику
+    } else {
+      const error = await response.json();
+      alert(error.error || 'Ошибка при обновлении цели');
+    }
+  } catch (error) {
+    alert('Ошибка при обновлении цели');
+  }
 }
 
 async function confirmDelete() {
