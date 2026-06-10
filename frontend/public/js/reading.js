@@ -46,21 +46,31 @@ async function renderMobilePdf(blob, viewer, loadingOverlay) {
 
     const baseViewport = page.getViewport({ scale: 1 });
     const targetWidth = viewer.clientWidth || window.innerWidth;
-    const scale = targetWidth / baseViewport.width;
-    const viewport = page.getViewport({ scale });
+    const cssScale = targetWidth / baseViewport.width;
+
+    // HiDPI рендер для резкого текста на телефоне
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    const renderScale = cssScale * dpr;
+
+    const cssViewport = page.getViewport({ scale: cssScale });
+    const renderViewport = page.getViewport({ scale: renderScale });
 
     const canvas = document.createElement('canvas');
     canvas.className = 'pdf-frame';
-    canvas.style.width = '100%';
-    canvas.style.height = 'auto';
-    canvas.width = Math.floor(viewport.width);
-    canvas.height = Math.floor(viewport.height);
+    canvas.style.width = `${Math.floor(cssViewport.width)}px`;
+    canvas.style.height = `${Math.floor(cssViewport.height)}px`;
+    canvas.width = Math.floor(renderViewport.width);
+    canvas.height = Math.floor(renderViewport.height);
 
     viewer.appendChild(canvas);
 
+    const ctx = canvas.getContext('2d', { alpha: false });
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
     await page.render({
-        canvasContext: canvas.getContext('2d'),
-        viewport
+        canvasContext: ctx,
+        viewport: renderViewport
     }).promise;
 
     if (loadingOverlay) loadingOverlay.style.display = 'none';
