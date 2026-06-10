@@ -8,14 +8,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Копирование requirements.txt из контекста сборки
+# Копирование requirements.txt из корня контекста
 COPY requirements.txt .
 
 # Установка Python-зависимостей
 RUN pip install --no-cache-dir -r requirements.txt gunicorn
 
-# Копирование всего проекта из контекста
-COPY . .
+# Копирование Django проекта
+COPY reading_api/ ./reading_api/
+
+WORKDIR /app/reading_api
 
 # Сборка статики
 RUN python manage.py collectstatic --noinput 2>/dev/null || true

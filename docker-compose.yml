@@ -27,8 +27,8 @@ services:
   # Django Backend
   backend:
     build:
-      context: ./backend/reading_api
-      dockerfile: ../Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: reading_backend
     restart: unless-stopped
     depends_on:
@@ -52,7 +52,7 @@ services:
         limits:
           memory: 384M
     command: >
-      sh -c "python manage.py migrate --noinput &&
+      sh -c "cd reading_api && python manage.py migrate --noinput &&
              python manage.py collectstatic --noinput 2>/dev/null || true &&
              gunicorn reading_api.wsgi:application --bind 0.0.0.0:8000 --workers 1 --threads 2"
 
