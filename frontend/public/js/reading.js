@@ -23,9 +23,46 @@ const oldTestId = urlParams.get('testId');
 
 // ==================== ЗАГРУЗКА PDF ====================
 
+// Определение размеров экрана
+function getScreenSize() {
+    const width = window.innerWidth || document.documentElement.clientWidth;
+    const height = window.innerHeight || document.documentElement.clientHeight;
+    
+    if (width < 576) return 'mobile-sm';
+    if (width < 768) return 'mobile';
+    if (width < 992) return 'tablet';
+    return 'desktop';
+}
+
+function getPDFScale() {
+    const viewer = document.getElementById('pdfViewer');
+    if (!viewer) return 1.0;
+    
+    const viewerWidth = viewer.clientWidth - 32; // отступы
+    const viewerHeight = viewer.clientHeight - 32;
+    
+    // Стандартный размер A4 страницы при 72 DPI ≈ 595 x 842
+    const pdfWidth = 595;
+    const pdfHeight = 842;
+    
+    const scaleX = viewerWidth / pdfWidth;
+    const scaleY = viewerHeight / pdfHeight;
+    
+    // Выбираем меньший масштаб чтобы страница влезала полностью
+    let scale = Math.min(scaleX, scaleY);
+    
+    // Ограничиваем от 0.3 до 2.0
+    scale = Math.max(0.3, Math.min(2.0, scale));
+    
+    console.log('Screen size:', getScreenSize(), 'Viewer:', viewerWidth, 'x', viewerHeight, 'Scale:', scale.toFixed(2));
+    
+    return scale;
+}
+
 async function loadPDFPage() {
     console.log('=== loadPDFPage START ===');
     console.log('Loading page:', currentPage);
+    console.log('Screen size:', getScreenSize(), window.innerWidth, 'x', window.innerHeight);
     
     const viewer = document.getElementById('pdfViewer');
     let loadingOverlay = document.getElementById('loadingOverlay');
@@ -73,7 +110,7 @@ async function loadPDFPage() {
         loadingOverlay = newLoadingOverlay;
 
         const iframe = document.createElement('iframe');
-        iframe.src = blobUrl;
+        iframe.src = blobUrl + '#zoom=' + getPDFScale();
         iframe.className = 'pdf-frame';
         iframe.setAttribute('frameborder', '0');
         iframe.setAttribute('scrolling', 'auto');
@@ -534,4 +571,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     initReading();
+    
+    // Пересчёт масштаба при изменении размера окна (поворот экрана)
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        console.log('Resize detected:', window.innerWidth, 'x', window.innerHeight, 'Screen:', getScreenSize());
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            if (isPageLoaded && currentPage) {
+                console.log('Reloading PDF for new screen size...');
+                loadPDFPage();
+            }
+        }, 300);
+    });
 });
