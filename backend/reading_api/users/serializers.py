@@ -13,10 +13,14 @@ class UserRGSTRSerializer(serializers.ModelSerializer):
         fields = ['name', 'email', 'password', 'password_confirm', 'subscription_type']
 
     def validate(self, data):
-        if data['password'] != data['password_confirm']:
-            raise serializers.ValidationError("Пароли не совпадают")
-        if User.objects.filter(email=data['email']).exists():
-            raise serializers.ValidationError("Пользователь с таким email уже существует")
+        password = data.get('password')
+        password_confirm = data.get('password_confirm')
+        email = data.get('email')
+
+        if password != password_confirm:
+            raise serializers.ValidationError({"password_confirm": ["Пароли не совпадают"]})
+        if email and User.objects.filter(email=email).exists():
+            raise serializers.ValidationError({"email": ["Пользователь с таким email уже существует"]})
         return data
 
     def create(self, validated_data):

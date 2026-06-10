@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
+from django.db import transaction
 from .models import User, ConfirmEmailKey, PasswordResetKey
 from .serializers import (
     UserRGSTRSerializer, UserLoginSerializer,
@@ -21,11 +22,15 @@ class RegistrUserView(APIView):
     def post(self, request):
         serializer = UserRGSTRSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
+            with transaction.atomic():
+                user = serializer.save()
+                token, _ = Token.objects.get_or_create(user=user)
 
             return Response({
                 "status": "Регистрация успешна.",
-                "user_id": user.id
+                "user_id": user.id,
+                "token": token.key,
+                "user": UserSerializer(user).data
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
