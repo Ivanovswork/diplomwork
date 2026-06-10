@@ -8,7 +8,8 @@ const FormData = require('form-data');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const DJANGO_API_URL = 'http://localhost:8000/api';
+// URL для Django API - берётся из переменной окружения (для Docker)
+const DJANGO_API_URL = process.env.DJANGO_API_URL || 'http://localhost:8000/api';
 
 const upload = multer({ storage: multer.memoryStorage() });
 
