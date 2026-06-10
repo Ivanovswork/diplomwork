@@ -971,32 +971,45 @@ def check_test_required(request, session_id):
     test_start_page = (block_number - 1) * 2 + 1
     test_end_page = min(block_number * 2, book.pages_count)
 
-    test = Test.objects.filter(
+    # Получаем ВСЕ тесты по этому блоку
+    tests = Test.objects.filter(
         session__book=book,
         start_page=test_start_page,
         end_page=test_end_page
-    ).first()
+    ).order_by('-created_at')  # Сначала новые
 
-    if test:
-        if test.status == 'pending':
-            return Response({
-                'requires_test': True,
-                'test_id': test.id,
-                'message': 'Пройдите тест перед продолжением чтения',
-                'start_page': test_start_page,
-                'end_page': test_end_page,
-                'retake': False
-            })
-        elif test.status == 'failed':
-            return Response({
-                'requires_test': True,
-                'test_id': test.id,
-                'message': 'Тест не пройден. Перечитайте страницы и пройдите тест заново.',
-                'start_page': test_start_page,
-                'end_page': test_end_page,
-                'retake': True
-            })
+    # Проверяем: есть ли тест со статусом 'passed'?
+    passed_test = tests.filter(status='passed').first()
+    if passed_test:
+        # Есть успешный тест - чтение НЕ блокируем
+        return Response({'requires_test': False})
 
+    # Нет passed теста - проверяем что есть
+    pending_test = tests.filter(status='pending').first()
+    failed_test = tests.filter(status='failed').first()
+
+    if pending_test:
+        # Есть непройденный тест - блокируем до прохождения
+        return Response({
+            'requires_test': True,
+            'test_id': pending_test.id,
+            'message': 'Пройдите тест перед продолжением чтения',
+            'start_page': test_start_page,
+            'end_page': test_end_page,
+            'retake': False
+        })
+    elif failed_test:
+        # Все тесты провалены - нужно перечитывать и создавать новый
+        return Response({
+            'requires_test': True,
+            'test_id': failed_test.id,
+            'message': 'Тест не пройден. Перечитайте страницы и пройдите тест заново.',
+            'start_page': test_start_page,
+            'end_page': test_end_page,
+            'retake': True
+        })
+
+    # Тестов нет вообще
     return Response({'requires_test': False})
 
 
