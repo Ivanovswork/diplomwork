@@ -2,13 +2,8 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
   <title>Чтение</title>
-  <!-- PDF.js для корректного отображения на мобильных -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-  </script>
   <style>
     :root {
       --primary: #4a90e2;
@@ -42,8 +37,9 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
-      padding: 16px;
-      gap: 16px;
+      height: 100dvh;
+      padding: 12px;
+      gap: 12px;
       overflow: hidden;
     }
 
@@ -109,23 +105,15 @@
       border-radius: 16px;
       background: #fff;
       box-shadow: var(--shadow);
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
-    .pdf-canvas {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-    }
-
-    .pdf-viewer iframe,
+    .pdf-frame,
     .pdf-viewer embed {
       display: block;
       width: 100%;
       height: 100%;
       border: none;
+      background: #fff;
     }
 
     .page-info {
@@ -182,17 +170,32 @@
 
     @media (max-width: 768px) {
       .reading-container {
-        padding: 12px;
+        padding: 8px;
+        gap: 8px;
       }
 
       .reading-header,
       .reading-footer {
-        padding: 14px;
+        padding: 10px 12px;
+        border-radius: 14px;
+      }
+
+      .book-title {
+        font-size: 14px;
       }
 
       .timer {
-        min-width: 76px;
-        font-size: 16px;
+        min-width: 68px;
+        font-size: 14px;
+        padding: 8px 10px;
+      }
+
+      .pdf-viewer {
+        border-radius: 12px;
+      }
+
+      .btn-next {
+        padding: 10px 16px;
       }
     }
   </style>

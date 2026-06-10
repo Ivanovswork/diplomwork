@@ -14,8 +14,6 @@ let pendingTestId = null;
 let blockStartPage = 1;
 let blockEndPage = 2;
 let lastSavedPage = 0;
-let pdfDoc = null;
-let pdfPage = null;
 
 const urlParams = new URLSearchParams(window.location.search);
 const reviewMode = urlParams.get('review') === 'true';
@@ -23,7 +21,7 @@ const reviewStartPage = parseInt(urlParams.get('startPage'));
 const reviewEndPage = parseInt(urlParams.get('endPage'));
 const oldTestId = urlParams.get('testId');
 
-// ==================== ЗАГРУЗКА PDF (PDF.js) ====================
+// ==================== ЗАГРУЗКА PDF ====================
 
 async function loadPDFPage() {
     console.log('=== loadPDFPage START ===');
@@ -37,96 +35,6 @@ async function loadPDFPage() {
         return;
     }
     
-    if (!loadingOverlay) {
-        loadingOverlay = document.createElement('div');
-        loadingOverlay.id = 'loadingOverlay';
-        loadingOverlay.className = 'loading-overlay';
-        loadingOverlay.innerHTML = '<div class="spinner"></div><div>Загрузка страницы...</div>';
-        viewer.appendChild(loadingOverlay);
-    }
-    
-    loadingOverlay.style.display = 'flex';
-    isPageLoaded = false;
-
-    try {
-        const token = getToken();
-        if (!token) throw new Error('Токен не найден');
-
-        // Загружаем весь PDF документ
-        if (!pdfDoc) {
-            const pdfUrl = `${API_URL}/reading/read-web/${bookId}/`;
-            console.log('Loading PDF document:', pdfUrl);
-            
-            const response = await fetch(pdfUrl, {
-                headers: { 'Authorization': `Token ${token}` }
-            });
-            
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            
-            const arrayBuffer = await response.arrayBuffer();
-            pdfDoc = await pdfjsLib.load(arrayBuffer);
-            console.log('PDF loaded, pages:', pdfDoc.numPages);
-        }
-
-        // Рендерим страницу
-        loadingOverlay.innerHTML = '<div class="spinner"></div><div>Рендеринг страницы...</div>';
-        
-        pdfPage = await pdfDoc.getPage(currentPage);
-        
-        const viewport = pdfPage.getViewport({ scale: 1.0 });
-        
-        // Очищаем viewer и создаем canvas
-        viewer.innerHTML = '';
-        
-        const newLoadingOverlay = document.createElement('div');
-        newLoadingOverlay.id = 'loadingOverlay';
-        newLoadingOverlay.className = 'loading-overlay';
-        newLoadingOverlay.innerHTML = '<div class="spinner"></div><div>Загрузка...</div>';
-        viewer.appendChild(newLoadingOverlay);
-        loadingOverlay = newLoadingOverlay;
-
-        const canvas = document.createElement('canvas');
-        canvas.className = 'pdf-canvas';
-        viewer.appendChild(canvas);
-        
-        const context = canvas.getContext('2d');
-        
-        // Масштабируем под размер контейнера
-        const containerWidth = viewer.clientWidth;
-        const containerHeight = viewer.clientHeight;
-        
-        const scaleX = containerWidth / viewport.width;
-        const scaleY = containerHeight / viewport.height;
-        const scale = Math.min(scaleX, scaleY, 2.0); // Максимум 2x для качества
-        
-        const scaledViewport = pdfPage.getViewport({ scale });
-        
-        canvas.height = scaledViewport.height;
-        canvas.width = scaledViewport.width;
-
-        const renderContext = {
-            canvasContext: context,
-            viewport: scaledViewport
-        };
-
-        await pdfPage.render(renderContext).promise;
-        
-        console.log('Page rendered:', currentPage, 'size:', scaledViewport.width, 'x', scaledViewport.height);
-        
-        loadingOverlay.style.display = 'none';
-        isPageLoaded = true;
-        
-        if (!isInReviewMode && !isWaitingForTest) startTimer();
-        
-    } catch (error) {
-        console.error('loadPDFPage error:', error);
-        if (loadingOverlay) {
-            loadingOverlay.innerHTML = `<div>Ошибка: ${error.message}</div>`;
-            loadingOverlay.style.display = 'flex';
-        }
-    }
-}
-
     if (!loadingOverlay) {
         loadingOverlay = document.createElement('div');
         loadingOverlay.id = 'loadingOverlay';
@@ -162,17 +70,13 @@ async function loadPDFPage() {
         newLoadingOverlay.className = 'loading-overlay';
         newLoadingOverlay.innerHTML = '<div class="spinner"></div><div>Загрузка страницы...</div>';
         viewer.appendChild(newLoadingOverlay);
-        
         loadingOverlay = newLoadingOverlay;
 
-        // Используем iframe вместо embed для лучшей поддержки на мобильных
         const iframe = document.createElement('iframe');
         iframe.src = blobUrl;
-        iframe.style.width = '100%';
-        iframe.style.height = '100%';
-        iframe.style.border = 'none';
+        iframe.className = 'pdf-frame';
         iframe.setAttribute('frameborder', '0');
-        iframe.setAttribute('scrolling', 'no');
+        iframe.setAttribute('scrolling', 'auto');
 
         iframe.onload = () => {
             console.log('PDF iframe loaded');
