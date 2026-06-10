@@ -9,7 +9,10 @@ def generate_key():
 
 def send_confirmation_email(user_email, key):
     """Отправляет письмо подтверждения на email"""
-    confirm_url = f"http://localhost:8000/api/users/confirm-email/{key}/"
+    # URL берётся из переменной окружения или используется дефолтный
+    import os
+    base_url = os.environ.get('BASE_URL', 'http://80.78.254.95')
+    confirm_url = f"{base_url}/api/users/confirm-email/{key}/"
     send_mail(
         'Подтверждение email - Reading API',
         f'Перейдите по ссылке для подтверждения: {confirm_url}',
@@ -21,9 +24,13 @@ def send_confirmation_email(user_email, key):
 
 def send_password_reset_email(user_email, key):
     """Отправляет код для сброса пароля на email"""
+    import os
+    base_url = os.environ.get('BASE_URL', 'http://80.78.254.95')
+    reset_url = f"{base_url}/forgot-password.html"
     send_mail(
         'Сброс пароля - Reading Tracker',
         f'Ваш код для сброса пароля: {key}\n\n'
+        f'Перейдите по ссылке: {reset_url}\n\n'
         f'Введите этот код в приложении, чтобы установить новый пароль.\n'
         f'Если вы не запрашивали сброс пароля, просто проигнорируйте это письмо.',
         settings.DEFAULT_FROM_EMAIL,

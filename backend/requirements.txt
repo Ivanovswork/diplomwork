@@ -27,9 +27,6 @@ psycopg2-binary==2.9.9
 PyJWT==2.8.0
 bcrypt==4.1.2
 
-# ML & NLP (для GigaChat и обработки текста)
-transformers==4.38.0
-
 # Utilities
 tqdm==4.66.1
 python-multipart==0.0.9
