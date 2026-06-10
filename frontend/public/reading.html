@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
   <title>Чтение</title>
   <style>
     :root {
@@ -169,12 +169,13 @@
 
     @media (max-width: 768px) {
       .reading-container {
-        padding: 8px;
-        gap: 8px;
+        padding: 0;
+        gap: 6px;
       }
 
       .reading-header,
       .reading-footer {
+        margin: 0 6px;
         padding: 10px 12px;
         border-radius: 12px;
       }
@@ -190,7 +191,8 @@
       }
 
       .pdf-viewer {
-        border-radius: 8px;
+        border-radius: 0;
+        width: 100vw;
       }
 
       .btn-next {
