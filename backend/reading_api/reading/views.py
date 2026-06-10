@@ -15,7 +15,6 @@ import fitz
 from datetime import date, datetime
 
 from books.models import Book, UserConnection
-from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from .models import ReadingSession, PageReadingLog, UserReadingStreak, Test, Question, Answer, UserTestResult
 from users.models import User
