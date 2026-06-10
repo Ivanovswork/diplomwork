@@ -51,7 +51,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 384M
+          memory: 512M
     command: >
       sh -c "python manage.py migrate --noinput &&
              python manage.py collectstatic --noinput 2>/dev/null || true &&

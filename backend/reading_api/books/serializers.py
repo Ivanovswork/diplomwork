@@ -152,10 +152,16 @@ class BookUploadSerializer(serializers.ModelSerializer):
             # PDF
             validated_data['format'] = 'pdf'
             try:
+                import time
+                start = time.time()
+                print(f"⏳ Starting fitz.open for PDF...")
                 doc = fitz.open(stream=content, filetype="pdf")
                 validated_data['pages_count'] = len(doc)
+                elapsed = time.time() - start
+                print(f"✅ PDF processed: {validated_data['pages_count']} pages in {elapsed:.2f}s")
                 doc.close()
             except Exception as e:
+                print(f"⚠️ PDF processing error: {e}")
                 validated_data['pages_count'] = 0
 
         validated_data['status'] = 'in_progress'
@@ -236,10 +242,16 @@ class BookUploadToChildSerializer(serializers.Serializer):
             book_format = 'epub'
         else:
             try:
+                import time
+                start = time.time()
+                print(f"⏳ Starting fitz.open for child's PDF...")
                 doc = fitz.open(stream=content, filetype="pdf")
                 pages_count = len(doc)
+                elapsed = time.time() - start
+                print(f"✅ Child's PDF processed: {pages_count} pages in {elapsed:.2f}s")
                 doc.close()
             except Exception as e:
+                print(f"⚠️ Child's PDF processing error: {e}")
                 pages_count = 0
             book_format = 'pdf'
 
