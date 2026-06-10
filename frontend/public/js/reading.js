@@ -21,6 +21,51 @@ const reviewStartPage = parseInt(urlParams.get('startPage'));
 const reviewEndPage = parseInt(urlParams.get('endPage'));
 const oldTestId = urlParams.get('testId');
 
+let pdfJsLoadingPromise = null;
+
+async function ensurePdfJsLoaded() {
+    if (window.pdfjsLib) return;
+    if (!pdfJsLoadingPromise) {
+        pdfJsLoadingPromise = new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Не удалось загрузить PDF.js'));
+            document.head.appendChild(script);
+        });
+    }
+    await pdfJsLoadingPromise;
+}
+
+async function renderMobilePdf(blob, viewer, loadingOverlay) {
+    await ensurePdfJsLoaded();
+
+    const bytes = await blob.arrayBuffer();
+    const pdfDoc = await pdfjsLib.getDocument({ data: bytes }).promise;
+    const page = await pdfDoc.getPage(1);
+
+    const baseViewport = page.getViewport({ scale: 1 });
+    const targetWidth = viewer.clientWidth || window.innerWidth;
+    const scale = targetWidth / baseViewport.width;
+    const viewport = page.getViewport({ scale });
+
+    const canvas = document.createElement('canvas');
+    canvas.className = 'pdf-frame';
+    canvas.style.width = '100%';
+    canvas.style.height = 'auto';
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
+
+    viewer.appendChild(canvas);
+
+    await page.render({
+        canvasContext: canvas.getContext('2d'),
+        viewport
+    }).promise;
+
+    if (loadingOverlay) loadingOverlay.style.display = 'none';
+}
+
 // ==================== ЗАГРУЗКА PDF ====================
 
 async function loadPDFPage() {
@@ -73,11 +118,23 @@ async function loadPDFPage() {
         viewer.appendChild(newLoadingOverlay);
         loadingOverlay = newLoadingOverlay;
 
-        const iframe = document.createElement('iframe');
         const isMobileScreen = window.innerWidth <= 768;
-        iframe.src = isMobileScreen
-            ? `${blobUrl}#zoom=10`
-            : `${blobUrl}#zoom=page-width`;
+
+        if (isMobileScreen) {
+            try {
+                await renderMobilePdf(blob, viewer, loadingOverlay);
+                console.log('PDF mobile canvas rendered');
+                isPageLoaded = true;
+                if (!isInReviewMode && !isWaitingForTest) startTimer();
+                URL.revokeObjectURL(blobUrl);
+                return;
+            } catch (mobileError) {
+                console.error('Mobile canvas render failed, fallback to iframe:', mobileError);
+            }
+        }
+
+        const iframe = document.createElement('iframe');
+        iframe.src = `${blobUrl}#zoom=page-width`;
         iframe.className = 'pdf-frame';
         iframe.setAttribute('frameborder', '0');
         iframe.setAttribute('scrolling', 'auto');
