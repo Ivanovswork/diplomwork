@@ -293,7 +293,9 @@ def create_test_for_session(session, start_page, end_page):
 
         # Получаем текст страниц
         content = ""
-        doc = fitz.open(stream=session.book.content, filetype="pdf")
+        # Конвертируем memoryview в bytes для fitz.open()
+        pdf_bytes = bytes(session.book.content) if isinstance(session.book.content, memoryview) else session.book.content
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         for page_num in range(start_page - 1, end_page):
             if page_num < len(doc):
                 content += doc[page_num].get_text()
@@ -574,7 +576,8 @@ def get_or_create_session(request, book_id):
     
     try:
         import fitz
-        doc = fitz.open(stream=book.content, filetype="pdf")
+        pdf_bytes = bytes(book.content) if isinstance(book.content, memoryview) else book.content
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         pages_to_analyze = min(5, book.pages_count)
         
         cover_pages = []
@@ -823,7 +826,7 @@ def finish_book(request, book_id):
     if total_pages_read >= book.pages_count:
         book.status = 'completed'
         book.save()
-
+        
         ReadingSession.objects.filter(book=book, status='active').update(
             status='completed',
             end_datetime=timezone.now()
@@ -1088,7 +1091,8 @@ def retake_test(request, test_id):
 
     # Получаем текст страниц для этого блока
     content = ""
-    doc = fitz.open(stream=old_test.session.book.content, filetype="pdf")
+    pdf_bytes = bytes(old_test.session.book.content) if isinstance(old_test.session.book.content, memoryview) else old_test.session.book.content
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     for page_num in range(old_test.start_page - 1, old_test.end_page):
         if page_num < len(doc):
             content += doc[page_num].get_text()
@@ -1221,7 +1225,8 @@ def get_block_text(request, book_id, block_number):
     block_end_page = min(block_number * 2, book.pages_count)
 
     content = ""
-    doc = fitz.open(stream=book.content, filetype="pdf")
+    pdf_bytes = bytes(book.content) if isinstance(book.content, memoryview) else book.content
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     for page_num in range(block_start_page - 1, block_end_page):
         if page_num < len(doc):
             content += doc[page_num].get_text()
@@ -1515,7 +1520,8 @@ def get_page_words_count(request, book_id, page_number):
         return Response({"error": "Нет доступа"}, status=status.HTTP_403_FORBIDDEN)
 
     try:
-        doc = fitz.open(stream=book.content, filetype="pdf")
+        pdf_bytes = bytes(book.content) if isinstance(book.content, memoryview) else book.content
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         page = doc[page_number - 1]
         text = page.get_text()
         doc.close()
@@ -1556,7 +1562,8 @@ def text_proxy(request, book_id):
 
     try:
         page_number = int(request.GET.get('page', 1))
-        doc = fitz.open(stream=book.content, filetype="pdf")
+        pdf_bytes = bytes(book.content) if isinstance(book.content, memoryview) else book.content
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         
         if page_number < 1 or page_number > len(doc):
             doc.close()
@@ -1629,7 +1636,8 @@ def get_book_content_info(request, book_id):
         return Response({"error": "Нет доступа"}, status=status.HTTP_403_FORBIDDEN)
 
     try:
-        doc = fitz.open(stream=book.content, filetype="pdf")
+        pdf_bytes = bytes(book.content) if isinstance(book.content, memoryview) else book.content
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         total_pages = len(doc)
         
         # Анализируем первые 5 страниц (или меньше, если книга меньше)
