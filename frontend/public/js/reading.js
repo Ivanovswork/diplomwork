@@ -211,21 +211,23 @@ async function checkTestForCurrentBlock() {
         console.log('Test check:', check);
         
         if (check.requires_test) {
-            isWaitingForTest = true;
             pendingTestId = check.test_id;
             blockStartPage = check.start_page || blockStartPage;
             blockEndPage = check.end_page || blockEndPage;
             
-            // Если тест провален (retake=true) - включаем режим перечитывания
+            // Если тест провален (retake=true) - включаем режим перечитывания БЕЗ показа теста
             if (check.retake === true) {
                 isInReviewMode = true;
+                isWaitingForTest = false;  // Не блокируем кнопки!
                 currentPage = blockStartPage;
                 document.getElementById('pageInfo').textContent = `Страница ${currentPage} / ${totalPages}`;
                 console.log('Review mode enabled - retake required for pages:', blockStartPage, '-', blockEndPage);
-                alert('Тест не пройден! Перечитайте страницы ' + blockStartPage + '-' + blockEndPage + ' и попробуйте снова.');
+                alert('Тест не пройден! Перечитайте страницы ' + blockStartPage + '-' + blockEndPage + ' внимательно. После этого вам будет предложен новый тест.');
+            } else {
+                // Первый проход - показываем тест
+                isWaitingForTest = true;
+                showTestDialog();
             }
-            
-            showTestDialog();
         }
     } catch (error) {
         console.error('Test check error:', error);
@@ -368,7 +370,7 @@ async function saveCurrentPage() {
         alert('Сначала пройдите тест!');
         return;
     }
-    
+
     if (lastSavedPage === currentPage) {
         console.log('Page already saved, skipping');
         if (currentPage < totalPages) {
@@ -477,7 +479,7 @@ async function saveCurrentPage() {
 // ==================== КНОПКА ДАЛЕЕ ====================
 
 async function onNextPageClick() {
-    console.log('onNextPageClick - isWaitingForTest:', isWaitingForTest);
+    console.log('onNextPageClick - isWaitingForTest:', isWaitingForTest, 'isInReviewMode:', isInReviewMode);
     
     if (isWaitingForTest) {
         alert('Сначала пройдите тест!');
@@ -485,11 +487,13 @@ async function onNextPageClick() {
     }
     
     if (isInReviewMode) {
+        // В режиме перечитывания просто листаем страницы БЕЗ сохранения
         if (currentPage < blockEndPage) {
             currentPage++;
             document.getElementById('pageInfo').textContent = `Страница ${currentPage} / ${totalPages}`;
             await loadPDFPage();
         } else {
+            // Дошли до конца блока - создаём новый тест
             await createNewTestAfterReview();
         }
         return;
