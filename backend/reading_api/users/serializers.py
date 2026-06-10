@@ -21,8 +21,9 @@ class UserRGSTRSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop('password_confirm')
-        validated_data['is_account_active'] = False  # Неактивен до подтверждения
-        validated_data['is_active'] = False
+        # Упрощенный production-режим: аккаунт сразу активен (без email-подтверждения)
+        validated_data['is_account_active'] = True
+        validated_data['is_active'] = True
         user = User.objects.create_user(**validated_data)
         return user
 

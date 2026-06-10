@@ -12,7 +12,7 @@ from .serializers import (
     PasswordResetRequestSerializer, PasswordResetVerifySerializer,
     PasswordResetConfirmSerializer
 )
-from .utils import generate_key, send_confirmation_email, send_password_reset_email
+from .utils import generate_key, send_password_reset_email
 
 
 class RegistrUserView(APIView):
@@ -22,14 +22,9 @@ class RegistrUserView(APIView):
         serializer = UserRGSTRSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            key_obj = ConfirmEmailKey.objects.create(
-                user=user,
-                key=generate_key()
-            )
-            send_confirmation_email(user.email, key_obj.key)
 
             return Response({
-                "status": "Регистрация успешна. Проверьте email.",
+                "status": "Регистрация успешна.",
                 "user_id": user.id
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
